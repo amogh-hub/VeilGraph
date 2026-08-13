@@ -1,0 +1,75 @@
+{
+  "payload": {
+    "claim_boundary": "Consumed external holdouts are preserved as evidence and are not tuning inputs. Difficult holdout recall is reported rather than hidden.",
+    "closed_at_utc": "2026-08-13T18:39:29.619606+00:00",
+    "detector_model_surface_sha256": {
+      "backend/app/detection/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "backend/app/detection/broad_pii.py": "c2c756464a44cffe08ae632a104755298fff35593ac441b33d89a082fd11cfa6",
+      "backend/app/detection/contextual_v4.py": "b0c16cca88da7e2ce4bf3109f10f653da9f6cbbb39bb75bbdb8876dae253b5c5",
+      "backend/app/detection/direct_identifiers.py": "115f59bfa4a662e3a97e33d49c0abf82561853d3b7c6c90994674ab9343ce1d0",
+      "backend/app/detection/docx_context.py": "ce971b48cb095da155e895d3581446de988b9d60e8e9e4616e4e87a5f6c16839",
+      "backend/app/detection/generalization_v5.py": "a4901ffa09da35bc403385c725d53b3aee41230e789c7223fa40ae27aae6d295",
+      "backend/app/detection/models.py": "88e1466fdf1c0941d7c8d1e3b9dc39c90cf4950aec2170a71f31262c3b801973",
+      "backend/app/detection/person_names.py": "00a0afbd056e770a56207b64de7017892c2c1468652e8e012d03ccd340a686a2",
+      "backend/app/detection/pipeline.py": "7fe3db7e6320797a904eaa5b3e51f7d939c17af8ca99742765fcddc8c4773783",
+      "backend/app/detection/quasi_identifiers.py": "ce7cc91f7fae6f11e0256709a7a6a43fb1eeb43a47a79534316d90e10e802f73",
+      "backend/app/detection/semantic_ner.py": "71bc441b4c8e9294b00173f35fd415862f516c1d059bf4e8082f7816ada882c3",
+      "backend/app/detection/semantic_ner_v2.py": "de913097c8c0b3129246b6884307a9125e742f4f485e31ce900c6fd96d752b19",
+      "backend/app/detection/semantic_ner_v3.py": "57a34d494971ea07f2e78aab355d120e3e8f45afa6a3c4190ba8c6cf3e352e79",
+      "backend/app/detection/video_context.py": "0af28b70b126dbaa513f1798eceb0492a816dcae9770e979ab21a91d7b1ea693",
+      "backend/app/detection/visual_detector.py": "f98a09860f200630ac6eb2091ced9d3e0922fe2103809d12a3140f02a26d2178",
+      "backend/app/extraction/document_processor.py": "b7151453ff14a0b64ad385dcfed1799f9fc3fcb6fa58db4bf4882dfadad76ef2",
+      "backend/app/extraction/structured_data.py": "6d769037ead9614345a347b24354d0c9d90d6034ce75389b564c8fea398e1568",
+      "backend/benchmark_corpus/veilbench_curated_v1.json": "ea868e30cf474a8c286c2c87d76dd9679f090c2b5ae4b4792684b3ab5f4bb8df",
+      "backend/models/semantic_ner_v1.json": "70c5e10654daff5b0ee65e6e3f9b8ba744cc0426eb253c19ece92c4c949df903",
+      "backend/models/semantic_ner_v2.json": "56a2719936d8f7ebd1bc12bc16c435765beea9d73cc662c0c3ea0b83dadf123a",
+      "backend/models/semantic_ner_v3.json": "37f7e935d497874cff3bbb8038eb1b03519b9c283a35b99eb8cb075db9652d59",
+      "backend/training_data/semantic_ner_train_v2.json": "8f604867077c48beedd793ec808f882c06b65bc016cb1a0c5c8b418c690cf840",
+      "backend/training_data/semantic_ner_train_v3.json": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df"
+    },
+    "final_regression": {
+      "all_passed": true,
+      "generated_at": "2026-08-13T18:39:29.403552+00:00",
+      "openapi_written": true,
+      "pytest_failed": 0,
+      "pytest_passed": 268,
+      "run_checks_exit_code": 0,
+      "schema": "veilgraph.final-full-regression.v1",
+      "typescript_typecheck": true,
+      "vite_production_build": true,
+      "warnings": 5
+    },
+    "frozen_detector": "Broad PII v5",
+    "phase": "PHASE 1 \u2014 ACCURACY & JUDGE-DATA READINESS",
+    "schema": "veilgraph.phase1-authoritative-freeze.v2",
+    "scientific_evidence_sha256": {
+      "competition/CLAIMS_AND_BOUNDARIES.md": "80d63158952b4db2b093b05ff512312ff7386b4b75796fb7a7f206e16736b7b9",
+      "competition/HOLDOUT_NEMOTRON_REPORT.md": "9c35a96fedd928df57ca2fc3af70df7a96e4a55a26f1bcabaf7d84b88b97b47b",
+      "competition/HOLDOUT_NEMOTRON_RESULTS.json": "15320a0e5b2b32ce97d425814383433738309397fe329748a97d6a5f61a9a38b",
+      "competition/final/FINAL_FULL_REGRESSION.json": "b0fdbae51b222b13413d9012d36d7688532ee22a105dc2bc8357001e47084ea8",
+      "competition/phase1/BROAD_PII_V5_FREEZE_MANIFEST.json": "56035dfb7fcbc0bc5bceb04abbd360fd21d50a9330bc408a6488e6355c29fae1",
+      "competition/phase1/EXTERNAL_HOLDOUT_ARI_SYNTHETIC_TEST_RESULTS.json": "5c624489a8ac51c70fe69bfadfb0f4d21b9b5ada8b80d90991b737fa83e70f0d",
+      "competition/phase1/EXTERNAL_HOLDOUT_TAB_RESULTS.json": "c9e7063e76ea3921ed998f3dbd1a8fb013f6641d6b0c1b4a52fe3441a1587ba0",
+      "competition/phase1/JUDGE_READINESS_RESULTS.json": "9f1286f47dd1f0afb3f25694a0eccc7ebae27f273c8de2e58a2cb2053c911dbf"
+    },
+    "semantic_ner": {
+      "contains_real_pii": false,
+      "model_sha256": "37f7e935d497874cff3bbb8038eb1b03519b9c283a35b99eb8cb075db9652d59",
+      "name": "Semantic NER v3",
+      "runtime_network_required": false,
+      "schema": "veilgraph.semantic-ner.linear.v3",
+      "training_corpus_sha256": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df",
+      "training_examples": 2330,
+      "version": "3.0.0"
+    },
+    "signer": {
+      "algorithm": "Ed25519",
+      "public_key_b64": "pK+Gb/ivpEJOEv4i4HIykHJOPUghXGvlmDqd5aeXEjw=",
+      "public_key_sha256": "38ba2d121c5e91a52dbbefc6372c267e3de94c33a54616f3a0ab96bf71aa4703"
+    },
+    "sih_problem_id": "SIH260381",
+    "status": "COMPLETE_AND_FROZEN"
+  },
+  "signature_algorithm": "Ed25519",
+  "signature_b64": "7qSXDEvNrndSLuNdShW86/VbUG/vcf3Fvs9Bua8gGrA4GLw+zB23DWx81h7CRV+r/EQ6SbJ48U6Ozcgy7LGlDg=="
+}

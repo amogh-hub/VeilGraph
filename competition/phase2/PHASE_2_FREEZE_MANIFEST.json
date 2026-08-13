@@ -1,0 +1,235 @@
+{
+  "payload": {
+    "benchmark": {
+      "all_passed": true,
+      "api_job_concurrency": {
+        "completed": 4,
+        "details": [
+          {
+            "canonical_entities": 4,
+            "file_id": "91caf559-3f87-4a02-9907-f902cbbc1f5b",
+            "index": 0,
+            "isolated": true,
+            "job_id": "5b364139-4734-4c0f-a968-3b86905065f8",
+            "mentions": 4,
+            "passed": true
+          },
+          {
+            "canonical_entities": 4,
+            "file_id": "e44203be-8ae5-418f-bf40-e474111c35d4",
+            "index": 1,
+            "isolated": true,
+            "job_id": "6565baf9-77bd-44e7-97ac-4e877ef8b122",
+            "mentions": 4,
+            "passed": true
+          },
+          {
+            "canonical_entities": 4,
+            "file_id": "6f598e3f-e66e-4224-ac78-8992c56d9ba0",
+            "index": 2,
+            "isolated": true,
+            "job_id": "01966d0f-b0ab-4173-befe-2d3eb698646c",
+            "mentions": 4,
+            "passed": true
+          },
+          {
+            "canonical_entities": 4,
+            "file_id": "05f5b907-e6b9-484b-bcbd-7f31e6b185b9",
+            "index": 3,
+            "isolated": true,
+            "job_id": "2ac02c93-b3a2-48d8-8a5e-c473edd78dea",
+            "mentions": 4,
+            "passed": true
+          }
+        ],
+        "elapsed_ms": 120.465,
+        "error": null,
+        "job_isolation_valid": true,
+        "passed": true,
+        "process_cpu_ms": 134.548,
+        "unique_files": 4,
+        "unique_jobs": 4,
+        "workers": 4
+      },
+      "cases": [
+        {
+          "cpu_core_equivalent_pct_p50": 99.99,
+          "name": "full_detection_text_1k",
+          "p50_ms": 45.032,
+          "p50_process_cpu_ms": 45.029,
+          "p95_ms": 45.491,
+          "process_high_water_rss_mib": 145.58,
+          "python_peak_alloc_mib": 0.08,
+          "throughput_kib_s_p50": 22.21
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 100.0,
+          "name": "full_detection_text_8k",
+          "p50_ms": 431.047,
+          "p50_process_cpu_ms": 431.043,
+          "p95_ms": 431.148,
+          "process_high_water_rss_mib": 146.61,
+          "python_peak_alloc_mib": 0.61,
+          "throughput_kib_s_p50": 18.56
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 99.95,
+          "name": "full_detection_text_24k",
+          "p50_ms": 1344.732,
+          "p50_process_cpu_ms": 1344.121,
+          "p95_ms": 1347.017,
+          "process_high_water_rss_mib": 166.81,
+          "python_peak_alloc_mib": 1.99,
+          "throughput_kib_s_p50": 17.85
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 99.66,
+          "name": "full_detection_text_64k",
+          "p50_ms": 3801.226,
+          "p50_process_cpu_ms": 3788.486,
+          "p95_ms": 3810.501,
+          "process_high_water_rss_mib": 217.48,
+          "python_peak_alloc_mib": 5.75,
+          "throughput_kib_s_p50": 16.84
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 99.97,
+          "name": "validation_text_8mb",
+          "p50_ms": 282.728,
+          "p50_process_cpu_ms": 282.633,
+          "p95_ms": 286.941,
+          "process_high_water_rss_mib": 222.72,
+          "python_peak_alloc_mib": 8.0,
+          "throughput_kib_s_p50": 28974.87
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 99.22,
+          "name": "structured_extraction_1000_rows",
+          "p50_ms": 44.028,
+          "p50_process_cpu_ms": 43.686,
+          "p95_ms": 48.411,
+          "process_high_water_rss_mib": 225.14,
+          "python_peak_alloc_mib": 6.75,
+          "throughput_kib_s_p50": 1726.07
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 99.99,
+          "name": "structured_extraction_5000_rows",
+          "p50_ms": 269.108,
+          "p50_process_cpu_ms": 269.07,
+          "p95_ms": 269.824,
+          "process_high_water_rss_mib": 257.19,
+          "python_peak_alloc_mib": 35.13,
+          "throughput_kib_s_p50": 1443.64
+        },
+        {
+          "cpu_core_equivalent_pct_p50": 100.0,
+          "name": "pdf_extraction_5_pages",
+          "p50_ms": 384.005,
+          "p50_process_cpu_ms": 383.995,
+          "p95_ms": 385.565,
+          "process_high_water_rss_mib": 327.14,
+          "python_peak_alloc_mib": 0.43,
+          "throughput_kib_s_p50": 47.39
+        }
+      ],
+      "detector_concurrency": {
+        "completed": 4,
+        "elapsed_ms": 822.979,
+        "mentions_each": [
+          136,
+          136,
+          136,
+          136
+        ],
+        "passed": true,
+        "process_cpu_ms": 835.645,
+        "signatures_identical": true,
+        "workers": 4
+      },
+      "process_high_water_rss_mib": 348.56
+    },
+    "closed_at_utc": "2026-08-12T16:47:20.316028+00:00",
+    "completion_rule": {
+      "arbitrary_future_latency_target_reopens_phase": false,
+      "manual_acceptance_required_before_treating_this_freeze_as_authoritative": true,
+      "phase1_accuracy_loop_reopened": false
+    },
+    "cots": {
+      "capability_comparison_frozen": true,
+      "quantitative_protocol_frozen": true,
+      "quantitative_vendor_measurements_phase": "PHASE 3 \u2014 EVIDENCE & FINAL RELEASE",
+      "quantitative_vendor_measurements_required_to_be_real_not_estimated": true
+    },
+    "evidence_sha256": {
+      "competition/phase2/COTS_BENCHMARK_PROTOCOL.md": "38edef5d65032674c466dc6d043dc1ad8eab9d265d6f223722bcf226ba54ee79",
+      "competition/phase2/COTS_CAPABILITY_COMPARISON.md": "adcd3fad80e626e276d03c6fefa42506888628b8b5ab11ca0cd0fdf0dc456bb3",
+      "competition/phase2/PHASE2_BENCHMARK_REPORT.md": "9999fefdd7dd5010dec9948e31427c8e1ad42714b80e7c958b306239107596fd",
+      "competition/phase2/PHASE2_BENCHMARK_RESULTS.json": "5d5c9aee4bfbbe070d685b7b8b5239a33a1739170baa964127a83290b5c02b8d",
+      "competition/phase2/PHASE2_FULL_REGRESSION.json": "6a804c50ec00a29396647cf908747494ce9e5ed72a29180d432b1529d1ffafa3",
+      "competition/phase2/PHASE2_FULL_REGRESSION.log": "dda00f26d4ce726578a311f8f1689b61b00e54e5f2867513ae10b39736587188",
+      "competition/phase2/PHASE2_RELEASE_PACKAGE_RESULTS.json": "abfbb16ee63ca349a7e308d1dcb3368ab9270f4e360dbf29c84a33adf28050cc",
+      "competition/phase2/PHASE2_SECURITY_RESULTS.json": "90758f81bc839ceaf6ee04ce13ea7a6b08f1df6499046c611899fa457fc90034",
+      "competition/phase2/PHASE_2_REQUIREMENT_TRACEABILITY.md": "c75f38ceb77bc51b4f187562b2061c388b1c9e16e27a5af8a41a21b98b992e6c",
+      "competition/phase2/PHASE_2_SCOPE_LOCK.md": "c688f5551c70a568029c83199a84f57350b1b7fe22aee495ba05da05c304e025"
+    },
+    "next_phase": "PHASE 3 \u2014 EVIDENCE & FINAL RELEASE",
+    "phase": "PHASE 2 \u2014 PRODUCTION, SECURITY & SCALE",
+    "phase1_detector_preserved": "Broad PII v5",
+    "phase1_freeze_manifest_sha256": "2e4c1e5a863f648013a96e8c8f3b61c9c9e8688065c223bb3dc0d09f67539bf3",
+    "production_surface_sha256": {
+      "backend/app/core/config.py": "2665c156b00ae1322d502092bc5382f1d6160e9b2ca1f6c81e79b6500cb5fc32",
+      "backend/app/ops/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "backend/app/ops/admission.py": "35eb712b4bacfc89ff6d9e94e8ce17beea16097021213806275205e214b86d7b",
+      "backend/app/ops/metrics.py": "1ba7adb1f289f981d99c80a225634ac2a76aa25b071f1fc17977602cfbce37bd",
+      "backend/app/ops/routes.py": "0810036e340639805129ad60f997a74c4dd5e83185e143c001e23b4075a1696b",
+      "backend/app/ops/status.py": "c8e676ad157669fb164d76061f9af323864542bf5115373a8fe1faf8de4fc446",
+      "backend/app/proof/package.py": "228f566389bb22f6c154e3252069e335a0ded9680dc2e214e88b24df3dcc1cc2",
+      "backend/app/security/deployment.py": "8663f232f8005228decee5e3973069d49cf30ba304c3ca8a8e6f9aeacc1b37db",
+      "backend/app/security/network_guard.py": "836a5de73909469c1baf1b9bc0c51ec11a4a850aff8e0e8c14a91e50a5b34703",
+      "backend/app/security/release_package.py": "909b9e3b21bd23d3bec2962680315be5d289efc74c29b9602b4c9d1f9ca804f6",
+      "backend/app/security/workspace.py": "97674fe23867832097c2966f5fc057132e30253a19ed34f3bdbc188d66ef5df7",
+      "backend/main.py": "b9a2377508e35935ffe32c6f2f9fb8828b28829caa44313c0fd517db9e91594b",
+      "scripts/build_competition_release.py": "0ae476790c07603a87784b3d036442c5c5134860a51f026f9859d0f2d43994de",
+      "scripts/finalize_phase2.py": "f36c7358b11baf4169a6bd9e23cfb49eb71c306877416405f7fb417e56b2f83d",
+      "scripts/record_phase2_regression.py": "c6032b5a9de83e128d086d17843501a325876e3b0f6151d237e5150fd96b8f46",
+      "scripts/run_phase2_benchmarks.py": "895408f18d315f8a85fefcba8a5c8bc4afe016d03ada6e5a16fd115ee349df11",
+      "scripts/run_phase2_complete.sh": "d02a99e90006d2563c816aa4f09381c31e2accaa3e719e259ac13c5d56b55594",
+      "scripts/run_phase2_security_selftest.py": "4bb644b69e7dc6414cef14eb5e098836967c12784b28146cf992fd5fa329ce4d",
+      "scripts/verify_competition_release.py": "b59a1ee2dc16a3fe875885aef4dd9509a41e7973940b66807ee0474e4bdb9d49",
+      "scripts/verify_phase2_freeze.py": "987f24450f27cdb00244bdc8a6091f587fbe309e4a78f7db374d4faf7a69afa1"
+    },
+    "regression": {
+      "all_passed": true,
+      "openapi_written": true,
+      "pytest_failed": 0,
+      "pytest_passed": 254,
+      "run_checks_exit_zero": true,
+      "schema": "veilgraph.phase2-full-regression.v2",
+      "typescript_typecheck": true,
+      "vite_production_build": true,
+      "warnings": 5
+    },
+    "release": {
+      "entry_count": 342,
+      "path": "competition/releases/veilgraph-sih-phase2-sanitized.zip",
+      "sha256": "5050e199b1ca9759f0e64a8751b1df096f2faa19dd5b397dd90f28c34367f950",
+      "size_bytes": 1610838,
+      "verification_valid": true
+    },
+    "schema": "veilgraph.phase2-freeze.v2",
+    "security": {
+      "all_passed": true,
+      "checks_passed": 9,
+      "checks_total": 9
+    },
+    "signer": {
+      "algorithm": "Ed25519",
+      "public_key_b64": "pK+Gb/ivpEJOEv4i4HIykHJOPUghXGvlmDqd5aeXEjw=",
+      "public_key_sha256": "38ba2d121c5e91a52dbbefc6372c267e3de94c33a54616f3a0ab96bf71aa4703"
+    },
+    "status": "COMPLETE_AND_FROZEN"
+  },
+  "signature_algorithm": "Ed25519",
+  "signature_b64": "6yOAGeYJNmmdDQ/W7Hf0Wm5vuYj0E3GWjZmgKK/mlGGo3/EBe2F1Or575WMs+UaN/wWqMQ6uL9G47sHgUKblAw=="
+}

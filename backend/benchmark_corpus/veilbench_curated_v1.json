@@ -1,0 +1,237 @@
+{
+  "schema": "veilgraph.benchmark-corpus.v1",
+  "name": "VeilBench Curated Identity Exposure Corpus v1",
+  "license": "CC0-1.0",
+  "description": "Fictional, locally generated benchmark cases for VeilGraph regression and accuracy measurement. No real personal data.",
+  "cases": [
+    {
+      "id": "gov-001",
+      "domain": "government",
+      "text": "Citizen name: Aarav Testperson\nMobile: +91 98765 43210\nEmail: aarav.test@example.org\nDate of birth: 11 June 2007\nAddress: 42 Test Road Bengaluru Karnataka\nPIN code: 560038\nCase reference: VG-TEST-2026-001",
+      "entities": [
+        ["PERSON_NAME", "Aarav Testperson"], ["PHONE", "+91 98765 43210"], ["EMAIL", "aarav.test@example.org"],
+        ["DATE_OF_BIRTH", "11 June 2007"], ["STREET_ADDRESS", "42 Test Road Bengaluru Karnataka"],
+        ["POSTCODE", "560038"], ["CASE_REFERENCE", "VG-TEST-2026-001"]
+      ]
+    },
+    {
+      "id": "gov-002",
+      "domain": "government",
+      "text": "Applicant: Meera Sampleperson\nAadhaar: 1234 5678 9012\nPAN: ABCDE1234F\nCity: Bengaluru\nAge: 22",
+      "entities": [
+        ["PERSON_NAME", "Meera Sampleperson"], ["AADHAAR_LIKE", "1234 5678 9012"], ["PAN_LIKE", "ABCDE1234F"],
+        ["LOCALITY", "Bengaluru"], ["AGE", "22"]
+      ]
+    },
+    {
+      "id": "hr-001",
+      "domain": "hr",
+      "text": "Employee name: Isha Demoperson\nEmployer: Example Systems Private Limited\nJob title: Junior Security Analyst\nEmail: isha.demo@example.org\nPhone: 9988776655",
+      "entities": [
+        ["PERSON_NAME", "Isha Demoperson"], ["EMPLOYER", "Example Systems Private Limited"], ["JOB_TITLE", "Junior Security Analyst"],
+        ["EMAIL", "isha.demo@example.org"], ["PHONE", "9988776655"]
+      ]
+    },
+    {
+      "id": "health-001",
+      "domain": "healthcare",
+      "text": "Patient name: Rohan Fictional\nDOB: 05/09/2006\nAge: 19 years\nHome address: 81 Demo Street Mysuru Karnataka\nPostal code: 570001",
+      "entities": [
+        ["PERSON_NAME", "Rohan Fictional"], ["DATE_OF_BIRTH", "05/09/2006"], ["AGE", "19 years"],
+        ["STREET_ADDRESS", "81 Demo Street Mysuru Karnataka"], ["POSTCODE", "570001"]
+      ]
+    },
+    {
+      "id": "education-001",
+      "domain": "education",
+      "text": "Student name: Kavya Example\nEmail: kavya.student@example.edu\nMobile: +91-91234-56789\nCity: Bengaluru\nOrganisation: Example Institute of Technology",
+      "entities": [
+        ["PERSON_NAME", "Kavya Example"], ["EMAIL", "kavya.student@example.edu"], ["PHONE", "+91-91234-56789"],
+        ["LOCALITY", "Bengaluru"], ["EMPLOYER", "Example Institute of Technology"]
+      ]
+    },
+    {
+      "id": "legal-001",
+      "domain": "legal",
+      "text": "Witness name: Dev Testcase\nCase ref: CASE-2026-7788\nContact: 080 4123 4567\nResidential address: 17 Fiction Lane Bengaluru\nPIN: 560001",
+      "entities": [
+        ["PERSON_NAME", "Dev Testcase"], ["CASE_REFERENCE", "CASE-2026-7788"], ["PHONE", "080 4123 4567"],
+        ["STREET_ADDRESS", "17 Fiction Lane Bengaluru"], ["POSTCODE", "560001"]
+      ]
+    },
+    {
+      "id": "finance-001",
+      "domain": "finance",
+      "text": "Account holder name: Nila Placeholder\nPAN: QWERT6789Z\nEmail: nila.placeholder@example.com\nTelephone: +91 87654 32109",
+      "entities": [
+        ["PERSON_NAME", "Nila Placeholder"], ["PAN_LIKE", "QWERT6789Z"], ["EMAIL", "nila.placeholder@example.com"],
+        ["PHONE", "+91 87654 32109"]
+      ]
+    },
+    {
+      "id": "insurance-001",
+      "domain": "insurance",
+      "text": "Beneficiary name: Arjun Synthetic\nDate of birth: 2001-04-19\nLocality: Mysuru\nApplication ID: APP_2026_10001",
+      "entities": [
+        ["PERSON_NAME", "Arjun Synthetic"], ["DATE_OF_BIRTH", "2001-04-19"], ["LOCALITY", "Mysuru"],
+        ["CASE_REFERENCE", "APP_2026_10001"]
+      ]
+    },
+    {
+      "id": "contact-001",
+      "domain": "general",
+      "text": "Contact person name: Sana Mock\nEmail: sana.mock+alerts@example.net\nPhone: (080) 4555 6677\nCompany: Example Analytics LLP",
+      "entities": [
+        ["PERSON_NAME", "Sana Mock"], ["EMAIL", "sana.mock+alerts@example.net"], ["PHONE", "(080) 4555 6677"],
+        ["EMPLOYER", "Example Analytics LLP"]
+      ]
+    },
+    {
+      "id": "family-001",
+      "domain": "government",
+      "text": "Mother's name: Priya Placeholder\nEmergency contact name: Neel Fiction\nEmergency contact phone: 9876543210\nDistrict: Bengaluru Urban",
+      "entities": [
+        ["PERSON_NAME", "Priya Placeholder"], ["PERSON_NAME", "Neel Fiction"], ["PHONE", "9876543210"],
+        ["LOCALITY", "Bengaluru Urban"]
+      ]
+    },
+    {
+      "id": "mixed-001",
+      "domain": "general",
+      "text": "Full name: Tara Example\nD.O.B.: 19-07-2004\nOccupation: Security Analyst\nEmployer: Example Cyber Labs\nReference ID: REF/2026/9911",
+      "entities": [
+        ["PERSON_NAME", "Tara Example"], ["DATE_OF_BIRTH", "19-07-2004"], ["JOB_TITLE", "Security Analyst"],
+        ["EMPLOYER", "Example Cyber Labs"], ["CASE_REFERENCE", "REF/2026/9911"]
+      ]
+    },
+    {
+      "id": "mixed-002",
+      "domain": "general",
+      "text": "Customer name: Vihaan Demo\nAddress: Flat 4 Example Residency Chennai Tamil Nadu\nPincode: 600001\nEmail: vihaan.demo@example.in\nMobile: +91 93456 78901",
+      "entities": [
+        ["PERSON_NAME", "Vihaan Demo"], ["STREET_ADDRESS", "Flat 4 Example Residency Chennai Tamil Nadu"], ["POSTCODE", "600001"],
+        ["EMAIL", "vihaan.demo@example.in"], ["PHONE", "+91 93456 78901"]
+      ]
+    },
+    {
+      "id": "negative-001",
+      "domain": "negative",
+      "text": "The meeting starts at 10:30. Order 123456 was processed on 08/08/2026. No personal contact details are present.",
+      "entities": []
+    },
+    {
+      "id": "negative-002",
+      "domain": "negative",
+      "text": "Name: test data\nCity: N/A\nAge: unknown\nCase reference: none\nThis is a deliberately non-sensitive fixture.",
+      "entities": []
+    },
+    {
+      "id": "negative-003",
+      "domain": "negative",
+      "text": "Build version 1234-5678-9012-alpha is not an Aadhaar number because it is embedded in a software version string.",
+      "entities": []
+    },
+    {
+      "id": "challenge-name-001",
+      "domain": "challenge",
+      "text": "Aarav Testperson submitted the report yesterday and requested public release.",
+      "entities": [["PERSON_NAME", "Aarav Testperson"]]
+    },
+    {
+      "id": "challenge-name-002",
+      "domain": "challenge",
+      "text": "The reviewer thanked Meera Sampleperson for completing the audit.",
+      "entities": [["PERSON_NAME", "Meera Sampleperson"]]
+    },
+    {
+      "id": "challenge-address-001",
+      "domain": "challenge",
+      "text": "The letter was delivered to 51 Example Avenue Bengaluru before noon.",
+      "entities": [["STREET_ADDRESS", "51 Example Avenue Bengaluru"]]
+    },
+    {
+      "id": "challenge-employer-001",
+      "domain": "challenge",
+      "text": "Kavya works at Example Institute of Technology as a Security Analyst.",
+      "entities": [["EMPLOYER", "Example Institute of Technology"], ["JOB_TITLE", "Security Analyst"]]
+    },
+    {
+      "id": "ocr-corruption-001",
+      "domain": "challenge",
+      "text": "Email: aarav.test @ example.org\nMobile: +91 98765 43210",
+      "entities": [["EMAIL", "aarav.test @ example.org"], ["PHONE", "+91 98765 43210"]]
+    },
+    {
+      "id": "phone-short-001",
+      "domain": "general",
+      "text": "Telephone: 41234567",
+      "entities": [["PHONE", "41234567"]]
+    },
+    {
+      "id": "phone-negative-date",
+      "domain": "negative",
+      "text": "Date of birth: 11-06-2007\nReference ID: VG-2026-00421",
+      "entities": [["DATE_OF_BIRTH", "11-06-2007"], ["CASE_REFERENCE", "VG-2026-00421"]]
+    },
+    {
+      "id": "pan-case-001",
+      "domain": "government",
+      "text": "PAN identifier abcde1234f was supplied for this fictional record.",
+      "entities": [["PAN_LIKE", "abcde1234f"]]
+    },
+    {
+      "id": "aadhaar-hyphen-001",
+      "domain": "government",
+      "text": "Aadhaar-like credential: 4321-8765-2109",
+      "entities": [["AADHAAR_LIKE", "4321-8765-2109"]]
+    },
+    {
+      "id": "email-multiple-001",
+      "domain": "general",
+      "text": "Primary email: alpha.user@example.org\nBackup email: beta.user@example.net",
+      "entities": [["EMAIL", "alpha.user@example.org"], ["EMAIL", "beta.user@example.net"]]
+    },
+    {
+      "id": "age-boundary-001",
+      "domain": "general",
+      "text": "Age: 0\nGuardian's name: Reva Sample",
+      "entities": [["AGE", "0"], ["PERSON_NAME", "Reva Sample"]]
+    },
+    {
+      "id": "age-boundary-002",
+      "domain": "general",
+      "text": "Age: 120\nNominee's name: Om Test",
+      "entities": [["AGE", "120"], ["PERSON_NAME", "Om Test"]]
+    },
+    {
+      "id": "postcode-001",
+      "domain": "general",
+      "text": "Postal code: 110001\nDistrict: New Delhi",
+      "entities": [["POSTCODE", "110001"], ["LOCALITY", "New Delhi"]]
+    },
+    {
+      "id": "case-reference-001",
+      "domain": "legal",
+      "text": "Case reference: NTRO_REDACT_2026_01",
+      "entities": [["CASE_REFERENCE", "NTRO_REDACT_2026_01"]]
+    },
+    {
+      "id": "label-nextline-001",
+      "domain": "form",
+      "text": "Name:\nAditi Demo\nAge:\n21\nCity:\nBengaluru",
+      "entities": [["PERSON_NAME", "Aditi Demo"], ["AGE", "21"], ["LOCALITY", "Bengaluru"]]
+    },
+    {
+      "id": "multiline-001",
+      "domain": "form",
+      "text": "Employer:\nExample Defence Research Lab\nJob title:\nResearch Associate\nApplication ID:\nAPP-REDACT-2026",
+      "entities": [["EMPLOYER", "Example Defence Research Lab"], ["JOB_TITLE", "Research Associate"], ["CASE_REFERENCE", "APP-REDACT-2026"]]
+    },
+    {
+      "id": "email-negative-001",
+      "domain": "negative",
+      "text": "The symbol @ appears in documentation, but there is no complete email address here. Version example.org is only a domain.",
+      "entities": []
+    }
+  ]
+}

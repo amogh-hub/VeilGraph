@@ -1,0 +1,66 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "detail": "CASE_REFERENCE, DATE_OF_BIRTH, EMAIL, EMPLOYER, PERSON_NAME, PHONE, STREET_ADDRESS",
+      "elapsed_ms": 681,
+      "expected": "DETECTED",
+      "name": "rotated_90_degree_scan",
+      "observed": "DETECTED",
+      "passed": true
+    },
+    {
+      "detail": "phone_mentions=12 pages=12",
+      "elapsed_ms": 2739,
+      "expected": "PRESERVED",
+      "name": "twelve_page_cross_page_consistency",
+      "observed": "PRESERVED",
+      "passed": true
+    },
+    {
+      "detail": "Password-protected or encrypted PDFs are not accepted",
+      "elapsed_ms": 20,
+      "expected": "REJECTED",
+      "name": "encrypted_pdf",
+      "observed": "REJECTED",
+      "passed": true
+    },
+    {
+      "detail": "PDF page 1 exceeds the safe rendering budget (933,669,136 pixels > 30,000,000)",
+      "elapsed_ms": 0,
+      "expected": "REJECTED",
+      "name": "oversized_render_geometry",
+      "observed": "REJECTED",
+      "passed": true
+    },
+    {
+      "detail": "Invalid PDF: Failed to open stream",
+      "elapsed_ms": 0,
+      "expected": "REJECTED",
+      "name": "malformed_pdf",
+      "observed": "REJECTED",
+      "passed": true
+    },
+    {
+      "detail": "evilX-Injected_ yes.pdf",
+      "elapsed_ms": 0,
+      "expected": "SANITIZED",
+      "name": "filename_header_injection",
+      "observed": "SANITIZED",
+      "passed": true
+    },
+    {
+      "detail": "attachment=0 metadata-cleared hidden-identifier-absent",
+      "elapsed_ms": 206,
+      "expected": "SCRUBBED",
+      "name": "hidden_metadata_attachment_text",
+      "observed": "SCRUBBED",
+      "passed": true
+    }
+  ],
+  "offline": true,
+  "passed": 7,
+  "suite": "VeilGraph Final Hardening Pass 2 stress matrix",
+  "total": 7,
+  "version": "0.5.2-final-hardening-2"
+}

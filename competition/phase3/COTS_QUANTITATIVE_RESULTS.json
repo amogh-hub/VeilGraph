@@ -1,0 +1,121 @@
+{
+  "acceptance": {
+    "commercial_cots_executed": true,
+    "external_off_the_shelf_executed": true,
+    "veilgraph_executed": true
+  },
+  "claim_boundary": "NOT_EXECUTED systems have no substituted marketing numbers. Commercial execution may incur vendor charges and requires explicit credentials/flag.",
+  "dataset": {
+    "label_accounting": {
+      "language:en": 100,
+      "task:ai4privacy-en": 100
+    },
+    "name": "PIIMB: PII Masking Benchmark",
+    "path_name": "test_sentences.jsonl",
+    "rows": 100,
+    "sha256": "5ff46f3a80316318794f94596fa374060d70f2f32a85909f958cbabc70bae41f",
+    "task": "ai4privacy-en"
+  },
+  "generated_at_unix": 1786646132,
+  "literal_ntro_cots_requirement_closed": true,
+  "metric": "character-level label-agnostic PII coverage, identical rows for every executed system",
+  "schema": "veilgraph.cots-quantitative.v1",
+  "systems": [
+    {
+      "errors": 0,
+      "metadata": {
+        "detector": "Broad PII v5 + Semantic NER v3",
+        "runtime_external_model_api": false
+      },
+      "metrics": {
+        "f1": 0.836226,
+        "f2": 0.793413,
+        "fn_characters": 402,
+        "fp_characters": 117,
+        "fpr": 0.014903,
+        "non_pii_characters": 7851,
+        "precision": 0.918863,
+        "recall": 0.767226,
+        "tp_characters": 1325
+      },
+      "performance": {
+        "mean_row_ms": 4.493034,
+        "median_row_ms": 3.418458,
+        "p95_row_ms": 8.871973,
+        "rows_per_second": 222.296053,
+        "wall_seconds": 0.449851
+      },
+      "rows": 100,
+      "status": "EXECUTED",
+      "system": "VeilGraph"
+    },
+    {
+      "errors": 0,
+      "metadata": {
+        "deployment": "local",
+        "nlp_engine": "spaCy",
+        "package": "presidio-analyzer",
+        "presidio_published_python_range_note": "outside Presidio published 3.10-3.13 support range; benchmark executed only if smoke/runtime succeeds",
+        "python": "3.14.6",
+        "spacy_model": "en_core_web_sm-3.8.0",
+        "spacy_version": "3.8.13",
+        "version": "installed"
+      },
+      "metrics": {
+        "f1": 0.675,
+        "f2": 0.68268,
+        "fn_characters": 539,
+        "fp_characters": 605,
+        "fpr": 0.07706,
+        "non_pii_characters": 7851,
+        "precision": 0.662577,
+        "recall": 0.687898,
+        "tp_characters": 1188
+      },
+      "performance": {
+        "mean_row_ms": 8.086598,
+        "median_row_ms": 6.941876,
+        "p95_row_ms": 13.243635,
+        "rows_per_second": 123.566608,
+        "wall_seconds": 0.80928
+      },
+      "rows": 100,
+      "status": "EXECUTED",
+      "system": "Microsoft Presidio"
+    },
+    {
+      "reason": "AWS adapter unavailable: RuntimeError: AWS_REGION/AWS_DEFAULT_REGION is required",
+      "status": "NOT_EXECUTED",
+      "system": "AWS Comprehend PII"
+    },
+    {
+      "errors": 0,
+      "metadata": {
+        "deployment": "commercial cloud",
+        "endpoint_host": "veilgraph-cots-pii-amogh.cognitiveservices.azure.com",
+        "service": "Azure AI Language PII"
+      },
+      "metrics": {
+        "f1": 0.742108,
+        "f2": 0.729594,
+        "fn_characters": 481,
+        "fp_characters": 385,
+        "fpr": 0.049038,
+        "non_pii_characters": 7851,
+        "precision": 0.763948,
+        "recall": 0.721482,
+        "tp_characters": 1246
+      },
+      "performance": {
+        "mean_row_ms": 105.692449,
+        "median_row_ms": 82.160854,
+        "p95_row_ms": 144.229616,
+        "rows_per_second": 9.459439,
+        "wall_seconds": 10.571451
+      },
+      "rows": 100,
+      "status": "EXECUTED",
+      "system": "Azure AI Language PII"
+    }
+  ]
+}

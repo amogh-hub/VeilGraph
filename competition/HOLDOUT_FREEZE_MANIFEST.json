@@ -1,0 +1,212 @@
+{
+  "frozen_detector": "Broad-Coverage PII Engine v3",
+  "holdout_task": "nemotron-pii",
+  "locked_files": [
+    {
+      "path": "backend/app/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/api/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/api/routes.py",
+      "sha256": "846755794e474f210fec00c3ccdeb77e39dc1e8721b7aa9006f7cfe1bb7da6ba"
+    },
+    {
+      "path": "backend/app/audit/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/audit/ledger.py",
+      "sha256": "97c8df598ce301de2ad400b1907e6e83fb1ad960606f233f84eda98356127af1"
+    },
+    {
+      "path": "backend/app/benchmark/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/benchmark/openpii.py",
+      "sha256": "25c3207dc6f1e953071c049647354d92cea82be1a11cb71fec4fbdc212851e03"
+    },
+    {
+      "path": "backend/app/benchmark/piimb.py",
+      "sha256": "e72084f4a60ad6503962c65e8e25b3d3bdd83adf87c4fc94b677a94119e5d65a"
+    },
+    {
+      "path": "backend/app/benchmark/veilbench.py",
+      "sha256": "7beb6fe35b15427cf593b9a25a91bc4ffecc7ee7039b394404b4d22e16ae5078"
+    },
+    {
+      "path": "backend/app/core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/core/config.py",
+      "sha256": "c5b632975965411a15aca4b873c313450b13e6f43e81025e026a05e3c427ca1f"
+    },
+    {
+      "path": "backend/app/core/database.py",
+      "sha256": "8ae0fe70942020253758a63adcbf80d70c0e07315fe0391cd2d85ae0a3ed836a"
+    },
+    {
+      "path": "backend/app/core/enums.py",
+      "sha256": "11e609249a449947e4eef02c7477fc40ca09de77e98be2a91d6e857a3e0a89ed"
+    },
+    {
+      "path": "backend/app/core/schemas.py",
+      "sha256": "4dc5d1656adc2594c43c24bb94c949c0a80e8b595ddf422126cc3f61e2d2806b"
+    },
+    {
+      "path": "backend/app/detection/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/detection/broad_pii.py",
+      "sha256": "e842c6d390826586219196d6aab249b1303f42644c7faa63bc646f7fef30b852"
+    },
+    {
+      "path": "backend/app/detection/direct_identifiers.py",
+      "sha256": "115f59bfa4a662e3a97e33d49c0abf82561853d3b7c6c90994674ab9343ce1d0"
+    },
+    {
+      "path": "backend/app/detection/models.py",
+      "sha256": "88e1466fdf1c0941d7c8d1e3b9dc39c90cf4950aec2170a71f31262c3b801973"
+    },
+    {
+      "path": "backend/app/detection/person_names.py",
+      "sha256": "00a0afbd056e770a56207b64de7017892c2c1468652e8e012d03ccd340a686a2"
+    },
+    {
+      "path": "backend/app/detection/pipeline.py",
+      "sha256": "504a7fc3291c9543782a90b08ebb2c4bc80c3fb6baa8311bc44617cb495febfb"
+    },
+    {
+      "path": "backend/app/detection/quasi_identifiers.py",
+      "sha256": "ce7cc91f7fae6f11e0256709a7a6a43fb1eeb43a47a79534316d90e10e802f73"
+    },
+    {
+      "path": "backend/app/detection/semantic_ner.py",
+      "sha256": "71bc441b4c8e9294b00173f35fd415862f516c1d059bf4e8082f7816ada882c3"
+    },
+    {
+      "path": "backend/app/detection/visual_detector.py",
+      "sha256": "723e74026a06a54b9551fb3d7a8576b4982f8e9e0ba24870157b0d6234def639"
+    },
+    {
+      "path": "backend/app/extraction/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/extraction/document_processor.py",
+      "sha256": "f0d1989399129d677f6479a6a51b9589c80a40b95a92c09e1cb25755d3b5484c"
+    },
+    {
+      "path": "backend/app/extraction/structured_data.py",
+      "sha256": "8fe79a5cd9bd7eb2277c430dee10230342939dd482b501c2daa19aea0ba5dee0"
+    },
+    {
+      "path": "backend/app/extraction/text_formats.py",
+      "sha256": "08daef790c1e675e8b2ca5ac22f35017f118faa3b42288124871e51cbdcb2852"
+    },
+    {
+      "path": "backend/app/graph/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/graph/exposure_graph.py",
+      "sha256": "d95c8b2c1778938f35866e71c22925cda949686da8aa5bca30763c336d7e6a50"
+    },
+    {
+      "path": "backend/app/ingestion/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/ingestion/validator.py",
+      "sha256": "a09660c9ac3b26705fe30400322c18e66e5bdd50fe03af839b11b87b9a255e72"
+    },
+    {
+      "path": "backend/app/ir/__init__.py",
+      "sha256": "8c2357ea0c7985ac8fe5f75f7311df5ea87bd9fb86cea70f985572dedc17d68f"
+    },
+    {
+      "path": "backend/app/ir/privacy_ir.py",
+      "sha256": "c85e349b4afbb5e31b58c098023560dc6c278f20128a0c8d9e1d062bf8914724"
+    },
+    {
+      "path": "backend/app/policy/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/policy/compiler.py",
+      "sha256": "c8007c998c54ae1840883186286505a9c80f0ee25c5460584b672733332c23df"
+    },
+    {
+      "path": "backend/app/presentation/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/presentation/preview.py",
+      "sha256": "d3cdad603b0265372bdf88a707b9ebaa9727f289ba47f86c3caf71f8682b718d"
+    },
+    {
+      "path": "backend/app/proof/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/proof/certificate.py",
+      "sha256": "54223fd23118046d25e0f3ab8da41d97aa570abe08e68ea34bac7559e3654d38"
+    },
+    {
+      "path": "backend/app/proof/package.py",
+      "sha256": "e91824703eb969d10fbb9abd1cc9e0171d1d3a087e2543d6599918a21f2247ee"
+    },
+    {
+      "path": "backend/app/security/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/security/network_guard.py",
+      "sha256": "ffce861481948fdf046b76af847981aaa938cf7239c2c48e27c5afcd3f83afec"
+    },
+    {
+      "path": "backend/app/security/signing.py",
+      "sha256": "c5a518515ccfe36bc79aa72ccaea558c23fae30c7fc78caa7ca1599af1deb608"
+    },
+    {
+      "path": "backend/app/security/workspace.py",
+      "sha256": "59e70d190d8824ffb9033470336e5ad9bf0e24f40c7331d07fcaaac689882aae"
+    },
+    {
+      "path": "backend/app/transformation/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/transformation/sanitizer.py",
+      "sha256": "b7a100c1689dc661bf70d37447017da6f25190f5c362e9bdcdd814f82b082eba"
+    },
+    {
+      "path": "backend/app/verification/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/verification/red_team.py",
+      "sha256": "0c1e33594e1e25a55aad061f836c433877e05d1269a65d60c159b6bcdb44f831"
+    },
+    {
+      "path": "backend/models/semantic_ner_v1.json",
+      "sha256": "70c5e10654daff5b0ee65e6e3f9b8ba744cc0426eb253c19ece92c4c949df903"
+    }
+  ],
+  "piimb_input_sha256": "5ff46f3a80316318794f94596fa374060d70f2f32a85909f958cbabc70bae41f",
+  "policy": {
+    "holdout_must_not_be_used_to_tune_v3": true,
+    "production_detector_must_match_manifest": true,
+    "report_is_post_freeze_generalization_evidence": true
+  },
+  "schema": "veilgraph.holdout-freeze.v1",
+  "source_snapshot": "veilgraph-sih-final-135passed-v3-frozen.zip",
+  "source_snapshot_sha256": "89d6a287c71b6d4010d5e40100dc0a0f22b89e743ab912011ecf6b665713b01d",
+  "verified_test_baseline": 135
+}

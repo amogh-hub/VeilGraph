@@ -1,0 +1,49 @@
+{
+  "all_passed": true,
+  "checks": {
+    "all_training_scripts_present": true,
+    "current_corpus_matches_phase1_freeze": true,
+    "current_model_matches_phase1_freeze": true,
+    "current_training_examples_2330": true,
+    "current_version_is_3_0_0": true,
+    "future_promotion_requires_new_version_and_freeze": true,
+    "operational_uploads_not_training_data": true,
+    "runtime_network_not_required": true,
+    "three_versioned_generations_present": true
+  },
+  "generated_at": "2026-08-13T18:35:17.241981+00:00",
+  "generations": [
+    {
+      "generation": 1,
+      "model_sha256": "70c5e10654daff5b0ee65e6e3f9b8ba744cc0426eb253c19ece92c4c949df903",
+      "schema": "veilgraph.semantic-ner.linear.v1",
+      "training_corpus_sha256": "76ba810afbce192aaf288a08675279ad22181cb4386a2c3cdc6a5dfc6d014729",
+      "training_examples": 26,
+      "training_script": "backend/train_semantic_ner.py",
+      "training_script_exists": true,
+      "version": "1.0.0"
+    },
+    {
+      "generation": 2,
+      "model_sha256": "56a2719936d8f7ebd1bc12bc16c435765beea9d73cc662c0c3ea0b83dadf123a",
+      "schema": "veilgraph.semantic-ner.linear.v2",
+      "training_corpus_sha256": "8f604867077c48beedd793ec808f882c06b65bc016cb1a0c5c8b418c690cf840",
+      "training_examples": 97,
+      "training_script": "scripts/train_semantic_ner_v2.py",
+      "training_script_exists": true,
+      "version": "2.0.0"
+    },
+    {
+      "generation": 3,
+      "model_sha256": "37f7e935d497874cff3bbb8038eb1b03519b9c283a35b99eb8cb075db9652d59",
+      "schema": "veilgraph.semantic-ner.linear.v3",
+      "training_corpus_sha256": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df",
+      "training_examples": 2330,
+      "training_script": "scripts/train_semantic_ner_v3.py",
+      "training_script_exists": true,
+      "version": "3.0.0"
+    }
+  ],
+  "policy": "Operational uploads are never silently used for training. Model improvement is an offline, versioned, evaluated and re-frozen release process.",
+  "schema": "veilgraph.controlled-model-learning-evidence.v1"
+}

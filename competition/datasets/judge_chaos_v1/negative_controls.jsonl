@@ -1,0 +1,6 @@
+{"file":"01_blank_tabs.txt","format":"TXT","entity_type":"PERSON_NAME","value":"Alias note","reason":"field prose, not a person"}
+{"file":"02_unicode_mixed.md","format":"MD","entity_type":"PERSON_NAME","value":"Mixed-script evaluation","reason":"heading, not a person"}
+{"file":"02_unicode_mixed.md","format":"MD","entity_type":"EMPLOYER","value":"generalisation stress cases","reason":"test description, not an organisation"}
+{"file":"02_unicode_mixed.md","format":"MD","entity_type":"PERSON_NAME","value":"longitudinal recall","reason":"metric concept, not a person"}
+{"file":"03_dense_inline.rtf","format":"RTF","entity_type":"PERSON_NAME","value":"Dense inline","reason":"fixture title, not a person"}
+{"file":"03_dense_inline.rtf","format":"RTF","entity_type":"LOCALITY","value":"end","reason":"delimiter sentinel, not a locality"}

@@ -1,0 +1,13 @@
+Name,Email,Phone,Age,City,Cohort,Score,Income,Visit Date,Treatment Group
+Dev Malhotra,dev.malhotra@example.org,+91 90000 10001,21,Bengaluru,A,61,42000,2026-01-05,Standard
+Ira Chatterjee,ira.chatterjee@example.org,+91 90000 10002,24,Bengaluru,A,66,45500,2026-01-12,Standard
+Om Pradhan,om.pradhan@example.org,+91 90000 10003,27,Mysuru,B,71,51000,2026-01-19,Enhanced
+Leena Dutta,leena.dutta@example.org,+91 90000 10004,30,Mysuru,B,76,56500,2026-01-26,Enhanced
+Yash Kulkarni,yash.kulkarni@example.org,+91 90000 10005,34,Pune,A,80,62500,2026-02-02,Standard
+Anika Bose,anika.bose@example.org,+91 90000 10006,38,Pune,C,84,69000,2026-02-09,Intensive
+Rehan Gill,rehan.gill@example.org,+91 90000 10007,42,Kochi,C,87,74500,2026-02-16,Intensive
+Maya Saxena,maya.saxena@example.org,+91 90000 10008,45,Kochi,B,90,80500,2026-02-23,Enhanced
+Kunal Roy,kunal.roy@example.org,+91 90000 10009,49,Jaipur,B,92,86000,2026-03-02,Enhanced
+Nisha Puri,nisha.puri@example.org,+91 90000 10010,53,Jaipur,C,94,92000,2026-03-09,Intensive
+Arav Mehra,arav.mehra@example.org,+91 90000 10011,57,Indore,A,96,98500,2026-03-16,Standard
+Siya Khanna,siya.khanna@example.org,+91 90000 10012,61,Indore,C,98,105000,2026-03-23,Intensive

@@ -1,0 +1,53 @@
+{
+  "all_passed": true,
+  "checks": [
+    {
+      "detail": "Secure-online mode requires a valid bearer token",
+      "name": "secure_online_auth_fail_closed",
+      "passed": true
+    },
+    {
+      "detail": "Secure-online mode requires HTTPS",
+      "name": "forwarded_https_untrusted_peer_rejected",
+      "passed": true
+    },
+    {
+      "detail": "authenticated secure-online client",
+      "name": "forwarded_https_trusted_proxy_only",
+      "passed": true
+    },
+    {
+      "detail": "VeilGraph offline mode blocked external connection to example.invalid",
+      "name": "offline_python_egress_guard",
+      "passed": true
+    },
+    {
+      "detail": "ok",
+      "name": "sqlite_quick_check",
+      "passed": true
+    },
+    {
+      "detail": "workspace=0o700 blob=0o600",
+      "name": "workspace_permissions",
+      "passed": true
+    },
+    {
+      "detail": "[{'name': 'package_size_limit', 'valid': True, 'detail': 'Proof package is within configured compressed-size limit'}, {'name': 'package_structure', 'valid': False, 'detail': 'Outer proof package contains an unsafe member path: ../escape'}]",
+      "name": "proof_zip_path_traversal",
+      "passed": true
+    },
+    {
+      "detail": "entries=1 verify=True",
+      "name": "release_secret_exclusion",
+      "passed": true
+    },
+    {
+      "detail": "Release member set does not exactly match manifest; missing=[] extra=['unmanifested-extra.txt']",
+      "name": "release_exact_member_set",
+      "passed": true
+    }
+  ],
+  "passed": 9,
+  "schema": "veilgraph.phase2-security-selftest.v2",
+  "total": 9
+}

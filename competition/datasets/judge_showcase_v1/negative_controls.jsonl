@@ -1,0 +1,8 @@
+{"file":"01_case_brief.txt","format":"TXT","entity_type":"PERSON_NAME","value":"VEILGRAPH JUDGE SHOWCASE","reason":"product heading, not a person"}
+{"file":"01_case_brief.txt","format":"TXT","entity_type":"PERSON_NAME","value":"FICTIONAL CASE","reason":"document heading, not a person"}
+{"file":"01_case_brief.txt","format":"TXT","entity_type":"EMPLOYER","value":"National Geospatial Privacy Challenge 2026","reason":"fictional event, not an employer"}
+{"file":"02_research_note.md","format":"MD","entity_type":"PERSON_NAME","value":"Cohort research handoff","reason":"heading, not a person"}
+{"file":"02_research_note.md","format":"MD","entity_type":"EMPLOYER","value":"external research partner","reason":"audience role, not an organisation name"}
+{"file":"02_research_note.md","format":"MD","entity_type":"PERSON_NAME","value":"longitudinal linkage","reason":"privacy concept, not a person"}
+{"file":"03_service_letter.rtf","format":"RTF","entity_type":"PERSON_NAME","value":"Service letter","reason":"document title, not a person"}
+{"file":"01_case_brief.txt","format":"TXT","entity_type":"LOCALITY","value":"fictional National Geospatial Privacy Challenge 2026","reason":"event phrase, not a locality"}

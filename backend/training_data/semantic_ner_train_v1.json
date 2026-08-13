@@ -1,0 +1,37 @@
+{
+  "schema": "veilgraph.semantic-ner-training.v1",
+  "license": "CC0-1.0",
+  "contains_real_pii": false,
+  "purpose": "Independent fictional context examples for training the local semantic span classifier; evaluation uses a separate hash-frozen VeilBench corpus.",
+  "examples": [
+    {"entity_type":"PERSON_NAME","accept":true,"text":"Rohan Fixture submitted the application today."},
+    {"entity_type":"PERSON_NAME","accept":true,"text":"Nikhil Sample reviewed the file before release."},
+    {"entity_type":"PERSON_NAME","accept":true,"text":"Tara Mockperson requested a correction yesterday."},
+    {"entity_type":"PERSON_NAME","accept":true,"text":"The officer thanked Tara Mockperson for the signed form."},
+    {"entity_type":"PERSON_NAME","accept":true,"text":"The coordinator contacted Isha Fixture after verification."},
+    {"entity_type":"PERSON_NAME","accept":false,"text":"Security Analyst submitted a generic template."},
+    {"entity_type":"PERSON_NAME","accept":false,"text":"Public Release requested approval."},
+    {"entity_type":"PERSON_NAME","accept":false,"text":"Identity Exposure submitted a status update."},
+
+    {"entity_type":"STREET_ADDRESS","accept":true,"text":"The parcel was delivered to 22 Sample Road Mysuru before sunset."},
+    {"entity_type":"STREET_ADDRESS","accept":true,"text":"The notice was mailed to 7 Fixture Lane Pune after review."},
+    {"entity_type":"STREET_ADDRESS","accept":true,"text":"The letter was sent to 108 Demo Street Chennai before noon."},
+    {"entity_type":"STREET_ADDRESS","accept":true,"text":"The packet was couriered to 4 Model Avenue Kochi after noon."},
+    {"entity_type":"STREET_ADDRESS","accept":false,"text":"The build was delivered to 51 Project Version Alpha before testing."},
+    {"entity_type":"STREET_ADDRESS","accept":false,"text":"The file was sent to 22 Release Candidate Beta after review."},
+
+    {"entity_type":"EMPLOYER","accept":true,"text":"Asha works at Demo Research Foundation as a Data Scientist."},
+    {"entity_type":"EMPLOYER","accept":true,"text":"Ravi worked with Sample Systems Limited as an Engineer."},
+    {"entity_type":"EMPLOYER","accept":true,"text":"Neha is employed by Fixture National Bank as an Auditor."},
+    {"entity_type":"EMPLOYER","accept":true,"text":"Dev works at Model Technology Institute as a Researcher."},
+    {"entity_type":"EMPLOYER","accept":false,"text":"The demo works at Public Release as a placeholder."},
+    {"entity_type":"EMPLOYER","accept":false,"text":"The test worked with Security Analyst as a placeholder."},
+
+    {"entity_type":"JOB_TITLE","accept":true,"text":"Asha works at Demo Research Foundation as a Data Scientist."},
+    {"entity_type":"JOB_TITLE","accept":true,"text":"Ravi worked with Sample Systems Limited as an Engineer."},
+    {"entity_type":"JOB_TITLE","accept":true,"text":"Neha is employed by Fixture National Bank as an Auditor."},
+    {"entity_type":"JOB_TITLE","accept":true,"text":"Dev works at Model Technology Institute as a Security Engineer."},
+    {"entity_type":"JOB_TITLE","accept":false,"text":"The demo works at Example Institute as a Public Release."},
+    {"entity_type":"JOB_TITLE","accept":false,"text":"The fixture works at Demo Labs as an Identity Exposure."}
+  ]
+}

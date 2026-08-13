@@ -1,0 +1,12 @@
+{
+  "all_passed": true,
+  "generated_at_unix": 1786570658,
+  "openapi_written": true,
+  "pytest_failed": 0,
+  "pytest_passed": 259,
+  "run_checks_exit_code": 0,
+  "schema": "veilgraph.phase3-full-regression.v1",
+  "typescript_typecheck": true,
+  "vite_production_build": true,
+  "warnings": 5
+}

@@ -1,0 +1,982 @@
+{
+  "datasets": [
+    {
+      "dataset_id": "VG-JUDGE-SHOWCASE-1.0",
+      "dataset_version": "1.0.0",
+      "detection": {
+        "f1": 0.9987228607918263,
+        "f2": 0.9994887525562371,
+        "false_discovery_rate": 0.002551020408163265,
+        "fn": 0,
+        "fp": 1,
+        "precision": 0.9974489795918368,
+        "recall": 1.0,
+        "tp": 391
+      },
+      "elapsed_seconds": 4.294,
+      "evidence": {
+        "correct_evidence_mentions": 398,
+        "evidence_accuracy": 0.9731051344743277,
+        "failures": {
+          "wrong-bbox-or-unit": 11
+        },
+        "ground_truth_mentions": 409,
+        "note": "Evidence score checks exact character/page/frame/bbox when the manifest provides it; structured record and decoded-text locators use source-unit correctness. Dedicated geometry regression remains authoritative for renderer alignment.",
+        "out_of_bounds_detections": 2
+      },
+      "files": [
+        {
+          "detected_unique": 9,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "01_case_brief.txt",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "TXT",
+          "fp": 0,
+          "gold_unique": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 9
+        },
+        {
+          "detected_unique": 8,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "02_research_note.md",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "MD",
+          "fp": 0,
+          "gold_unique": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        {
+          "detected_unique": 6,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "03_service_letter.rtf",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "RTF",
+          "fp": 0,
+          "gold_unique": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 6
+        },
+        {
+          "detected_unique": 13,
+          "f1": 0.9600000000000001,
+          "f2": 0.9836065573770493,
+          "false_negative_examples": [],
+          "false_positive_examples": [
+            {
+              "entity_type": "QR_CODE",
+              "normalized_value": "00"
+            }
+          ],
+          "file": "04_case_packet.pdf",
+          "file_type": "PDF",
+          "fn": 0,
+          "format": "PDF",
+          "fp": 1,
+          "gold_unique": 12,
+          "precision": 0.9230769230769231,
+          "recall": 1.0,
+          "tp": 12
+        },
+        {
+          "detected_unique": 9,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "05_scanned_application.pdf",
+          "file_type": "PDF",
+          "fn": 0,
+          "format": "PDF",
+          "fp": 0,
+          "gold_unique": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 9
+        },
+        {
+          "detected_unique": 9,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "06_identity_card.png",
+          "file_type": "IMAGE",
+          "fn": 0,
+          "format": "PNG",
+          "fp": 0,
+          "gold_unique": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 9
+        },
+        {
+          "detected_unique": 10,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "07_case_report.docx",
+          "file_type": "DOCX",
+          "fn": 0,
+          "format": "DOCX",
+          "fp": 0,
+          "gold_unique": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 10
+        },
+        {
+          "detected_unique": 108,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "08_research_records.csv",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "CSV",
+          "fp": 0,
+          "gold_unique": 108,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        },
+        {
+          "detected_unique": 108,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "09_research_records.json",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "JSON",
+          "fp": 0,
+          "gold_unique": 108,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        },
+        {
+          "detected_unique": 108,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "10_research_records.xlsx",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "XLSX",
+          "fp": 0,
+          "gold_unique": 108,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        },
+        {
+          "detected_unique": 4,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "11_privacy_clip.mp4",
+          "file_type": "VIDEO",
+          "fn": 0,
+          "format": "MP4",
+          "fp": 0,
+          "gold_unique": 4,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 4
+        }
+      ],
+      "negative_control_fpr": {
+        "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+        "false_positive_controls": 0,
+        "false_positive_rate": 0.0,
+        "negative_controls": 8,
+        "per_entity": {
+          "EMPLOYER": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 2,
+            "true_negative_controls": 2
+          },
+          "LOCALITY": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 1,
+            "true_negative_controls": 1
+          },
+          "PERSON_NAME": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 5,
+            "true_negative_controls": 5
+          }
+        },
+        "true_negative_controls": 8
+      },
+      "per_entity": {
+        "AADHAAR_LIKE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        },
+        "AGE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 40
+        },
+        "CASE_REFERENCE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 44
+        },
+        "EMAIL": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 44
+        },
+        "EMPLOYER": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 41
+        },
+        "GENERIC_DATE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 41
+        },
+        "LOCALITY": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 45
+        },
+        "PAN_LIKE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        },
+        "PERSON_NAME": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 46
+        },
+        "PHONE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 45
+        },
+        "POSTCODE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 36
+        },
+        "QR_CODE": {
+          "f1": 0.8571428571428571,
+          "f2": 0.9375,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.75,
+          "recall": 1.0,
+          "tp": 3
+        },
+        "SIGNATURE_CANDIDATE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        }
+      },
+      "per_format": {
+        "CSV": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        },
+        "DOCX": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 10
+        },
+        "JSON": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        },
+        "MD": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        "MP4": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 4
+        },
+        "PDF": {
+          "f1": 0.9767441860465117,
+          "f2": 0.9905660377358492,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.9545454545454546,
+          "recall": 1.0,
+          "tp": 21
+        },
+        "PNG": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 9
+        },
+        "RTF": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 6
+        },
+        "TXT": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 9
+        },
+        "XLSX": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 108
+        }
+      },
+      "split_role": "judge_demo_and_development",
+      "tuning_allowed": true,
+      "untouched_holdout": false
+    },
+    {
+      "dataset_id": "VG-JUDGE-CHAOS-1.0",
+      "dataset_version": "1.0.0",
+      "detection": {
+        "f1": 0.942857142857143,
+        "f2": 0.9375000000000001,
+        "false_discovery_rate": 0.04807692307692308,
+        "fn": 7,
+        "fp": 5,
+        "precision": 0.9519230769230769,
+        "recall": 0.9339622641509434,
+        "tp": 99
+      },
+      "elapsed_seconds": 3.933,
+      "evidence": {
+        "correct_evidence_mentions": 93,
+        "evidence_accuracy": 0.8611111111111112,
+        "failures": {
+          "missing": 7,
+          "wrong-bbox-or-unit": 8
+        },
+        "ground_truth_mentions": 108,
+        "note": "Evidence score checks exact character/page/frame/bbox when the manifest provides it; structured record and decoded-text locators use source-unit correctness. Dedicated geometry regression remains authoritative for renderer alignment.",
+        "out_of_bounds_detections": 1
+      },
+      "files": [
+        {
+          "detected_unique": 5,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "01_blank_tabs.txt",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "TXT",
+          "fp": 0,
+          "gold_unique": 5,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 5
+        },
+        {
+          "detected_unique": 7,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "02_unicode_mixed.md",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "MD",
+          "fp": 0,
+          "gold_unique": 7,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 7
+        },
+        {
+          "detected_unique": 5,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "03_dense_inline.rtf",
+          "file_type": "TEXT",
+          "fn": 0,
+          "format": "RTF",
+          "fp": 0,
+          "gold_unique": 5,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 5
+        },
+        {
+          "detected_unique": 8,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "04_multicolumn.pdf",
+          "file_type": "PDF",
+          "fn": 0,
+          "format": "PDF",
+          "fp": 0,
+          "gold_unique": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        {
+          "detected_unique": 8,
+          "f1": 0.9411764705882353,
+          "f2": 0.9090909090909091,
+          "false_negative_examples": [
+            {
+              "entity_type": "AADHAAR_LIKE",
+              "normalized_value": "111122223333"
+            }
+          ],
+          "false_positive_examples": [],
+          "file": "05_low_contrast_scan.pdf",
+          "file_type": "PDF",
+          "fn": 1,
+          "format": "PDF",
+          "fp": 0,
+          "gold_unique": 9,
+          "precision": 1.0,
+          "recall": 0.8888888888888888,
+          "tp": 8
+        },
+        {
+          "detected_unique": 8,
+          "f1": 0.35294117647058826,
+          "f2": 0.34090909090909094,
+          "false_negative_examples": [
+            {
+              "entity_type": "AADHAAR_LIKE",
+              "normalized_value": "111122223333"
+            },
+            {
+              "entity_type": "EMAIL",
+              "normalized_value": "arjun.bhat@example.org"
+            },
+            {
+              "entity_type": "LOCALITY",
+              "normalized_value": "mangaluru"
+            },
+            {
+              "entity_type": "PAN_LIKE",
+              "normalized_value": "ABCDE1234F"
+            },
+            {
+              "entity_type": "PERSON_NAME",
+              "normalized_value": "arjun bhat"
+            },
+            {
+              "entity_type": "PHONE",
+              "normalized_value": "919000010007"
+            }
+          ],
+          "false_positive_examples": [
+            {
+              "entity_type": "AGE",
+              "normalized_value": "29"
+            },
+            {
+              "entity_type": "GENERIC_DATE",
+              "normalized_value": "2026-07-44"
+            },
+            {
+              "entity_type": "LOCALITY",
+              "normalized_value": "mangalury"
+            },
+            {
+              "entity_type": "PERSON_NAME",
+              "normalized_value": "aun bhat"
+            },
+            {
+              "entity_type": "PHONE",
+              "normalized_value": "00010007"
+            }
+          ],
+          "file": "06_rotated_image.png",
+          "file_type": "IMAGE",
+          "fn": 6,
+          "format": "PNG",
+          "fp": 5,
+          "gold_unique": 9,
+          "precision": 0.375,
+          "recall": 0.3333333333333333,
+          "tp": 3
+        },
+        {
+          "detected_unique": 6,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "07_longline.jpg",
+          "file_type": "IMAGE",
+          "fn": 0,
+          "format": "JPEG",
+          "fp": 0,
+          "gold_unique": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 6
+        },
+        {
+          "detected_unique": 8,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "08_headers_tables.docx",
+          "file_type": "DOCX",
+          "fn": 0,
+          "format": "DOCX",
+          "fp": 0,
+          "gold_unique": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        {
+          "detected_unique": 12,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "09_messy.csv",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "CSV",
+          "fp": 0,
+          "gold_unique": 12,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 12
+        },
+        {
+          "detected_unique": 10,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "10_nested.json",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "JSON",
+          "fp": 0,
+          "gold_unique": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 10
+        },
+        {
+          "detected_unique": 25,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "11_merged_mixed.xlsx",
+          "file_type": "DATASET",
+          "fn": 0,
+          "format": "XLSX",
+          "fp": 0,
+          "gold_unique": 25,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 25
+        },
+        {
+          "detected_unique": 2,
+          "f1": 1.0,
+          "f2": 1.0,
+          "false_negative_examples": [],
+          "false_positive_examples": [],
+          "file": "12_transient.mp4",
+          "file_type": "VIDEO",
+          "fn": 0,
+          "format": "MP4",
+          "fp": 0,
+          "gold_unique": 2,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        }
+      ],
+      "negative_control_fpr": {
+        "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+        "false_positive_controls": 0,
+        "false_positive_rate": 0.0,
+        "negative_controls": 6,
+        "per_entity": {
+          "EMPLOYER": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 1,
+            "true_negative_controls": 1
+          },
+          "LOCALITY": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 1,
+            "true_negative_controls": 1
+          },
+          "PERSON_NAME": {
+            "definition": "Explicit-negative-control FPR: controls incorrectly emitted as the specified entity type / total labelled negative controls.",
+            "false_positive_controls": 0,
+            "false_positive_rate": 0.0,
+            "negative_controls": 4,
+            "true_negative_controls": 4
+          }
+        },
+        "true_negative_controls": 6
+      },
+      "per_entity": {
+        "AADHAAR_LIKE": {
+          "f1": 0.0,
+          "f2": 0.0,
+          "fn": 2,
+          "fp": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "tp": 0
+        },
+        "AGE": {
+          "f1": 0.9090909090909091,
+          "f2": 0.9615384615384615,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.8333333333333334,
+          "recall": 1.0,
+          "tp": 5
+        },
+        "CASE_REFERENCE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 16
+        },
+        "EMAIL": {
+          "f1": 0.9714285714285714,
+          "f2": 0.9550561797752809,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.9444444444444444,
+          "tp": 17
+        },
+        "EMPLOYER": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        "GENERIC_DATE": {
+          "f1": 0.6666666666666666,
+          "f2": 0.8333333333333334,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.5,
+          "recall": 1.0,
+          "tp": 1
+        },
+        "LOCALITY": {
+          "f1": 0.9285714285714286,
+          "f2": 0.9285714285714286,
+          "fn": 1,
+          "fp": 1,
+          "precision": 0.9285714285714286,
+          "recall": 0.9285714285714286,
+          "tp": 13
+        },
+        "PAN_LIKE": {
+          "f1": 0.6666666666666666,
+          "f2": 0.5555555555555556,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.5,
+          "tp": 1
+        },
+        "PERSON_NAME": {
+          "f1": 0.9473684210526315,
+          "f2": 0.9473684210526316,
+          "fn": 1,
+          "fp": 1,
+          "precision": 0.9473684210526315,
+          "recall": 0.9473684210526315,
+          "tp": 18
+        },
+        "PHONE": {
+          "f1": 0.9333333333333333,
+          "f2": 0.9333333333333333,
+          "fn": 1,
+          "fp": 1,
+          "precision": 0.9333333333333333,
+          "recall": 0.9333333333333333,
+          "tp": 14
+        },
+        "POSTCODE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 1
+        },
+        "QR_CODE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 3
+        },
+        "SIGNATURE_CANDIDATE": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        }
+      },
+      "per_format": {
+        "CSV": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 12
+        },
+        "DOCX": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 8
+        },
+        "JPEG": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 6
+        },
+        "JSON": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 10
+        },
+        "MD": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 7
+        },
+        "MP4": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 2
+        },
+        "PDF": {
+          "f1": 0.9696969696969697,
+          "f2": 0.9523809523809523,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.9411764705882353,
+          "tp": 16
+        },
+        "PNG": {
+          "f1": 0.35294117647058826,
+          "f2": 0.34090909090909094,
+          "fn": 6,
+          "fp": 5,
+          "precision": 0.375,
+          "recall": 0.3333333333333333,
+          "tp": 3
+        },
+        "RTF": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 5
+        },
+        "TXT": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 5
+        },
+        "XLSX": {
+          "f1": 1.0,
+          "f2": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 25
+        }
+      },
+      "split_role": "adversarial_development_and_regression",
+      "tuning_allowed": true,
+      "untouched_holdout": false
+    }
+  ],
+  "generated_at_unix": 1786520128,
+  "schema": "veilgraph.phase1-judge-readiness.v1"
+}

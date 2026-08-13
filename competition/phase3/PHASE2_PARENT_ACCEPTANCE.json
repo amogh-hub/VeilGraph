@@ -1,0 +1,7 @@
+{
+  "schema": "veilgraph.phase3-parent.v1",
+  "phase2_freeze_manifest_sha256": "8d106cc14331f11d20da54b1aa6c11bf8c00cd476c9c5177bfb983fdd9a6eac7",
+  "phase2_status": "COMPLETE_AND_FROZEN",
+  "verified_before_phase3_apply": true,
+  "backup": ".veilgraph-hotfix-backups/phase3-pre-grand-finale-v13-20260813-014307"
+}

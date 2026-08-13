@@ -1,0 +1,145 @@
+{
+  "schema": "veilgraph.broad-pii-v5-freeze.v1",
+  "detector": "Broad PII v5 \u2014 Generalization Hardening",
+  "freeze_date": "2026-08-12",
+  "purpose": "Freeze the exact live Broad PII v5 detector/model surface before first requesting the Ari synthetic TEST holdout rows.",
+  "frozen_files": [
+    {
+      "path": "backend/app/detection/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/app/detection/broad_pii.py",
+      "sha256": "c2c756464a44cffe08ae632a104755298fff35593ac441b33d89a082fd11cfa6"
+    },
+    {
+      "path": "backend/app/detection/contextual_v4.py",
+      "sha256": "b0c16cca88da7e2ce4bf3109f10f653da9f6cbbb39bb75bbdb8876dae253b5c5"
+    },
+    {
+      "path": "backend/app/detection/direct_identifiers.py",
+      "sha256": "115f59bfa4a662e3a97e33d49c0abf82561853d3b7c6c90994674ab9343ce1d0"
+    },
+    {
+      "path": "backend/app/detection/docx_context.py",
+      "sha256": "ce971b48cb095da155e895d3581446de988b9d60e8e9e4616e4e87a5f6c16839"
+    },
+    {
+      "path": "backend/app/detection/generalization_v5.py",
+      "sha256": "a4901ffa09da35bc403385c725d53b3aee41230e789c7223fa40ae27aae6d295"
+    },
+    {
+      "path": "backend/app/detection/models.py",
+      "sha256": "88e1466fdf1c0941d7c8d1e3b9dc39c90cf4950aec2170a71f31262c3b801973"
+    },
+    {
+      "path": "backend/app/detection/person_names.py",
+      "sha256": "00a0afbd056e770a56207b64de7017892c2c1468652e8e012d03ccd340a686a2"
+    },
+    {
+      "path": "backend/app/detection/pipeline.py",
+      "sha256": "7fe3db7e6320797a904eaa5b3e51f7d939c17af8ca99742765fcddc8c4773783"
+    },
+    {
+      "path": "backend/app/detection/quasi_identifiers.py",
+      "sha256": "ce7cc91f7fae6f11e0256709a7a6a43fb1eeb43a47a79534316d90e10e802f73"
+    },
+    {
+      "path": "backend/app/detection/semantic_ner.py",
+      "sha256": "71bc441b4c8e9294b00173f35fd415862f516c1d059bf4e8082f7816ada882c3"
+    },
+    {
+      "path": "backend/app/detection/semantic_ner_v2.py",
+      "sha256": "de913097c8c0b3129246b6884307a9125e742f4f485e31ce900c6fd96d752b19"
+    },
+    {
+      "path": "backend/app/detection/semantic_ner_v3.py",
+      "sha256": "57a34d494971ea07f2e78aab355d120e3e8f45afa6a3c4190ba8c6cf3e352e79"
+    },
+    {
+      "path": "backend/app/detection/video_context.py",
+      "sha256": "0af28b70b126dbaa513f1798eceb0492a816dcae9770e979ab21a91d7b1ea693"
+    },
+    {
+      "path": "backend/app/detection/visual_detector.py",
+      "sha256": "f98a09860f200630ac6eb2091ced9d3e0922fe2103809d12a3140f02a26d2178"
+    },
+    {
+      "path": "backend/app/extraction/document_processor.py",
+      "sha256": "b7151453ff14a0b64ad385dcfed1799f9fc3fcb6fa58db4bf4882dfadad76ef2"
+    },
+    {
+      "path": "backend/app/extraction/structured_data.py",
+      "sha256": "6d769037ead9614345a347b24354d0c9d90d6034ce75389b564c8fea398e1568"
+    },
+    {
+      "path": "backend/models/semantic_ner_v1.json",
+      "sha256": "70c5e10654daff5b0ee65e6e3f9b8ba744cc0426eb253c19ece92c4c949df903"
+    },
+    {
+      "path": "backend/models/semantic_ner_v2.json",
+      "sha256": "56a2719936d8f7ebd1bc12bc16c435765beea9d73cc662c0c3ea0b83dadf123a"
+    },
+    {
+      "path": "backend/models/semantic_ner_v3.json",
+      "sha256": "37f7e935d497874cff3bbb8038eb1b03519b9c283a35b99eb8cb075db9652d59"
+    },
+    {
+      "path": "backend/training_data/semantic_ner_train_v2.json",
+      "sha256": "8f604867077c48beedd793ec808f882c06b65bc016cb1a0c5c8b418c690cf840"
+    },
+    {
+      "path": "backend/training_data/semantic_ner_train_v3.json",
+      "sha256": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df"
+    }
+  ],
+  "veilbench_curated_v1_sha256": "ea868e30cf474a8c286c2c87d76dd9679f090c2b5ae4b4792684b3ab5f4bb8df",
+  "development_splits": [
+    "VG-JUDGE-SHOWCASE-1.0",
+    "VG-JUDGE-CHAOS-1.0",
+    "VeilGraph synthetic semantic-context corpus v3"
+  ],
+  "consumed_holdouts": [
+    {
+      "name": "PIIMB Nemotron",
+      "generation": "v3",
+      "may_be_used_as_untouched_for_v5": false
+    },
+    {
+      "name": "TAB ECHR test",
+      "generation": "v4",
+      "documents": 127,
+      "may_be_used_as_untouched_for_v5": false
+    }
+  ],
+  "semantic_model": {
+    "name": "Semantic NER v3",
+    "version": "3.0.0",
+    "schema": "veilgraph.semantic-ner.linear.v3",
+    "runtime_network_required": false,
+    "training_examples": 2330,
+    "training_corpus_sha256": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df",
+    "model_sha256": "37f7e935d497874cff3bbb8038eb1b03519b9c283a35b99eb8cb075db9652d59",
+    "contains_real_pii": false
+  },
+  "planned_untouched_holdout": {
+    "name": "Ari PII Detection English Consolidated \u2014 held-out synthetic challenge subset",
+    "repo": "Ari-S-123/pii-detection-english-consolidated",
+    "revision": "61e7c4fcd6c569d4cc89db9cba79deab833df085",
+    "split": "test",
+    "filter": "data_source == synthetic",
+    "test_parquet_lfs_sha256": "768d415110c5726142c38bfe82270bb6109670977c9f4ac6a7e46f4f6838e471",
+    "expected_full_test_rows": 31361,
+    "expected_synthetic_test_rows": 1201,
+    "opened_before_freeze": false,
+    "used_for_v5_tuning": false,
+    "ai4privacy_rows_excluded": true
+  },
+  "external_acceptance_thresholds": {
+    "exact_f1_min": 0.5,
+    "relaxed_f1_min": 0.65,
+    "critical_recall_min": 0.75,
+    "contextual_relaxed_recall_min": 0.55,
+    "no_entity_fp_doc_rate_max": 0.2
+  }
+}

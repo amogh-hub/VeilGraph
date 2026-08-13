@@ -1,0 +1,14 @@
+VEILGRAPH JUDGE SHOWCASE — FICTIONAL CASE
+
+Subject: Aarav Menon
+Email: aarav.menon@example.org
+Phone: +91 90000 10001
+Age: 29
+Locality: Indiranagar, Bengaluru
+Employer: Orion Analytics Pvt Ltd
+Case reference: VG-CASE-26001
+Event date: 2026-07-14
+
+Context note: The subject was the only Orion Analytics delegate from Indiranagar to attend the fictional National Geospatial Privacy Challenge 2026.
+
+All people, identifiers and events in this file are fictional and created solely for VeilGraph evaluation.

@@ -1,0 +1,2 @@
+{"case_id": "SC-PDF-001", "file": "04_case_packet.pdf", "locator": {"page": 2, "type": "page"}, "related_person": "Meera Menon", "relationship": "MOTHER", "subject": "Aarav Menon"}
+{"case_id": "SC-DOCX-001", "file": "07_case_report.docx", "locator": {"type": "docx_unit", "unit": "body"}, "related_person": "Meera Iyer", "relationship": "EMERGENCY_CONTACT", "subject": "Ishita Rao"}

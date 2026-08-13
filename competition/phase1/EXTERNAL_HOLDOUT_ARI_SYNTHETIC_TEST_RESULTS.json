@@ -1,0 +1,233 @@
+{
+  "detector_freeze_manifest_sha256": "56035dfb7fcbc0bc5bceb04abbd360fd21d50a9330bc408a6488e6355c29fae1",
+  "detector_generation": "Broad PII v5",
+  "detector_tuned_on_test_rows": false,
+  "holdout_status": "UNTOUCHED_TEST_ROWS_UNTIL_BROAD_PII_V5_FREEZE",
+  "quality_gate": {
+    "checks": {
+      "contextual_relaxed_recall": {
+        "pass": true,
+        "threshold": 0.55,
+        "value": 0.6885593220338984
+      },
+      "critical_recall": {
+        "pass": false,
+        "threshold": 0.75,
+        "value": 0.5279503105590062
+      },
+      "exact_f1": {
+        "pass": false,
+        "threshold": 0.5,
+        "value": 0.410538286580743
+      },
+      "no_entity_fp_doc_rate": {
+        "not_applicable_when_no_negative_docs": true,
+        "pass": false,
+        "threshold": 0.2,
+        "value": 0.8823529411764706
+      },
+      "relaxed_f1": {
+        "pass": false,
+        "threshold": 0.65,
+        "value": 0.47568672736653783
+      }
+    },
+    "pass": false
+  },
+  "raw_holdout_persisted_in_repository": false,
+  "results": {
+    "contextual_shared_gold": 1416,
+    "contextual_shared_recall": 0.6885593220338984,
+    "critical_shared_gold": 2898,
+    "critical_shared_recall": 0.5279503105590062,
+    "documents": 1201,
+    "exact": {
+      "f1": 0.410538286580743,
+      "f2": 0.46096875798076103,
+      "fn": 2148,
+      "fp": 4072,
+      "precision": 0.34722667521641554,
+      "recall": 0.502086230876217,
+      "tp": 2166
+    },
+    "excluded_gold_label_counts": {
+      "AADHAAR": 24,
+      "ACCOUNTNUMBER": 150,
+      "AMOUNT": 3,
+      "BIC": 19,
+      "BITCOINADDRESS": 160,
+      "BUSINESS_REGISTRATION": 1,
+      "COMPANYNAME": 14,
+      "CREDITCARDISSUER": 1,
+      "CVV": 20,
+      "ETHEREUMADDRESS": 8,
+      "IBAN": 61,
+      "IPV4": 3,
+      "MASKEDNUMBER": 68,
+      "MIDDLENAME": 1,
+      "NATIONAL_INSURANCE": 31,
+      "PASSWORD": 9,
+      "PIN": 136,
+      "STATE": 4,
+      "TIME": 1,
+      "UPI_ID": 240,
+      "USERNAME": 63,
+      "VEHICLEVIN": 17,
+      "VEHICLEVRM": 85
+    },
+    "metric_note": "Primary relaxed metrics score only the predeclared shared taxonomy and require compatible entity families plus span overlap. Unsupported external labels are counted and excluded, never silently remapped. Exact metrics require compatible family and exact offsets.",
+    "negative_documents_with_no_shared_gold": 17,
+    "negative_documents_with_prediction": 15,
+    "no_entity_fp_document_rate": 0.8823529411764706,
+    "per_feature_dimension": {
+      "adversarial": {
+        "covered": 239,
+        "gold": 444,
+        "relaxed_recall": 0.5382882882882883
+      },
+      "basic": {
+        "covered": 682,
+        "gold": 970,
+        "relaxed_recall": 0.7030927835051546
+      },
+      "contextual": {
+        "covered": 442,
+        "gold": 788,
+        "relaxed_recall": 0.5609137055837563
+      },
+      "evolving": {
+        "covered": 159,
+        "gold": 272,
+        "relaxed_recall": 0.5845588235294118
+      },
+      "multilingual": {
+        "covered": 605,
+        "gold": 959,
+        "relaxed_recall": 0.6308654848800834
+      },
+      "noisy": {
+        "covered": 378,
+        "gold": 881,
+        "relaxed_recall": 0.42905788876276957
+      }
+    },
+    "per_gold_label": {
+      "CITY": {
+        "covered": 31,
+        "gold": 120,
+        "relaxed_recall": 0.25833333333333336
+      },
+      "CREDITCARDNUMBER": {
+        "covered": 69,
+        "gold": 83,
+        "relaxed_recall": 0.8313253012048193
+      },
+      "DATE": {
+        "covered": 179,
+        "gold": 220,
+        "relaxed_recall": 0.8136363636363636
+      },
+      "DOB": {
+        "covered": 405,
+        "gold": 407,
+        "relaxed_recall": 0.995085995085995
+      },
+      "DRIVERLICENSENUM": {
+        "covered": 73,
+        "gold": 116,
+        "relaxed_recall": 0.6293103448275862
+      },
+      "EMAIL": {
+        "covered": 303,
+        "gold": 325,
+        "relaxed_recall": 0.9323076923076923
+      },
+      "FIRSTNAME": {
+        "covered": 351,
+        "gold": 783,
+        "relaxed_recall": 0.4482758620689655
+      },
+      "IDCARDNUM": {
+        "covered": 127,
+        "gold": 335,
+        "relaxed_recall": 0.37910447761194027
+      },
+      "LASTNAME": {
+        "covered": 2,
+        "gold": 9,
+        "relaxed_recall": 0.2222222222222222
+      },
+      "PASSPORTNUM": {
+        "covered": 132,
+        "gold": 151,
+        "relaxed_recall": 0.8741721854304636
+      },
+      "PHONENUMBER": {
+        "covered": 358,
+        "gold": 854,
+        "relaxed_recall": 0.41920374707259955
+      },
+      "SSN": {
+        "covered": 60,
+        "gold": 107,
+        "relaxed_recall": 0.5607476635514018
+      },
+      "STREET": {
+        "covered": 204,
+        "gold": 392,
+        "relaxed_recall": 0.5204081632653061
+      },
+      "TAXNUM": {
+        "covered": 55,
+        "gold": 135,
+        "relaxed_recall": 0.4074074074074074
+      },
+      "TITLE": {
+        "covered": 3,
+        "gold": 4,
+        "relaxed_recall": 0.75
+      },
+      "ZIPCODE": {
+        "covered": 153,
+        "gold": 273,
+        "relaxed_recall": 0.5604395604395604
+      }
+    },
+    "relaxed_compatible_span_coverage": {
+      "f1": 0.47568672736653783,
+      "f2": 0.5335658351059063,
+      "gold_covered": 2505,
+      "gold_total": 4314,
+      "precision": 0.4028534786790638,
+      "prediction_supported": 2513,
+      "prediction_total": 6238,
+      "recall": 0.5806675938803895
+    },
+    "shared_taxonomy_gold_mentions": 4314,
+    "shared_taxonomy_predictions": 6238
+  },
+  "schema": "veilgraph.external-holdout.ari-synthetic-test.v1",
+  "source": {
+    "data_artifact_identity_verified": true,
+    "dataset": "Ari-S-123/pii-detection-english-consolidated",
+    "dataset_viewer_stream_sha256": "a2fab6a1aac4138357eecc53342f0fda1bddca3ebb7e01a34e4b3f8c96af381e",
+    "expected_full_test_rows": 31361,
+    "expected_synthetic_test_rows": 1201,
+    "filter": "data_source == synthetic",
+    "license": "MIT",
+    "observed_repository_head": "a3c2add092a3bfaa7dd541fdfa1185b5777f0749",
+    "observed_repository_head_after": "a3c2add092a3bfaa7dd541fdfa1185b5777f0749",
+    "revision": "61e7c4fcd6c569d4cc89db9cba79deab833df085",
+    "split": "test",
+    "test_parquet_lfs_sha256": "768d415110c5726142c38bfe82270bb6109670977c9f4ac6a7e46f4f6838e471",
+    "verified_test_parquet_sha256": "768d415110c5726142c38bfe82270bb6109670977c9f4ac6a7e46f4f6838e471"
+  },
+  "source_family_note": "The evaluated 1,201 rows are the dataset's held-out synthetic challenge split. The ai4privacy rows in the same dataset are excluded.",
+  "thresholds_predeclared_before_holdout": {
+    "contextual_relaxed_recall_min": 0.55,
+    "critical_recall_min": 0.75,
+    "exact_f1_min": 0.5,
+    "no_entity_fp_doc_rate_max": 0.2,
+    "relaxed_f1_min": 0.65
+  }
+}

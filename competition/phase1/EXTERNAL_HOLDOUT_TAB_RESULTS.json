@@ -1,0 +1,79 @@
+{
+  "detector_freeze_manifest_sha256": "5738d8f858f39ec56872c5a5aa297054c8db5311b1b1e98842feb0c1710840b4",
+  "detector_tuned_on_holdout": false,
+  "holdout_status": "UNTOUCHED_UNTIL_BROAD_PII_V4_FREEZE",
+  "raw_holdout_persisted_in_repository": false,
+  "results": {
+    "annotator_document_pairs": 555,
+    "direct_identifier_gold_mentions": 1612,
+    "direct_identifier_recall": 0.03598014888337469,
+    "documents": 127,
+    "fn": 12748,
+    "fp": 20292,
+    "mask_required_gold_mentions": 20809,
+    "metric_note": "Cross-benchmark exact normalized span-value matching. This is not the official TAB leaderboard metric; TAB's target-person masking policy and VeilGraph's broader release policy are not identical.",
+    "per_tab_entity_category": {
+      "CODE": {
+        "fn": 1612,
+        "recall": 0.0,
+        "tp": 0
+      },
+      "DATETIME": {
+        "fn": 2664,
+        "recall": 0.7206375838926175,
+        "tp": 6872
+      },
+      "DEM": {
+        "fn": 889,
+        "recall": 0.030534351145038167,
+        "tp": 28
+      },
+      "LOC": {
+        "fn": 622,
+        "recall": 0.5736806031528444,
+        "tp": 837
+      },
+      "MISC": {
+        "fn": 530,
+        "recall": 0.01303538175046555,
+        "tp": 7
+      },
+      "ORG": {
+        "fn": 1819,
+        "recall": 0.06526207605344296,
+        "tp": 127
+      },
+      "PERSON": {
+        "fn": 3949,
+        "recall": 0.04567423876268729,
+        "tp": 189
+      },
+      "QUANTITY": {
+        "fn": 663,
+        "recall": 0.0015060240963855422,
+        "tp": 1
+      }
+    },
+    "predicted_mentions_document_level": 7111,
+    "quasi_identifier_gold_mentions": 19197,
+    "quasi_identifier_recall": 0.4169401468979528,
+    "strict_span_value_f1": 0.32793621089459335,
+    "strict_span_value_f2": 0.36119151529272603,
+    "strict_span_value_precision": 0.28430853877896517,
+    "strict_span_value_recall": 0.38738046037772117,
+    "tab_no_mask_hit_rate": 0.1084052609946568,
+    "tab_no_mask_hits": 1055,
+    "tab_no_mask_mentions": 9732,
+    "tp": 8061
+  },
+  "schema": "veilgraph.external-holdout.tab.v1",
+  "source": {
+    "branch_used_for_acquisition": "master",
+    "file": "echr_test.json",
+    "git_commit": "558e09e26d6b36f5f78440074e6a233946d98bd9",
+    "license": "MIT",
+    "repository": "NorskRegnesentral/text-anonymization-benchmark",
+    "role": "TAB v1.0 ECHR test split",
+    "source_sha256": "cd0f0f15f84a8739654c7cf30c6be8ce27b051ef73974d39d792a0cb8c846379"
+  }
+}
