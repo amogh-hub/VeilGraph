@@ -43,3 +43,6 @@ competition/releases/*.zip
 *.tar.gz
 *.tgz
 *.tsbuildinfo
+
+# Local SIH26171 verification evidence (uploaded by CI, not committed)
+artifacts/verification/
