@@ -291,6 +291,7 @@ class BrowserVisualCapability(BaseModel):
 
     name: Literal[
         "SCREENSHOT_DECODE",
+        "LEARNED_FACE_DETECTION",
         "FACE_DETECTION",
         "QR_DETECTION",
         "TEXT_REGION_DETECTION",
@@ -308,6 +309,7 @@ class BrowserVisualStageTimings(BaseModel):
 
     screenshot_decode_ms: int = Field(default=0, ge=0, le=120_000)
     dom_projection_ms: int = Field(default=0, ge=0, le=120_000)
+    learned_face_ms: int = Field(default=0, ge=0, le=120_000)
     face_detection_ms: int = Field(default=0, ge=0, le=120_000)
     qr_detection_ms: int = Field(default=0, ge=0, le=120_000)
     text_region_ms: int = Field(default=0, ge=0, le=120_000)
@@ -332,6 +334,22 @@ class BrowserCaptureCoverageItem(BaseModel):
     detail: str = Field(min_length=1, max_length=512)
 
 
+class BrowserLearnedModelEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model_id: str = Field(min_length=1, max_length=128)
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    runtime: str = Field(min_length=1, max_length=128)
+    execution_provider: Literal["webgpu", "wasm", "unavailable"]
+    model_load_ms: int = Field(ge=0, le=120_000)
+    inference_ms: int = Field(ge=0, le=120_000)
+    input_width: int = Field(ge=1, le=4096)
+    input_height: int = Field(ge=1, le=4096)
+    detection_count: int = Field(ge=0, le=10_000)
+    fallback_used: bool = False
+    fallback_reason: str | None = Field(default=None, max_length=512)
+
+
 class BrowserVisualPerceptionReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -344,6 +362,7 @@ class BrowserVisualPerceptionReport(BaseModel):
     capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=32)
     finding_count: int = Field(ge=0, le=10_000)
     stage_timings_ms: BrowserVisualStageTimings = Field(default_factory=BrowserVisualStageTimings)
+    learned_model: BrowserLearnedModelEvidence | None = None
 
 
 class BrowserLocalCaptureMetadata(BaseModel):

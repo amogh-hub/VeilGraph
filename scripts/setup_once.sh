@@ -20,6 +20,8 @@ cd "$ROOT/frontend"
 npm install
 npm run generate:api
 
+python3 "$ROOT/scripts/provision_learned_vision.py"
+
 cd "$ROOT/browser-extension"
 npm install
 npm run typecheck

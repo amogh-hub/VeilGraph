@@ -1,0 +1,40 @@
+{
+  "schema": "veilgraph.browser-model-manifest.v1",
+  "model_id": "ultraface-rfb-320",
+  "filename": "version-RFB-320.onnx",
+  "sha256": "34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017",
+  "size_bytes": 1270727,
+  "input": {
+    "width": 320,
+    "height": 240,
+    "layout": "NCHW",
+    "color": "RGB",
+    "mean": [
+      127,
+      127,
+      127
+    ],
+    "scale": 0.0078125
+  },
+  "outputs": [
+    [
+      1,
+      4420,
+      2
+    ],
+    [
+      1,
+      4420,
+      4
+    ]
+  ],
+  "source": "https://huggingface.co/onnxmodelzoo/version-RFB-320",
+  "source_revision": "6fd293d22b523ec88959f104b8eef5395e3adfbc",
+  "download_url": "https://huggingface.co/onnxmodelzoo/version-RFB-320/resolve/6fd293d22b523ec88959f104b8eef5395e3adfbc/version-RFB-320.onnx?download=true",
+  "upstream_project": "https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB",
+  "license": "MIT",
+  "runtime": "onnxruntime-web@1.27.0",
+  "purpose": "Local face detection for privacy-preserving browser visual context",
+  "source_metadata_license": "apache-2.0",
+  "license_note": "Model README/SPDX states MIT; Hugging Face repository metadata currently labels apache-2.0. Preserve upstream notices when redistributing."
+}

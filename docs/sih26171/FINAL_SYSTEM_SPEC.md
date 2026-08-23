@@ -32,7 +32,10 @@ Browser page
   ├─ accessibility semantics
   └─ visual screen
         ↓
-Browser-native local multimodal perception
+Browser-local multimodal perception
+  ├─ packaged learned ONNX model (WebGPU preferred / WASM fallback)
+  ├─ browser-native CV corroboration
+  └─ DOM/accessibility/Canvas evidence
         ↓
 Hybrid sensitive-data engine
         ↓

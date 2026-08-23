@@ -224,7 +224,7 @@ export interface components {
       "critical_exposure_present"?: boolean
     }
     "BrowserVisualCapability": {
-      "name": "SCREENSHOT_DECODE" | "FACE_DETECTION" | "QR_DETECTION" | "TEXT_REGION_DETECTION" | "DOM_SENSITIVE_PROJECTION" | "OCR_TEXT_EXTRACTION"
+      "name": "SCREENSHOT_DECODE" | "LEARNED_FACE_DETECTION" | "FACE_DETECTION" | "QR_DETECTION" | "TEXT_REGION_DETECTION" | "DOM_SENSITIVE_PROJECTION" | "OCR_TEXT_EXTRACTION"
       "status": "READY" | "UNAVAILABLE" | "ERROR"
       "backend": string
       "required"?: boolean

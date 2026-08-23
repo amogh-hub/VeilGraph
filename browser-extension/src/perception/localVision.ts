@@ -5,6 +5,8 @@ import type {
   VisualFinding,
   VisualPerceptionReport,
 } from '../common/protocol.js'
+import type { LearnedFaceDetector } from './learnedFaceModel.js'
+import { unavailableLearnedFaceResult } from './learnedFaceModel.js'
 
 const MAX_TEXT_REGIONS = 220
 const FACE_SCORE_BP = 9000
@@ -192,7 +194,7 @@ async function nativeFaceFindings(bitmap: ImageBitmap): Promise<{ findings: Visu
   if (!scope.FaceDetector) {
     return {
       findings: [],
-      capability: { name: 'FACE_DETECTION', status: 'UNAVAILABLE', backend: 'shape-detection-api', required: true, detail: 'FaceDetector API is unavailable; local companion fallback remains mandatory' },
+      capability: { name: 'FACE_DETECTION', status: 'UNAVAILABLE', backend: 'shape-detection-api', required: false, detail: 'Native FaceDetector API unavailable; packaged ONNX model remains the required face path' },
     }
   }
   try {
@@ -207,12 +209,12 @@ async function nativeFaceFindings(bitmap: ImageBitmap): Promise<{ findings: Visu
         provider: 'shape-detection-api',
         modalities: ['VISUAL'],
       })),
-      capability: { name: 'FACE_DETECTION', status: 'READY', backend: 'shape-detection-api', required: true, detail: 'Local FaceDetector inference available' },
+      capability: { name: 'FACE_DETECTION', status: 'READY', backend: 'shape-detection-api', required: false, detail: 'Native FaceDetector corroboration available' },
     }
   } catch (error) {
     return {
       findings: [],
-      capability: { name: 'FACE_DETECTION', status: 'ERROR', backend: 'shape-detection-api', required: true, detail: error instanceof Error ? error.message : 'face detection failed' },
+      capability: { name: 'FACE_DETECTION', status: 'ERROR', backend: 'shape-detection-api', required: false, detail: error instanceof Error ? error.message : 'native face detection failed' },
     }
   }
 }
@@ -341,19 +343,24 @@ function deriveStatus(capabilities: VisualCapability[]): LocalPerceptionStatus {
 /**
  * Browser-native visual perception pass.
  *
- * This layer never calls a remote endpoint. It uses browser-local Shape
- * Detection APIs when available, deterministic Canvas CV for text-region
- * proposals, and DOM/visual projection for sensitive controls. Missing native
- * face/QR capabilities are explicitly surfaced as PARTIAL so the hardened
- * localhost companion must complete coverage before any network release.
+ * This layer never calls a remote endpoint. It combines the packaged learned
+ * ONNX face model with browser-local Shape Detection APIs, deterministic Canvas
+ * CV text-region proposals, and DOM/visual projection. Native face detection is
+ * corroborative; the packaged model is the required learned face path. Missing
+ * model coverage is surfaced as PARTIAL/ERROR rather than silently treated safe.
  */
-export async function runLocalVision(screenshotDataUrl: string, frames: FrameCapture[]): Promise<LocalVisionResult> {
+export async function runLocalVision(
+  screenshotDataUrl: string,
+  frames: FrameCapture[],
+  learnedFaceDetector?: LearnedFaceDetector,
+): Promise<LocalVisionResult> {
   const started = nowMs()
   const capabilities: VisualCapability[] = []
   const findings: VisualFinding[] = []
   let bitmap: ImageBitmap | null = null
   let screenshotDecodeMs = 0
   let domProjectionMs = 0
+  let learnedFaceMs = 0
   let faceDetectionMs = 0
   let qrDetectionMs = 0
   let textRegionMs = 0
@@ -378,6 +385,7 @@ export async function runLocalVision(screenshotDataUrl: string, frames: FrameCap
       stageTimingsMs: {
         screenshotDecodeMs,
         domProjectionMs,
+        learnedFaceMs,
         faceDetectionMs,
         qrDetectionMs,
         textRegionMs,
@@ -398,6 +406,14 @@ export async function runLocalVision(screenshotDataUrl: string, frames: FrameCap
     required: true,
     detail: `${domFindings.length} sensitive DOM region(s) projected into viewport geometry`,
   })
+
+  const learnedTimed = await timed(() => learnedFaceDetector
+    ? learnedFaceDetector.detect(bitmap)
+    : Promise.resolve(unavailableLearnedFaceResult('Packaged learned face detector was not initialized by the extension runtime')))
+  learnedFaceMs = learnedTimed.elapsedMs
+  const learnedFaces = learnedTimed.value
+  findings.push(...learnedFaces.findings)
+  capabilities.push(learnedFaces.capability)
 
   const [facesTimed, barcodesTimed, textTimed] = await Promise.all([
     timed(() => nativeFaceFindings(bitmap)),
@@ -420,8 +436,8 @@ export async function runLocalVision(screenshotDataUrl: string, frames: FrameCap
   const status = deriveStatus(capabilities)
   const report: VisualPerceptionReport = {
     status,
-    modelId: 'veilgraph-browser-native-cv-v2',
-    backend: 'browser-native',
+    modelId: 'veilgraph-hybrid-local-perception-v3',
+    backend: 'hybrid-local',
     elapsedMs: Math.max(0, Math.round(nowMs() - started)),
     imageWidth: bitmap.width,
     imageHeight: bitmap.height,
@@ -430,11 +446,13 @@ export async function runLocalVision(screenshotDataUrl: string, frames: FrameCap
     stageTimingsMs: {
       screenshotDecodeMs,
       domProjectionMs,
+      learnedFaceMs,
       faceDetectionMs,
       qrDetectionMs,
       textRegionMs,
       fusionMs,
     },
+    learnedModel: learnedFaces.evidence,
   }
   bitmap.close()
   return { status, findings: deduped, report }

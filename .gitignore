@@ -46,3 +46,7 @@ competition/releases/*.zip
 
 # Local SIH26171 verification evidence (uploaded by CI, not committed)
 artifacts/verification/
+
+# Generated browser ML runtime/model copies (source model + npm lock are tracked)
+browser-extension/dist/vendor/
+browser-extension/dist/models/

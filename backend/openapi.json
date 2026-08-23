@@ -2661,6 +2661,7 @@
             "type": "string",
             "enum": [
               "SCREENSHOT_DECODE",
+              "LEARNED_FACE_DETECTION",
               "FACE_DETECTION",
               "QR_DETECTION",
               "TEXT_REGION_DETECTION",

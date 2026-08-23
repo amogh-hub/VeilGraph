@@ -276,6 +276,7 @@ class Harness:
         self.run_command("Extension dependency audit", ["npm", "audit", "--audit-level=moderate"], cwd=ext, summary_parser=self._audit_summary)
         self.run_command("Extension TypeScript", ["npm", "run", "typecheck"], cwd=ext)
         self.run_command("Extension production build", ["npm", "run", "build"], cwd=ext)
+        self.run_command("Learned local model contract", ["node", "scripts/verify_learned_model_contract.mjs"], cwd=ext)
         self.run_command("Perception + visual contract", ["npm", "run", "verify:perception"], cwd=ext)
 
         self.run_command("Python↔browser interoperability", [self.backend_python, "scripts/verify_browser_protocol_interop.py"], cwd=ROOT)
@@ -379,6 +380,7 @@ def main() -> int:
             "Extension dependency audit",
             "Extension TypeScript",
             "Extension production build",
+            "Learned local model contract",
             "Perception + visual contract",
             "Python↔browser interoperability",
             "Browser/privacy regression",

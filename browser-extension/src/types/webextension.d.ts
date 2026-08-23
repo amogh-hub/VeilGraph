@@ -12,6 +12,7 @@ declare namespace chrome {
       ): void
     }
     function sendMessage<T = unknown>(message: unknown): Promise<T>
+    function getURL(path: string): string
   }
 
   namespace tabs {

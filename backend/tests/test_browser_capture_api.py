@@ -131,3 +131,53 @@ def test_browser_capture_metadata_rejects_impossible_frame_accounting():
     raw["failed_frame_ids"] = [7]
     with pytest.raises(ValueError, match="accounting exceeds"):
         BrowserLocalCaptureMetadata.model_validate(raw)
+
+
+def test_browser_capture_metadata_accepts_packaged_learned_model_evidence():
+    raw = _metadata()
+    raw["visual_perception_status"] = "READY"
+    raw["visual_perception_report"] = {
+        "status": "READY",
+        "model_id": "veilgraph-hybrid-local-perception-v3",
+        "backend": "hybrid-local",
+        "elapsed_ms": 17,
+        "image_width": 800,
+        "image_height": 600,
+        "finding_count": 1,
+        "stage_timings_ms": {
+            "screenshot_decode_ms": 1,
+            "dom_projection_ms": 1,
+            "learned_face_ms": 9,
+            "face_detection_ms": 0,
+            "qr_detection_ms": 2,
+            "text_region_ms": 2,
+            "fusion_ms": 2,
+        },
+        "learned_model": {
+            "model_id": "ultraface-rfb-320",
+            "model_sha256": "34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017",
+            "runtime": "onnxruntime-web@1.27.0",
+            "execution_provider": "wasm",
+            "model_load_ms": 4,
+            "inference_ms": 5,
+            "input_width": 320,
+            "input_height": 240,
+            "detection_count": 1,
+            "fallback_used": True,
+            "fallback_reason": "WebGPU unavailable in test context",
+        },
+        "capabilities": [
+            {
+                "name": "LEARNED_FACE_DETECTION",
+                "status": "READY",
+                "backend": "onnxruntime-web@1.27.0:wasm",
+                "required": True,
+                "detail": "Packaged model executed locally",
+            }
+        ],
+    }
+    parsed = BrowserLocalCaptureMetadata.model_validate(raw)
+    assert parsed.visual_perception_report is not None
+    assert parsed.visual_perception_report.learned_model is not None
+    assert parsed.visual_perception_report.learned_model.model_id == "ultraface-rfb-320"
+    assert parsed.visual_perception_report.stage_timings_ms.learned_face_ms == 9

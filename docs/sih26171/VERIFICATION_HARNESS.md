@@ -6,7 +6,7 @@ VeilGraph uses one verification entry point for local engineering checkpoints an
 ./scripts/verify_sih_checkpoint.sh
 ```
 
-The command runs the extension security/build gates, perception contract checks, Python↔browser interoperability, focused browser/privacy tests, full backend regression, frontend checks, deterministic API generation, and Git diff-integrity checks.
+The command runs the extension security/build gates, packaged learned-model inference contract, perception contract checks, Python↔browser interoperability, focused browser/privacy tests, full backend regression, frontend checks, deterministic API generation, and Git diff-integrity checks.
 
 Detailed command output is written to `artifacts/verification/logs/`. The compact machine-readable result is written to:
 

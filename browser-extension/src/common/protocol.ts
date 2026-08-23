@@ -170,7 +170,7 @@ export interface FrameCapture {
 }
 
 export interface VisualCapability {
-  name: 'SCREENSHOT_DECODE' | 'FACE_DETECTION' | 'QR_DETECTION' | 'TEXT_REGION_DETECTION' | 'DOM_SENSITIVE_PROJECTION'
+  name: 'SCREENSHOT_DECODE' | 'LEARNED_FACE_DETECTION' | 'FACE_DETECTION' | 'QR_DETECTION' | 'TEXT_REGION_DETECTION' | 'DOM_SENSITIVE_PROJECTION'
   status: 'READY' | 'UNAVAILABLE' | 'ERROR'
   backend: string
   required: boolean
@@ -180,22 +180,38 @@ export interface VisualCapability {
 export interface VisualStageTimings {
   screenshotDecodeMs: number
   domProjectionMs: number
+  learnedFaceMs: number
   faceDetectionMs: number
   qrDetectionMs: number
   textRegionMs: number
   fusionMs: number
 }
 
+export interface LearnedModelEvidence {
+  modelId: string
+  modelSha256: string
+  runtime: string
+  executionProvider: 'webgpu' | 'wasm' | 'unavailable'
+  modelLoadMs: number
+  inferenceMs: number
+  inputWidth: number
+  inputHeight: number
+  detectionCount: number
+  fallbackUsed: boolean
+  fallbackReason?: string
+}
+
 export interface VisualPerceptionReport {
   status: LocalPerceptionStatus
   modelId: string
-  backend: 'browser-native'
+  backend: 'browser-native' | 'hybrid-local'
   elapsedMs: number
   imageWidth: number
   imageHeight: number
   capabilities: VisualCapability[]
   findingCount: number
   stageTimingsMs: VisualStageTimings
+  learnedModel?: LearnedModelEvidence
 }
 
 export interface CaptureTimings {

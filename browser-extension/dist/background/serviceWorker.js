@@ -1,6 +1,11 @@
 import { runLocalVision } from '../perception/localVision.js';
+import { createOnnxLearnedFaceDetector } from '../perception/learnedFaceModel.js';
+// The build copies this pinned ONNX Runtime Web module into dist/vendor.
+// @ts-ignore -- generated vendor asset intentionally lives outside src/.
+import * as ortRuntime from '../vendor/onnxruntime/ort.webgpu.bundle.min.mjs';
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
 import { pairLocalCompanion } from '../security/pairing.js';
+const learnedFaceDetector = createOnnxLearnedFaceDetector(ortRuntime, (path) => chrome.runtime.getURL(path));
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
@@ -66,9 +71,9 @@ function buildCoverage(frames, expectedFrameCount, failedFrameIds, visualStatus,
         },
         {
             name: 'FACE',
-            status: statusFromCapability(byName.get('FACE_DETECTION')),
+            status: statusFromCapability(byName.get('LEARNED_FACE_DETECTION') ?? byName.get('FACE_DETECTION')),
             required: true,
-            detail: byName.get('FACE_DETECTION')?.detail ?? 'face capability not reported',
+            detail: (byName.get('LEARNED_FACE_DETECTION') ?? byName.get('FACE_DETECTION'))?.detail ?? 'face capability not reported',
         },
         {
             name: 'QR',
@@ -108,7 +113,7 @@ async function captureActivePage() {
     const screenshotStarted = nowMs();
     const screenshotDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
     const screenshotCaptureMs = Math.max(0, Math.round(nowMs() - screenshotStarted));
-    const vision = await runLocalVision(screenshotDataUrl, frames);
+    const vision = await runLocalVision(screenshotDataUrl, frames, learnedFaceDetector);
     const expectedFrameCount = frameDetails.length;
     const coverage = buildCoverage(frames, expectedFrameCount, failedFrameIds, vision.status, vision.report.capabilities);
     return {
@@ -180,11 +185,27 @@ function snakeCaseCapture(bundle, task, audienceProfile, privacyLevel) {
             stage_timings_ms: {
                 screenshot_decode_ms: bundle.visualPerceptionReport.stageTimingsMs.screenshotDecodeMs,
                 dom_projection_ms: bundle.visualPerceptionReport.stageTimingsMs.domProjectionMs,
+                learned_face_ms: bundle.visualPerceptionReport.stageTimingsMs.learnedFaceMs,
                 face_detection_ms: bundle.visualPerceptionReport.stageTimingsMs.faceDetectionMs,
                 qr_detection_ms: bundle.visualPerceptionReport.stageTimingsMs.qrDetectionMs,
                 text_region_ms: bundle.visualPerceptionReport.stageTimingsMs.textRegionMs,
                 fusion_ms: bundle.visualPerceptionReport.stageTimingsMs.fusionMs,
             },
+            ...(bundle.visualPerceptionReport.learnedModel ? {
+                learned_model: {
+                    model_id: bundle.visualPerceptionReport.learnedModel.modelId,
+                    model_sha256: bundle.visualPerceptionReport.learnedModel.modelSha256,
+                    runtime: bundle.visualPerceptionReport.learnedModel.runtime,
+                    execution_provider: bundle.visualPerceptionReport.learnedModel.executionProvider,
+                    model_load_ms: bundle.visualPerceptionReport.learnedModel.modelLoadMs,
+                    inference_ms: bundle.visualPerceptionReport.learnedModel.inferenceMs,
+                    input_width: bundle.visualPerceptionReport.learnedModel.inputWidth,
+                    input_height: bundle.visualPerceptionReport.learnedModel.inputHeight,
+                    detection_count: bundle.visualPerceptionReport.learnedModel.detectionCount,
+                    fallback_used: bundle.visualPerceptionReport.learnedModel.fallbackUsed,
+                    ...(bundle.visualPerceptionReport.learnedModel.fallbackReason ? { fallback_reason: bundle.visualPerceptionReport.learnedModel.fallbackReason } : {}),
+                },
+            } : {}),
             capabilities: bundle.visualPerceptionReport.capabilities.map((capability) => ({
                 name: capability.name,
                 status: capability.status,

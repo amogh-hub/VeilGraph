@@ -7,9 +7,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "python3 scripts/build.py",
     "verify:visual": "npm run build && node scripts/verify_visual_layer.mjs",
-    "verify:perception": "npm run build && node scripts/verify_perception_contract.mjs && node scripts/verify_visual_layer.mjs"
+    "verify:perception": "npm run build && node scripts/verify_perception_contract.mjs && node scripts/verify_visual_layer.mjs",
+    "verify:learned": "npm run build && node scripts/verify_learned_model_contract.mjs"
   },
   "devDependencies": {
     "typescript": "5.6.3"
+  },
+  "dependencies": {
+    "onnxruntime-web": "1.27.0"
   }
 }
