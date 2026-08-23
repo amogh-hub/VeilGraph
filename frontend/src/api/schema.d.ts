@@ -69,6 +69,18 @@ export interface components {
     "Body_upload_file_api_v1_jobs__job_id__files_post": {
       "file": string
     }
+    "BrowserCaptureCoverageItem": {
+      "name": "DOM" | "ACCESSIBILITY" | "VISUAL" | "TEXT_REGIONS" | "FACE" | "QR"
+      "status": "READY" | "PARTIAL" | "UNAVAILABLE" | "ERROR"
+      "required"?: boolean
+      "detail": string
+    }
+    "BrowserCaptureTimings": {
+      "frame_dom_ms"?: number
+      "screenshot_capture_ms"?: number
+      "visual_perception_ms"?: number
+      "total_local_ms"?: number
+    }
     "BrowserDetectionSummary": {
       "entity_type": string
       "mentions": number
@@ -101,6 +113,12 @@ export interface components {
       "visual_capabilities"?: Array<components['schemas']['BrowserVisualCapability']>
       "ocr_lines": number
       "visual_findings_count": number
+      "capture_id"?: string | null
+      "expected_frames": number
+      "captured_frames": number
+      "failed_frames": number
+      "capture_timings"?: components['schemas']['BrowserCaptureTimings'] | null
+      "browser_capture_coverage"?: Array<components['schemas']['BrowserCaptureCoverageItem']>
       "readiness": "READY_FOR_SANITIZATION" | "NEEDS_REVIEW" | "VISUAL_COVERAGE_INCOMPLETE"
       "note": string
     }

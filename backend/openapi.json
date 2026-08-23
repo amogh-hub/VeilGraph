@@ -1673,6 +1673,86 @@
         ],
         "title": "Body_upload_file_api_v1_jobs__job_id__files_post"
       },
+      "BrowserCaptureCoverageItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "DOM",
+              "ACCESSIBILITY",
+              "VISUAL",
+              "TEXT_REGIONS",
+              "FACE",
+              "QR"
+            ],
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PARTIAL",
+              "UNAVAILABLE",
+              "ERROR"
+            ],
+            "title": "Status"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "detail"
+        ],
+        "title": "BrowserCaptureCoverageItem"
+      },
+      "BrowserCaptureTimings": {
+        "properties": {
+          "frame_dom_ms": {
+            "type": "integer",
+            "maximum": 120000.0,
+            "minimum": 0.0,
+            "title": "Frame Dom Ms",
+            "default": 0
+          },
+          "screenshot_capture_ms": {
+            "type": "integer",
+            "maximum": 120000.0,
+            "minimum": 0.0,
+            "title": "Screenshot Capture Ms",
+            "default": 0
+          },
+          "visual_perception_ms": {
+            "type": "integer",
+            "maximum": 120000.0,
+            "minimum": 0.0,
+            "title": "Visual Perception Ms",
+            "default": 0
+          },
+          "total_local_ms": {
+            "type": "integer",
+            "maximum": 120000.0,
+            "minimum": 0.0,
+            "title": "Total Local Ms",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BrowserCaptureTimings"
+      },
       "BrowserDetectionSummary": {
         "properties": {
           "entity_type": {
@@ -1866,6 +1946,50 @@
             "minimum": 0.0,
             "title": "Visual Findings Count"
           },
+          "capture_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Id"
+          },
+          "expected_frames": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Frames"
+          },
+          "captured_frames": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Captured Frames"
+          },
+          "failed_frames": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Failed Frames"
+          },
+          "capture_timings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserCaptureTimings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "browser_capture_coverage": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserCaptureCoverageItem"
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "Browser Capture Coverage"
+          },
           "readiness": {
             "type": "string",
             "enum": [
@@ -1898,6 +2022,9 @@
           "visual_perception_status",
           "ocr_lines",
           "visual_findings_count",
+          "expected_frames",
+          "captured_frames",
+          "failed_frames",
           "readiness",
           "note"
         ],

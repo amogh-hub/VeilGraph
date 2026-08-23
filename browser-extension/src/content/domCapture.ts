@@ -1,6 +1,12 @@
 import type { CapturedElement, FrameCapture } from '../common/protocol.js'
+import { clipRectToViewport } from '../perception/geometry.js'
 
+const MAX_CAPTURED_ELEMENTS = 2000
 const ids = new WeakMap<Element, `vg_${string}`>()
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now()
+}
 
 function localId(element: Element): `vg_${string}` {
   const existing = ids.get(element)
@@ -12,19 +18,27 @@ function localId(element: Element): `vg_${string}` {
   return created
 }
 
-function normalizedBox(element: Element): [number, number, number, number] {
-  const rect = element.getBoundingClientRect()
-  const width = Math.max(document.documentElement.clientWidth, 1)
-  const height = Math.max(document.documentElement.clientHeight, 1)
-  const bp = (value: number, total: number) => Math.max(0, Math.min(10_000, Math.round((value / total) * 10_000)))
-  return [bp(rect.left, width), bp(rect.top, height), bp(rect.right, width), bp(rect.bottom, height)]
+function viewportSize(): { width: number; height: number } {
+  return {
+    width: Math.max(document.documentElement.clientWidth, window.innerWidth || 0, 1),
+    height: Math.max(document.documentElement.clientHeight, window.innerHeight || 0, 1),
+  }
 }
 
-function isVisible(element: Element): boolean {
+function normalizedBox(element: Element): [number, number, number, number] | null {
+  const { width, height } = viewportSize()
   const rect = element.getBoundingClientRect()
-  if (rect.width <= 0 || rect.height <= 0) return false
+  return clipRectToViewport(
+    { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+    width,
+    height,
+  )
+}
+
+function isVisibleInViewport(element: Element): boolean {
   const style = getComputedStyle(element)
-  return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity || '1') > 0
+  if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || '1') <= 0) return false
+  return normalizedBox(element) !== null
 }
 
 function labelledBy(element: Element): string {
@@ -102,7 +116,7 @@ function privacyHints(element: Element): string[] {
 }
 
 function shouldCapture(element: Element): boolean {
-  if (!isVisible(element)) return false
+  if (!isVisibleInViewport(element)) return false
   const tag = element.tagName.toLowerCase()
   if (['script', 'style', 'noscript', 'svg', 'path', 'meta', 'link'].includes(tag)) return false
   if (element.matches('button,a[href],input,textarea,select,[role],[contenteditable="true"],h1,h2,h3,h4,h5,h6,label')) return true
@@ -125,17 +139,24 @@ function collectRoots(): Array<Document | ShadowRoot> {
 }
 
 export function captureFrame(): FrameCapture {
+  const started = nowMs()
+  const roots = collectRoots()
   const candidates: Element[] = []
-  for (const root of collectRoots()) candidates.push(...Array.from(root.querySelectorAll('*')).filter(shouldCapture))
+  for (const root of roots) candidates.push(...Array.from(root.querySelectorAll('*')).filter(shouldCapture))
 
-  // Deduplicate elements that can appear in nested root traversals.
-  const unique = Array.from(new Set(candidates)).slice(0, 2000)
-  const elements: CapturedElement[] = unique.map((element) => {
+  // Deduplicate elements that can appear in nested root traversals. We record
+  // truncation explicitly instead of silently pretending the DOM view is whole.
+  const eligible = Array.from(new Set(candidates))
+  const unique = eligible.slice(0, MAX_CAPTURED_ELEMENTS)
+  const elements: CapturedElement[] = []
+  for (const element of unique) {
+    const bbox = normalizedBox(element)
+    if (!bbox) continue
     const input = element instanceof HTMLInputElement ? element : null
     const textarea = element instanceof HTMLTextAreaElement ? element : null
     const select = element instanceof HTMLSelectElement ? element : null
     const rawValue = input?.value ?? textarea?.value ?? select?.value
-    return {
+    elements.push({
       localId: localId(element),
       tag: element.tagName.toLowerCase(),
       role: implicitRole(element),
@@ -146,10 +167,10 @@ export function captureFrame(): FrameCapture {
       disabled: (element instanceof HTMLButtonElement || element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) ? element.disabled : false,
       ...(input?.type === 'checkbox' || input?.type === 'radio' ? { checked: input.checked } : {}),
       ...(element instanceof HTMLOptionElement ? { selected: element.selected } : {}),
-      bbox: normalizedBox(element),
+      bbox,
       privacyHints: privacyHints(element),
-    }
-  })
+    })
+  }
 
   let inaccessibleDescendantFrames = 0
   for (const frame of Array.from(document.querySelectorAll('iframe'))) {
@@ -160,15 +181,27 @@ export function captureFrame(): FrameCapture {
     }
   }
 
+  const { width: viewportWidth, height: viewportHeight } = viewportSize()
+  const documentElement = document.documentElement
   return {
     frameId: -1,
     isTopFrame: window.top === window,
     origin: location.origin,
     href: location.href,
     title: document.title.slice(0, 512),
-    viewportWidth: Math.max(document.documentElement.clientWidth, 1),
-    viewportHeight: Math.max(document.documentElement.clientHeight, 1),
+    viewportWidth,
+    viewportHeight,
+    devicePixelRatioBasisPoints: Math.max(1000, Math.min(80_000, Math.round((window.devicePixelRatio || 1) * 10_000))),
+    scrollX: Math.round(window.scrollX),
+    scrollY: Math.round(window.scrollY),
+    documentWidth: Math.max(documentElement.scrollWidth, documentElement.clientWidth, 1),
+    documentHeight: Math.max(documentElement.scrollHeight, documentElement.clientHeight, 1),
     elements,
+    eligibleElementCount: eligible.length,
+    capturedElementCount: elements.length,
+    captureTruncated: eligible.length > MAX_CAPTURED_ELEMENTS,
+    shadowRootCount: Math.max(0, roots.length - 1),
+    captureElapsedMs: Math.max(0, Math.round(nowMs() - started)),
     inaccessibleDescendantFrames,
   }
 }

@@ -3,6 +3,7 @@ export const BROWSER_AUTH_SCHEMA = 'veilgraph.browser-network-authorization.v1' 
 
 export type NetworkDecision = 'ALLOW_NETWORK_RELEASE' | 'DENY_NETWORK_RELEASE'
 export type LocalPerceptionStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE' | 'ERROR'
+export type PerceptionModality = 'DOM' | 'ACCESSIBILITY' | 'VISUAL'
 
 export interface PublicElement {
   element_id: `vg_${string}`
@@ -154,7 +155,17 @@ export interface FrameCapture {
   title: string
   viewportWidth: number
   viewportHeight: number
+  devicePixelRatioBasisPoints: number
+  scrollX: number
+  scrollY: number
+  documentWidth: number
+  documentHeight: number
   elements: CapturedElement[]
+  eligibleElementCount: number
+  capturedElementCount: number
+  captureTruncated: boolean
+  shadowRootCount: number
+  captureElapsedMs: number
   inaccessibleDescendantFrames: number
 }
 
@@ -166,6 +177,15 @@ export interface VisualCapability {
   detail: string
 }
 
+export interface VisualStageTimings {
+  screenshotDecodeMs: number
+  domProjectionMs: number
+  faceDetectionMs: number
+  qrDetectionMs: number
+  textRegionMs: number
+  fusionMs: number
+}
+
 export interface VisualPerceptionReport {
   status: LocalPerceptionStatus
   modelId: string
@@ -175,14 +195,35 @@ export interface VisualPerceptionReport {
   imageHeight: number
   capabilities: VisualCapability[]
   findingCount: number
+  stageTimingsMs: VisualStageTimings
+}
+
+export interface CaptureTimings {
+  frameDomMs: number
+  screenshotCaptureMs: number
+  visualPerceptionMs: number
+  totalLocalMs: number
+}
+
+export interface CaptureCoverageItem {
+  name: 'DOM' | 'ACCESSIBILITY' | 'VISUAL' | 'TEXT_REGIONS' | 'FACE' | 'QR'
+  status: LocalPerceptionStatus
+  required: boolean
+  detail: string
 }
 
 export interface PageCaptureBundle {
   schema: 'veilgraph.browser-local-capture.v1'
+  captureId: `VGC-${string}`
   capturedAt: string
   tabId: number
   screenshotDataUrl: string
   frames: FrameCapture[]
+  expectedFrameCount: number
+  capturedFrameCount: number
+  failedFrameIds: number[]
+  captureTimings: CaptureTimings
+  coverage: CaptureCoverageItem[]
   visualPerceptionStatus: LocalPerceptionStatus
   visualPerceptionReport: VisualPerceptionReport
   visualFindings: VisualFinding[]
@@ -195,6 +236,8 @@ export interface VisualFinding {
   bbox: [number, number, number, number]
   label?: string
   provider?: string
+  modalities?: PerceptionModality[]
+  relatedElementIds?: Array<`vg_${string}`>
 }
 
 export type BrowserActionType = 'CLICK' | 'SCROLL' | 'TYPE' | 'SELECT' | 'NAVIGATE' | 'READ' | 'WAIT'

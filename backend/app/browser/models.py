@@ -249,8 +249,28 @@ class BrowserLocalFrame(BaseModel):
     title: str = Field(default="", max_length=512)
     viewport_width: int = Field(ge=1, le=16_384)
     viewport_height: int = Field(ge=1, le=16_384)
+    device_pixel_ratio_basis_points: int = Field(default=10_000, ge=1_000, le=80_000)
+    scroll_x: int = Field(default=0, ge=-10_000_000, le=10_000_000)
+    scroll_y: int = Field(default=0, ge=-10_000_000, le=10_000_000)
+    document_width: int = Field(default=1, ge=1, le=10_000_000)
+    document_height: int = Field(default=1, ge=1, le=10_000_000)
     elements: list[BrowserLocalElement] = Field(default_factory=list, max_length=2000)
+    eligible_element_count: int = Field(default=0, ge=0, le=1_000_000)
+    captured_element_count: int = Field(default=0, ge=0, le=2000)
+    capture_truncated: bool = False
+    shadow_root_count: int = Field(default=0, ge=0, le=100_000)
+    capture_elapsed_ms: int = Field(default=0, ge=0, le=120_000)
     inaccessible_descendant_frames: int = Field(default=0, ge=0, le=256)
+
+    @model_validator(mode="after")
+    def validate_element_accounting(self):
+        if self.captured_element_count and self.captured_element_count != len(self.elements):
+            raise ValueError("captured_element_count must match the number of captured elements")
+        if self.eligible_element_count and self.eligible_element_count < len(self.elements):
+            raise ValueError("eligible_element_count cannot be smaller than captured elements")
+        if self.capture_truncated and self.eligible_element_count <= len(self.elements):
+            raise ValueError("capture_truncated requires eligible elements beyond the capture limit")
+        return self
 
 
 class BrowserLocalVisualFinding(BaseModel):
@@ -262,6 +282,8 @@ class BrowserLocalVisualFinding(BaseModel):
     bbox: tuple[int, int, int, int]
     label: str | None = Field(default=None, max_length=256)
     provider: str | None = Field(default=None, max_length=128)
+    modalities: list[Literal["DOM", "ACCESSIBILITY", "VISUAL"]] = Field(default_factory=list, max_length=3)
+    related_element_ids: list[str] = Field(default_factory=list, max_length=64)
 
 
 class BrowserVisualCapability(BaseModel):
@@ -281,6 +303,35 @@ class BrowserVisualCapability(BaseModel):
     detail: str = Field(min_length=1, max_length=512)
 
 
+class BrowserVisualStageTimings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    screenshot_decode_ms: int = Field(default=0, ge=0, le=120_000)
+    dom_projection_ms: int = Field(default=0, ge=0, le=120_000)
+    face_detection_ms: int = Field(default=0, ge=0, le=120_000)
+    qr_detection_ms: int = Field(default=0, ge=0, le=120_000)
+    text_region_ms: int = Field(default=0, ge=0, le=120_000)
+    fusion_ms: int = Field(default=0, ge=0, le=120_000)
+
+
+class BrowserCaptureTimings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    frame_dom_ms: int = Field(default=0, ge=0, le=120_000)
+    screenshot_capture_ms: int = Field(default=0, ge=0, le=120_000)
+    visual_perception_ms: int = Field(default=0, ge=0, le=120_000)
+    total_local_ms: int = Field(default=0, ge=0, le=120_000)
+
+
+class BrowserCaptureCoverageItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Literal["DOM", "ACCESSIBILITY", "VISUAL", "TEXT_REGIONS", "FACE", "QR"]
+    status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    required: bool = True
+    detail: str = Field(min_length=1, max_length=512)
+
+
 class BrowserVisualPerceptionReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -292,6 +343,7 @@ class BrowserVisualPerceptionReport(BaseModel):
     image_height: int = Field(ge=0, le=16_384)
     capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=32)
     finding_count: int = Field(ge=0, le=10_000)
+    stage_timings_ms: BrowserVisualStageTimings = Field(default_factory=BrowserVisualStageTimings)
 
 
 class BrowserLocalCaptureMetadata(BaseModel):
@@ -302,12 +354,18 @@ class BrowserLocalCaptureMetadata(BaseModel):
         alias="schema",
         serialization_alias="schema",
     )
+    capture_id: str | None = Field(default=None, min_length=8, max_length=96, pattern=r"^VGC-[A-F0-9]+$")
     captured_at: datetime
     tab_id: int = Field(ge=0)
     task: str = Field(min_length=1, max_length=1000)
     audience_profile: str = Field(default="PUBLIC_RELEASE", max_length=64)
     requested_privacy_level: int = Field(default=4, ge=1, le=5)
     frames: list[BrowserLocalFrame] = Field(min_length=1, max_length=64)
+    expected_frame_count: int | None = Field(default=None, ge=1, le=256)
+    captured_frame_count: int | None = Field(default=None, ge=1, le=64)
+    failed_frame_ids: list[int] = Field(default_factory=list, max_length=256)
+    capture_timings: BrowserCaptureTimings | None = None
+    coverage: list[BrowserCaptureCoverageItem] = Field(default_factory=list, max_length=16)
     visual_perception_status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
     visual_perception_report: BrowserVisualPerceptionReport | None = None
     visual_findings: list[BrowserLocalVisualFinding] = Field(default_factory=list, max_length=1000)
@@ -322,6 +380,16 @@ class BrowserLocalCaptureMetadata(BaseModel):
             raise ValueError("browser capture must contain exactly one top frame with frame_id=0")
         if not self.frames[0].is_top_frame or self.frames[0].frame_id != 0:
             raise ValueError("top frame must be first so screenshot pixel geometry remains unambiguous")
+        if self.captured_frame_count is not None and self.captured_frame_count != len(self.frames):
+            raise ValueError("captured_frame_count must match the number of captured frames")
+        if self.expected_frame_count is not None and self.expected_frame_count < len(self.frames):
+            raise ValueError("expected_frame_count cannot be smaller than captured frames")
+        if self.expected_frame_count is not None and self.captured_frame_count is not None:
+            if self.captured_frame_count + len(set(self.failed_frame_ids)) > self.expected_frame_count:
+                raise ValueError("captured + failed frame accounting exceeds expected_frame_count")
+        coverage_names = [item.name for item in self.coverage]
+        if len(coverage_names) != len(set(coverage_names)):
+            raise ValueError("browser capture coverage names must be unique")
         return self
 
 
@@ -358,6 +426,12 @@ class BrowserLocalAnalysisResponse(BaseModel):
     visual_capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=64)
     ocr_lines: int = Field(ge=0)
     visual_findings_count: int = Field(ge=0)
+    capture_id: str | None = None
+    expected_frames: int = Field(ge=1)
+    captured_frames: int = Field(ge=1)
+    failed_frames: int = Field(ge=0)
+    capture_timings: BrowserCaptureTimings | None = None
+    browser_capture_coverage: list[BrowserCaptureCoverageItem] = Field(default_factory=list, max_length=16)
     readiness: Literal["READY_FOR_SANITIZATION", "NEEDS_REVIEW", "VISUAL_COVERAGE_INCOMPLETE"]
     note: str
 

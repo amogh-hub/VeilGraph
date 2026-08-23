@@ -24,6 +24,6 @@ cd "$ROOT/browser-extension"
 npm install
 npm run typecheck
 npm run build
-npm run verify:visual
+npm run verify:perception
 
 echo "Final hardened Slice E setup complete. Backend, frontend, browser-extension, signing support, proof-package verification and OpenAPI-derived contracts are ready."

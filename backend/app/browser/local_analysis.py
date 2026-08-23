@@ -474,11 +474,17 @@ def browser_analysis_response_from_context(
         visual_capabilities=visual_capabilities,
         ocr_lines=ocr_lines,
         visual_findings_count=visual_findings_count,
+        capture_id=metadata.capture_id,
+        expected_frames=metadata.expected_frame_count or len(metadata.frames),
+        captured_frames=metadata.captured_frame_count or len(metadata.frames),
+        failed_frames=len(set(metadata.failed_frame_ids)),
+        capture_timings=metadata.capture_timings,
+        browser_capture_coverage=metadata.coverage,
         readiness=readiness,
         note=(
             "Local multimodal analysis only. Browser-native perception is independently fused with localhost OCR/OpenCV coverage; "
-            "raw screenshot/DOM data remains on-device. This response does not authorize external transmission. "
-            "A sanitized payload must still pass the Browser Privacy Red Team and signed Network Release Gate. "
+            "viewport geometry, capture completeness and stage timings remain explicit evidence. Raw screenshot/DOM data remains on-device. "
+            "This response does not authorize external transmission. A sanitized payload must still pass the Browser Privacy Red Team and signed Network Release Gate. "
             f"Analysis elapsed {int((time.perf_counter() - started_at) * 1000)} ms."
         ),
     )

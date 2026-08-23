@@ -2,14 +2,26 @@ import type {
   BrowserNetworkAuthorization,
   BrowserReleasePayload,
   BrowserReleasePreparation,
+  CaptureCoverageItem,
   FrameCapture,
+  LocalPerceptionStatus,
   PageCaptureBundle,
   RuntimeRequest,
   RuntimeResponse,
+  VisualCapability,
 } from '../common/protocol.js'
 import { runLocalVision } from '../perception/localVision.js'
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js'
 import { pairLocalCompanion } from '../security/pairing.js'
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now()
+}
+
+function captureId(): `VGC-${string}` {
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
+  return `VGC-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`
+}
 
 async function activeTab(): Promise<chrome.tabs.Tab> {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -18,11 +30,85 @@ async function activeTab(): Promise<chrome.tabs.Tab> {
   return tab
 }
 
+function statusFromCapability(capability: VisualCapability | undefined): LocalPerceptionStatus {
+  if (!capability) return 'UNAVAILABLE'
+  if (capability.status === 'READY') return 'READY'
+  if (capability.status === 'ERROR') return 'ERROR'
+  return 'UNAVAILABLE'
+}
+
+function buildCoverage(
+  frames: FrameCapture[],
+  expectedFrameCount: number,
+  failedFrameIds: number[],
+  visualStatus: LocalPerceptionStatus,
+  capabilities: VisualCapability[],
+): CaptureCoverageItem[] {
+  const topFrame = frames.find((frame) => frame.isTopFrame)
+  const anyTruncated = frames.some((frame) => frame.captureTruncated)
+  const domComplete = Boolean(topFrame) && failedFrameIds.length === 0 && !anyTruncated && frames.length === expectedFrameCount
+  const domStatus: LocalPerceptionStatus = !topFrame ? 'UNAVAILABLE' : domComplete ? 'READY' : 'PARTIAL'
+  const accessibleCount = frames.reduce(
+    (total, frame) => total + frame.elements.filter((element) => Boolean(element.accessibleName || element.role)).length,
+    0,
+  )
+  const totalElements = frames.reduce((total, frame) => total + frame.elements.length, 0)
+  const accessibilityStatus: LocalPerceptionStatus = !topFrame
+    ? 'UNAVAILABLE'
+    : totalElements === 0
+      ? 'PARTIAL'
+      : accessibleCount === totalElements && !anyTruncated
+        ? 'READY'
+        : 'PARTIAL'
+  const byName = new Map(capabilities.map((capability) => [capability.name, capability]))
+  return [
+    {
+      name: 'DOM',
+      status: domStatus,
+      required: true,
+      detail: `${frames.length}/${expectedFrameCount} frame DOM capture(s); failed=${failedFrameIds.length}; truncated=${anyTruncated}`,
+    },
+    {
+      name: 'ACCESSIBILITY',
+      status: accessibilityStatus,
+      required: true,
+      detail: `${accessibleCount}/${totalElements} captured viewport element(s) have role/name semantics`,
+    },
+    {
+      name: 'VISUAL',
+      status: visualStatus,
+      required: true,
+      detail: 'Visible-tab raster was analysed locally before any external release path',
+    },
+    {
+      name: 'TEXT_REGIONS',
+      status: statusFromCapability(byName.get('TEXT_REGION_DETECTION')),
+      required: true,
+      detail: byName.get('TEXT_REGION_DETECTION')?.detail ?? 'visual text-region capability not reported',
+    },
+    {
+      name: 'FACE',
+      status: statusFromCapability(byName.get('FACE_DETECTION')),
+      required: true,
+      detail: byName.get('FACE_DETECTION')?.detail ?? 'face capability not reported',
+    },
+    {
+      name: 'QR',
+      status: statusFromCapability(byName.get('QR_DETECTION')),
+      required: true,
+      detail: byName.get('QR_DETECTION')?.detail ?? 'QR capability not reported',
+    },
+  ]
+}
+
 async function captureActivePage(): Promise<PageCaptureBundle> {
+  const totalStarted = nowMs()
   const tab = await activeTab()
   const tabId = tab.id as number
   const frameDetails = (await chrome.webNavigation.getAllFrames({ tabId })) ?? []
   const frames: FrameCapture[] = []
+  const failedFrameIds: number[] = []
+  const domStarted = nowMs()
 
   for (const frame of frameDetails) {
     try {
@@ -30,28 +116,47 @@ async function captureActivePage(): Promise<PageCaptureBundle> {
       if (response.ok) {
         const captured = response.data as FrameCapture
         frames.push({ ...captured, frameId: frame.frameId })
+      } else {
+        failedFrameIds.push(frame.frameId)
       }
     } catch {
       // Cross-origin/inaccessible frames remain visible to the screenshot model.
       // Absence from DOM capture is represented rather than silently assumed safe.
+      failedFrameIds.push(frame.frameId)
     }
   }
+  frames.sort((left, right) => left.frameId - right.frameId)
+  const frameDomMs = Math.max(0, Math.round(nowMs() - domStarted))
 
+  const screenshotStarted = nowMs()
   const screenshotDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' })
+  const screenshotCaptureMs = Math.max(0, Math.round(nowMs() - screenshotStarted))
   const vision = await runLocalVision(screenshotDataUrl, frames)
+  const expectedFrameCount = frameDetails.length
+  const coverage = buildCoverage(frames, expectedFrameCount, failedFrameIds, vision.status, vision.report.capabilities)
 
   return {
     schema: 'veilgraph.browser-local-capture.v1',
+    captureId: captureId(),
     capturedAt: new Date().toISOString(),
     tabId,
     screenshotDataUrl,
     frames,
+    expectedFrameCount,
+    capturedFrameCount: frames.length,
+    failedFrameIds,
+    captureTimings: {
+      frameDomMs,
+      screenshotCaptureMs,
+      visualPerceptionMs: vision.report.elapsedMs,
+      totalLocalMs: Math.max(0, Math.round(nowMs() - totalStarted)),
+    },
+    coverage,
     visualPerceptionStatus: vision.status,
     visualPerceptionReport: vision.report,
     visualFindings: vision.findings,
   }
 }
-
 
 function dataUrlToBlob(dataUrl: string): Blob {
   const [header, encoded] = dataUrl.split(',', 2)
@@ -66,11 +171,27 @@ function dataUrlToBlob(dataUrl: string): Blob {
 function snakeCaseCapture(bundle: PageCaptureBundle, task: string, audienceProfile: string, privacyLevel: number): Record<string, unknown> {
   return {
     schema: bundle.schema,
+    capture_id: bundle.captureId,
     captured_at: bundle.capturedAt,
     tab_id: bundle.tabId,
     task,
     audience_profile: audienceProfile,
     requested_privacy_level: privacyLevel,
+    expected_frame_count: bundle.expectedFrameCount,
+    captured_frame_count: bundle.capturedFrameCount,
+    failed_frame_ids: bundle.failedFrameIds,
+    capture_timings: {
+      frame_dom_ms: bundle.captureTimings.frameDomMs,
+      screenshot_capture_ms: bundle.captureTimings.screenshotCaptureMs,
+      visual_perception_ms: bundle.captureTimings.visualPerceptionMs,
+      total_local_ms: bundle.captureTimings.totalLocalMs,
+    },
+    coverage: bundle.coverage.map((item) => ({
+      name: item.name,
+      status: item.status,
+      required: item.required,
+      detail: item.detail,
+    })),
     visual_perception_status: bundle.visualPerceptionStatus,
     visual_perception_report: {
       status: bundle.visualPerceptionReport.status,
@@ -80,6 +201,14 @@ function snakeCaseCapture(bundle: PageCaptureBundle, task: string, audienceProfi
       image_width: bundle.visualPerceptionReport.imageWidth,
       image_height: bundle.visualPerceptionReport.imageHeight,
       finding_count: bundle.visualPerceptionReport.findingCount,
+      stage_timings_ms: {
+        screenshot_decode_ms: bundle.visualPerceptionReport.stageTimingsMs.screenshotDecodeMs,
+        dom_projection_ms: bundle.visualPerceptionReport.stageTimingsMs.domProjectionMs,
+        face_detection_ms: bundle.visualPerceptionReport.stageTimingsMs.faceDetectionMs,
+        qr_detection_ms: bundle.visualPerceptionReport.stageTimingsMs.qrDetectionMs,
+        text_region_ms: bundle.visualPerceptionReport.stageTimingsMs.textRegionMs,
+        fusion_ms: bundle.visualPerceptionReport.stageTimingsMs.fusionMs,
+      },
       capabilities: bundle.visualPerceptionReport.capabilities.map((capability) => ({
         name: capability.name,
         status: capability.status,
@@ -95,6 +224,8 @@ function snakeCaseCapture(bundle: PageCaptureBundle, task: string, audienceProfi
       bbox: finding.bbox,
       ...(finding.label ? { label: finding.label } : {}),
       ...(finding.provider ? { provider: finding.provider } : {}),
+      ...(finding.modalities ? { modalities: finding.modalities } : {}),
+      ...(finding.relatedElementIds ? { related_element_ids: finding.relatedElementIds } : {}),
     })),
     frames: bundle.frames.map((frame) => ({
       frame_id: frame.frameId,
@@ -104,6 +235,16 @@ function snakeCaseCapture(bundle: PageCaptureBundle, task: string, audienceProfi
       title: frame.title,
       viewport_width: frame.viewportWidth,
       viewport_height: frame.viewportHeight,
+      device_pixel_ratio_basis_points: frame.devicePixelRatioBasisPoints,
+      scroll_x: frame.scrollX,
+      scroll_y: frame.scrollY,
+      document_width: frame.documentWidth,
+      document_height: frame.documentHeight,
+      eligible_element_count: frame.eligibleElementCount,
+      captured_element_count: frame.capturedElementCount,
+      capture_truncated: frame.captureTruncated,
+      shadow_root_count: frame.shadowRootCount,
+      capture_elapsed_ms: frame.captureElapsedMs,
       inaccessible_descendant_frames: frame.inaccessibleDescendantFrames,
       elements: frame.elements.map((element) => ({
         local_id: element.localId,
@@ -254,7 +395,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     return true
   }
   if (request.type === 'VG_GET_STATUS') {
-    sendResponse({ ok: true, data: { product: 'VeilGraph', networkReleaseGate: 'FAIL_CLOSED' } } satisfies RuntimeResponse)
+    sendResponse({ ok: true, data: { product: 'VeilGraph', networkReleaseGate: 'FAIL_CLOSED', perceptionContract: 'VIEWPORT_BOUND_V2' } } satisfies RuntimeResponse)
   }
   return false
 })

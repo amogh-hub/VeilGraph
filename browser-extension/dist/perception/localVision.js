@@ -27,15 +27,52 @@ function iou(a, b) {
     const areaB = Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
     return intersection / Math.max(1, areaA + areaB - intersection);
 }
+function mergeModalities(left, right) {
+    const modalities = Array.from(new Set([...(left.modalities ?? []), ...(right.modalities ?? [])]));
+    const relatedElementIds = Array.from(new Set([...(left.relatedElementIds ?? []), ...(right.relatedElementIds ?? [])]));
+    return {
+        ...left,
+        confidenceBasisPoints: Math.max(left.confidenceBasisPoints, right.confidenceBasisPoints),
+        ...(modalities.length ? { modalities } : {}),
+        ...(relatedElementIds.length ? { relatedElementIds } : {}),
+    };
+}
 function deduplicate(findings) {
     const sorted = [...findings].sort((left, right) => right.confidenceBasisPoints - left.confidenceBasisPoints);
     const kept = [];
     for (const finding of sorted) {
-        if (kept.some((existing) => existing.type === finding.type && iou(existing.bbox, finding.bbox) >= 0.72))
+        const duplicateIndex = kept.findIndex((existing) => existing.type === finding.type && iou(existing.bbox, finding.bbox) >= 0.72);
+        if (duplicateIndex >= 0) {
+            const existing = kept[duplicateIndex];
+            if (existing)
+                kept[duplicateIndex] = mergeModalities(existing, finding);
             continue;
+        }
         kept.push(finding);
     }
     return kept;
+}
+function fuseCrossModalSensitiveRegions(findings) {
+    const textRegions = findings.filter((finding) => finding.type === 'TEXT_REGION');
+    const consumedText = new Set();
+    const fused = findings.map((finding) => {
+        if (finding.type !== 'PASSWORD_FIELD' && finding.type !== 'SENSITIVE_REGION')
+            return finding;
+        let merged = finding;
+        for (const text of textRegions) {
+            if (iou(finding.bbox, text.bbox) < 0.35)
+                continue;
+            merged = mergeModalities(merged, text);
+            consumedText.add(text.findingId);
+        }
+        return merged;
+    });
+    return fused.filter((finding) => finding.type !== 'TEXT_REGION' || !consumedText.has(finding.findingId));
+}
+async function timed(operation) {
+    const started = nowMs();
+    const value = await operation();
+    return { value, elapsedMs: Math.max(0, Math.round(nowMs() - started)) };
 }
 async function decodeScreenshot(dataUrl) {
     if (!dataUrl.startsWith('data:image/'))
@@ -73,6 +110,8 @@ function projectDomSensitiveRegions(frames) {
             bbox: element.bbox,
             label: matchedHints.join(',') || 'password',
             provider: 'dom-visual-fusion',
+            modalities: ['DOM', 'ACCESSIBILITY'],
+            relatedElementIds: [element.localId],
         });
     }
     return findings;
@@ -96,6 +135,7 @@ async function nativeBarcodeFindings(bitmap) {
                 bbox: rectToBasisPoints(result.boundingBox, bitmap.width, bitmap.height),
                 ...(result.rawValue ? { label: result.rawValue.slice(0, 96) } : {}),
                 provider: 'shape-detection-api',
+                modalities: ['VISUAL'],
             })),
             capability: { name: 'QR_DETECTION', status: 'READY', backend: 'shape-detection-api', required: true, detail: 'Local BarcodeDetector QR inference available' },
         };
@@ -125,6 +165,7 @@ async function nativeFaceFindings(bitmap) {
                 confidenceBasisPoints: FACE_SCORE_BP,
                 bbox: rectToBasisPoints(result.boundingBox, bitmap.width, bitmap.height),
                 provider: 'shape-detection-api',
+                modalities: ['VISUAL'],
             })),
             capability: { name: 'FACE_DETECTION', status: 'READY', backend: 'shape-detection-api', required: true, detail: 'Local FaceDetector inference available' },
         };
@@ -150,6 +191,7 @@ async function nativeTextFindings(bitmap) {
                 confidenceBasisPoints: 9000,
                 bbox: rectToBasisPoints(result.boundingBox, bitmap.width, bitmap.height),
                 provider: 'shape-detection-api',
+                modalities: ['VISUAL'],
             })),
             capability: { name: 'TEXT_REGION_DETECTION', status: 'READY', backend: 'shape-detection-api', required: true, detail: 'Local TextDetector visual text-region inference available' },
         };
@@ -241,6 +283,7 @@ async function canvasTextRegionFindings(bitmap) {
                     clampBp((region[3] / height) * 10_000),
                 ],
                 provider: 'canvas-cv',
+                modalities: ['VISUAL'],
             })),
             capability: { name: 'TEXT_REGION_DETECTION', status: 'READY', backend: 'canvas-cv', required: true, detail: 'Deterministic local edge-density text-region proposal fallback available' },
         };
@@ -276,25 +319,43 @@ export async function runLocalVision(screenshotDataUrl, frames) {
     const capabilities = [];
     const findings = [];
     let bitmap = null;
+    let screenshotDecodeMs = 0;
+    let domProjectionMs = 0;
+    let faceDetectionMs = 0;
+    let qrDetectionMs = 0;
+    let textRegionMs = 0;
+    let fusionMs = 0;
     try {
-        bitmap = await decodeScreenshot(screenshotDataUrl);
+        const decoded = await timed(() => decodeScreenshot(screenshotDataUrl));
+        bitmap = decoded.value;
+        screenshotDecodeMs = decoded.elapsedMs;
         capabilities.push({ name: 'SCREENSHOT_DECODE', status: 'READY', backend: 'browser-imagebitmap', required: true, detail: `${bitmap.width}x${bitmap.height} screenshot decoded locally` });
     }
     catch (error) {
         capabilities.push({ name: 'SCREENSHOT_DECODE', status: 'ERROR', backend: 'browser-imagebitmap', required: true, detail: error instanceof Error ? error.message : 'screenshot decode failed' });
         const report = {
             status: 'ERROR',
-            modelId: 'veilgraph-browser-native-cv-v1',
+            modelId: 'veilgraph-browser-native-cv-v2',
             backend: 'browser-native',
             elapsedMs: Math.max(0, Math.round(nowMs() - started)),
             imageWidth: 0,
             imageHeight: 0,
             capabilities,
             findingCount: 0,
+            stageTimingsMs: {
+                screenshotDecodeMs,
+                domProjectionMs,
+                faceDetectionMs,
+                qrDetectionMs,
+                textRegionMs,
+                fusionMs,
+            },
         };
         return { status: 'ERROR', findings: [], report };
     }
+    const domStarted = nowMs();
     const domFindings = projectDomSensitiveRegions(frames);
+    domProjectionMs = Math.max(0, Math.round(nowMs() - domStarted));
     findings.push(...domFindings);
     capabilities.push({
         name: 'DOM_SENSITIVE_PROJECTION',
@@ -303,24 +364,41 @@ export async function runLocalVision(screenshotDataUrl, frames) {
         required: true,
         detail: `${domFindings.length} sensitive DOM region(s) projected into viewport geometry`,
     });
-    const [faces, barcodes, text] = await Promise.all([
-        nativeFaceFindings(bitmap),
-        nativeBarcodeFindings(bitmap),
-        nativeTextFindings(bitmap),
+    const [facesTimed, barcodesTimed, textTimed] = await Promise.all([
+        timed(() => nativeFaceFindings(bitmap)),
+        timed(() => nativeBarcodeFindings(bitmap)),
+        timed(() => nativeTextFindings(bitmap)),
     ]);
+    faceDetectionMs = facesTimed.elapsedMs;
+    qrDetectionMs = barcodesTimed.elapsedMs;
+    textRegionMs = textTimed.elapsedMs;
+    const faces = facesTimed.value;
+    const barcodes = barcodesTimed.value;
+    const text = textTimed.value;
     findings.push(...faces.findings, ...barcodes.findings, ...text.findings);
     capabilities.push(faces.capability, barcodes.capability, text.capability);
-    const deduped = deduplicate(findings);
+    const fusionStarted = nowMs();
+    const fused = fuseCrossModalSensitiveRegions(findings);
+    const deduped = deduplicate(fused);
+    fusionMs = Math.max(0, Math.round(nowMs() - fusionStarted));
     const status = deriveStatus(capabilities);
     const report = {
         status,
-        modelId: 'veilgraph-browser-native-cv-v1',
+        modelId: 'veilgraph-browser-native-cv-v2',
         backend: 'browser-native',
         elapsedMs: Math.max(0, Math.round(nowMs() - started)),
         imageWidth: bitmap.width,
         imageHeight: bitmap.height,
         capabilities,
         findingCount: deduped.length,
+        stageTimingsMs: {
+            screenshotDecodeMs,
+            domProjectionMs,
+            faceDetectionMs,
+            qrDetectionMs,
+            textRegionMs,
+            fusionMs,
+        },
     };
     bitmap.close();
     return { status, findings: deduped, report };
