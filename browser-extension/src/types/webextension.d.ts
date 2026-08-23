@@ -48,3 +48,23 @@ declare namespace chrome {
     function request(permissions: { origins?: string[] }): Promise<boolean>
   }
 }
+
+interface BarcodeDetectorOptions { formats?: string[] }
+interface DetectedBarcode { boundingBox: DOMRectReadOnly; rawValue: string }
+declare class BarcodeDetector {
+  constructor(options?: BarcodeDetectorOptions)
+  detect(source: ImageBitmapSource): Promise<DetectedBarcode[]>
+}
+
+interface FaceDetectorOptions { fastMode?: boolean; maxDetectedFaces?: number }
+interface DetectedFace { boundingBox: DOMRectReadOnly }
+declare class FaceDetector {
+  constructor(options?: FaceDetectorOptions)
+  detect(source: ImageBitmapSource): Promise<DetectedFace[]>
+}
+
+interface DetectedText { boundingBox: DOMRectReadOnly; rawValue?: string }
+declare class TextDetector {
+  constructor()
+  detect(source: ImageBitmapSource): Promise<DetectedText[]>
+}

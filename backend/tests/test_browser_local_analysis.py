@@ -117,6 +117,18 @@ def test_browser_local_analysis_reuses_identity_exposure_engine_without_external
     assert "does not authorize external transmission" in result.note
 
 
-def test_missing_browser_visual_model_is_explicitly_incomplete_not_assumed_safe():
+def test_browser_native_visual_gap_is_completed_only_by_local_companion_coverage():
     result = analyse_browser_capture(_metadata(visual_status="UNAVAILABLE"), _screenshot())
+    assert result.browser_visual_perception_status == "UNAVAILABLE"
+    assert result.local_companion_visual_status == "READY"
+    assert result.visual_perception_status == "READY"
+    assert result.readiness in {"READY_FOR_SANITIZATION", "NEEDS_REVIEW"}
+
+
+def test_visual_coverage_remains_fail_closed_if_browser_and_companion_are_unavailable(monkeypatch):
+    import app.browser.local_analysis as module
+
+    monkeypatch.setattr(module, "_companion_visual_capabilities", lambda _document: ("UNAVAILABLE", []))
+    result = analyse_browser_capture(_metadata(visual_status="UNAVAILABLE"), _screenshot())
+    assert result.visual_perception_status == "UNAVAILABLE"
     assert result.readiness == "VISUAL_COVERAGE_INCOMPLETE"

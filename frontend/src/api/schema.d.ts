@@ -58,8 +58,159 @@ export interface components {
       "error"?: string | null
       "events": Array<components['schemas']['AuditEventResponse']>
     }
+    "Body_analyse_capture_api_v1_browser_analyse_capture_post": {
+      "metadata": string
+      "screenshot": string
+    }
+    "Body_prepare_release_api_v1_browser_prepare_release_post": {
+      "metadata": string
+      "screenshot": string
+    }
     "Body_upload_file_api_v1_jobs__job_id__files_post": {
       "file": string
+    }
+    "BrowserDetectionSummary": {
+      "entity_type": string
+      "mentions": number
+      "sources": Array<string>
+      "pending_review": boolean
+    }
+    "BrowserGateResult": {
+      "name": string
+      "status": components['schemas']['TestStatus']
+      "detail": string
+      "attack_class": string
+      "severity": "critical" | "high" | "medium"
+      "mandatory"?: boolean
+    }
+    "BrowserLocalAnalysisResponse": {
+      "schema"?: string
+      "capture_sha256": string
+      "screenshot_sha256": string
+      "semantic_elements": number
+      "credential_fields": number
+      "detections": Array<components['schemas']['BrowserDetectionSummary']>
+      "pending_reviews": number
+      "identity_exposure_graph": Record<string, unknown>
+      "risk_before": number
+      "residual_risk_preview": number
+      "utility_preview": number
+      "browser_visual_perception_status": "READY" | "PARTIAL" | "UNAVAILABLE" | "ERROR"
+      "local_companion_visual_status": "READY" | "PARTIAL" | "UNAVAILABLE" | "ERROR"
+      "visual_perception_status": "READY" | "PARTIAL" | "UNAVAILABLE" | "ERROR"
+      "visual_capabilities"?: Array<components['schemas']['BrowserVisualCapability']>
+      "ocr_lines": number
+      "visual_findings_count": number
+      "readiness": "READY_FOR_SANITIZATION" | "NEEDS_REVIEW" | "VISUAL_COVERAGE_INCOMPLETE"
+      "note": string
+    }
+    "BrowserNetworkAuthorization": {
+      "payload": components['schemas']['BrowserNetworkAuthorizationPayload']
+      "signature_algorithm"?: string
+      "signature_b64": string
+    }
+    "BrowserNetworkAuthorizationPayload": {
+      "schema"?: string
+      "authorization_id": string
+      "decision": "ALLOW_NETWORK_RELEASE" | "DENY_NETWORK_RELEASE"
+      "payload_sha256": string
+      "session_id": string
+      "task_id": string
+      "issued_at": string
+      "expires_at": string
+      "nonce": string
+      "proof_score": number
+      "mandatory_gates": number
+      "mandatory_passed": number
+      "critical_failures": number
+      "identity_exposure_before": number
+      "residual_identity_exposure": number
+      "task_utility_score": number
+      "signer": components['schemas']['BrowserSigner']
+      "disclaimer": string
+    }
+    "BrowserPairingAttestation": {
+      "payload": components['schemas']['BrowserPairingPayload']
+      "signature_algorithm"?: string
+      "signature_b64": string
+    }
+    "BrowserPairingPayload": {
+      "schema"?: string
+      "challenge": string
+      "purpose"?: string
+      "issued_at": string
+      "expires_at": string
+      "signer": components['schemas']['BrowserSigner']
+    }
+    "BrowserPairingRequest": {
+      "challenge": string
+    }
+    "BrowserPublicElement": {
+      "element_id": string
+      "role": string
+      "label"?: string
+      "text"?: string
+      "control_type"?: string | null
+      "disabled"?: boolean
+      "checked"?: boolean | null
+      "selected"?: boolean | null
+      "bbox"?: Array<unknown> | null
+    }
+    "BrowserPublicPage": {
+      "origin": string
+      "page_class"?: string
+      "title"?: string
+      "elements"?: Array<components['schemas']['BrowserPublicElement']>
+      "visual_context"?: components['schemas']['BrowserPublicVisualContext'] | null
+    }
+    "BrowserPublicVisualContext": {
+      "mime_type": "image/webp" | "image/png"
+      "width": number
+      "height": number
+      "image_base64": string
+      "sanitized_sha256": string
+      "redacted_regions": number
+    }
+    "BrowserReleasePayload": {
+      "schema"?: string
+      "session_id": string
+      "task_id": string
+      "task": string
+      "page": components['schemas']['BrowserPublicPage']
+      "privacy_level": number
+      "network_privacy_floor": number
+      "identity_exposure_before": number
+      "residual_identity_exposure": number
+      "task_utility_score": number
+      "minimization_basis_points": number
+    }
+    "BrowserReleasePreparationResponse": {
+      "schema"?: string
+      "analysis": components['schemas']['BrowserLocalAnalysisResponse']
+      "payload": components['schemas']['BrowserReleasePayload']
+      "verification": components['schemas']['BrowserVerificationSummary']
+      "authorization": components['schemas']['BrowserNetworkAuthorization']
+    }
+    "BrowserSigner": {
+      "algorithm"?: string
+      "public_key_b64": string
+      "public_key_sha256": string
+    }
+    "BrowserVerificationSummary": {
+      "tests": Array<components['schemas']['BrowserGateResult']>
+      "proof_score": number
+      "critical_failures": number
+      "policy_floor_satisfied": boolean
+      "forbidden_raw_fields_present": boolean
+      "payload_commitment_valid": boolean
+      "critical_exposure_present"?: boolean
+    }
+    "BrowserVisualCapability": {
+      "name": "SCREENSHOT_DECODE" | "FACE_DETECTION" | "QR_DETECTION" | "TEXT_REGION_DETECTION" | "DOM_SENSITIVE_PROJECTION" | "OCR_TEXT_EXTRACTION"
+      "status": "READY" | "UNAVAILABLE" | "ERROR"
+      "backend": string
+      "required"?: boolean
+      "detail": string
     }
     "CanonicalEntityResponse": {
       "id": string

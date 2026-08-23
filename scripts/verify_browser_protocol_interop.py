@@ -28,7 +28,11 @@ from app.core.enums import TestStatus  # noqa: E402
 
 
 def main() -> int:
-    subprocess.run(["python3", str(ROOT / "browser-extension" / "scripts" / "build.py")], check=True)
+    subprocess.run(
+        ["npm", "run", "build"],
+        cwd=ROOT / "browser-extension",
+        check=True,
+    )
     with tempfile.TemporaryDirectory(prefix="veilgraph-browser-interop-") as temp:
         settings.signing_key_path = Path(temp) / "device.key"
         payload = BrowserReleasePayload(

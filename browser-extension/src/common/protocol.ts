@@ -2,7 +2,7 @@ export const BROWSER_RELEASE_SCHEMA = 'veilgraph.browser-release-payload.v1' as 
 export const BROWSER_AUTH_SCHEMA = 'veilgraph.browser-network-authorization.v1' as const
 
 export type NetworkDecision = 'ALLOW_NETWORK_RELEASE' | 'DENY_NETWORK_RELEASE'
-export type LocalPerceptionStatus = 'READY' | 'UNAVAILABLE' | 'ERROR'
+export type LocalPerceptionStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE' | 'ERROR'
 
 export interface PublicElement {
   element_id: `vg_${string}`
@@ -17,11 +17,21 @@ export interface PublicElement {
   bbox?: [number, number, number, number] | null
 }
 
+export interface PublicVisualContext {
+  mime_type: 'image/webp' | 'image/png'
+  width: number
+  height: number
+  image_base64: string
+  sanitized_sha256: string
+  redacted_regions: number
+}
+
 export interface PublicPage {
   origin: string
   page_class: string
   title: string
   elements: PublicElement[]
+  visual_context?: PublicVisualContext | null
 }
 
 export interface BrowserReleasePayload {
@@ -69,6 +79,58 @@ export interface BrowserNetworkAuthorization {
   signature_b64: string
 }
 
+export interface BrowserPairingPayload {
+  schema: 'veilgraph.browser-companion-pairing.v1'
+  challenge: string
+  purpose: 'PAIR_LOCAL_VEILGRAPH_COMPANION'
+  issued_at: string
+  expires_at: string
+  signer: {
+    algorithm: 'Ed25519'
+    public_key_b64: string
+    public_key_sha256: string
+  }
+}
+
+export interface BrowserPairingAttestation {
+  payload: BrowserPairingPayload
+  signature_algorithm: 'Ed25519'
+  signature_b64: string
+}
+
+export interface TrustedCompanionSigner {
+  publicKeyB64: string
+  publicKeySha256: string
+  pairedAt: string
+}
+
+export interface BrowserGateResult {
+  name: string
+  status: 'PASS' | 'FAIL' | 'INCONCLUSIVE'
+  detail: string
+  attack_class: string
+  severity: 'critical' | 'high' | 'medium'
+  mandatory: boolean
+}
+
+export interface BrowserVerificationSummary {
+  tests: BrowserGateResult[]
+  proof_score: number
+  critical_failures: number
+  policy_floor_satisfied: boolean
+  forbidden_raw_fields_present: boolean
+  payload_commitment_valid: boolean
+  critical_exposure_present: boolean
+}
+
+export interface BrowserReleasePreparation {
+  schema: 'veilgraph.browser-release-preparation.v1'
+  analysis: Record<string, unknown>
+  payload: BrowserReleasePayload
+  verification: BrowserVerificationSummary
+  authorization: BrowserNetworkAuthorization
+}
+
 export interface CapturedElement {
   localId: `vg_${string}`
   tag: string
@@ -96,6 +158,25 @@ export interface FrameCapture {
   inaccessibleDescendantFrames: number
 }
 
+export interface VisualCapability {
+  name: 'SCREENSHOT_DECODE' | 'FACE_DETECTION' | 'QR_DETECTION' | 'TEXT_REGION_DETECTION' | 'DOM_SENSITIVE_PROJECTION'
+  status: 'READY' | 'UNAVAILABLE' | 'ERROR'
+  backend: string
+  required: boolean
+  detail: string
+}
+
+export interface VisualPerceptionReport {
+  status: LocalPerceptionStatus
+  modelId: string
+  backend: 'browser-native'
+  elapsedMs: number
+  imageWidth: number
+  imageHeight: number
+  capabilities: VisualCapability[]
+  findingCount: number
+}
+
 export interface PageCaptureBundle {
   schema: 'veilgraph.browser-local-capture.v1'
   capturedAt: string
@@ -103,6 +184,7 @@ export interface PageCaptureBundle {
   screenshotDataUrl: string
   frames: FrameCapture[]
   visualPerceptionStatus: LocalPerceptionStatus
+  visualPerceptionReport: VisualPerceptionReport
   visualFindings: VisualFinding[]
 }
 
@@ -112,6 +194,7 @@ export interface VisualFinding {
   confidenceBasisPoints: number
   bbox: [number, number, number, number]
   label?: string
+  provider?: string
 }
 
 export type BrowserActionType = 'CLICK' | 'SCROLL' | 'TYPE' | 'SELECT' | 'NAVIGATE' | 'READ' | 'WAIT'
@@ -134,7 +217,9 @@ export interface BrowserActionPlan {
 
 export type RuntimeRequest =
   | { type: 'VG_CAPTURE_ACTIVE_PAGE' }
+  | { type: 'VG_PAIR_LOCAL_COMPANION' }
   | { type: 'VG_ANALYSE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
+  | { type: 'VG_PREPARE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_CAPTURE_FRAME' }
   | { type: 'VG_GET_STATUS' }
 

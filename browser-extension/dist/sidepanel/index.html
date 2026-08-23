@@ -13,10 +13,12 @@
       <div><strong>VeilGraph</strong><span>Privacy-governed browser agent</span></div>
     </header>
     <section class="gate"><span>Network release</span><strong>FAIL-CLOSED</strong></section>
+    <button id="pair" class="pair" type="button">Pair trusted local companion</button>
     <label for="task">What should the agent do?</label>
     <input id="task" type="text" autocomplete="off" placeholder="e.g. Book the follow-up appointment">
     <p id="status">Ready for local analysis.</p>
     <button id="analyse" type="button">Analyse current page locally</button>
+    <button id="prepare" class="secondary" type="button">Build & verify safe network payload</button>
     <pre id="detail" aria-live="polite"></pre>
     <footer>Raw screen context is sent only to the local VeilGraph companion on 127.0.0.1. External release remains impossible without a signed privacy authorization.</footer>
   </main>

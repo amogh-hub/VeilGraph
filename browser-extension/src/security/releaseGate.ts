@@ -1,6 +1,7 @@
 import type { BrowserNetworkAuthorization, BrowserReleasePayload } from '../common/protocol.js'
 import { BROWSER_AUTH_SCHEMA, BROWSER_RELEASE_SCHEMA } from '../common/protocol.js'
 import { canonicalJson, sha256Hex } from './canonicalJson.js'
+import { signerMatchesPinnedTrust } from './pairing.js'
 
 function base64ToBytes(value: string): Uint8Array {
   const raw = atob(value)
@@ -61,4 +62,18 @@ export async function verifyNetworkAuthorization(
   } catch {
     return { allowed: false, reason: 'unable to verify release authorization signature' }
   }
+}
+
+
+export async function verifyTrustedNetworkAuthorization(
+  authorization: BrowserNetworkAuthorization,
+  payload: BrowserReleasePayload,
+  nowMs = Date.now(),
+): Promise<{ allowed: boolean; reason: string }> {
+  const pinned = await signerMatchesPinnedTrust(
+    authorization.payload.signer.public_key_b64,
+    authorization.payload.signer.public_key_sha256,
+  )
+  if (!pinned) return { allowed: false, reason: 'authorization signer does not match the explicitly paired local VeilGraph companion' }
+  return verifyNetworkAuthorization(authorization, payload, nowMs)
 }

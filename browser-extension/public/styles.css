@@ -16,3 +16,8 @@ footer { margin-top: 18px; color: #73737a; font-size: 10.5px; line-height: 1.5; 
 label { display: block; margin: 18px 0 7px; color: #8d8d93; font-size: 11px; }
 input { width: 100%; border: 1px solid #2d2d31; border-radius: 12px; background: #111113; color: #f5f5f7; padding: 11px 12px; outline: none; }
 input:focus { border-color: #5b5b62; }
+
+.secondary { margin-top: 9px; background: #19191c; color: #f5f5f7; border: 1px solid #34343a; }
+.secondary:hover { background: #202024; }
+
+.pair { margin-top: 10px; background: transparent; color: #b8b8bd; border: 1px solid #2d2d31; font-size: 11px; }

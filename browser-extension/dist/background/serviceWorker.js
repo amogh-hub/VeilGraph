@@ -1,5 +1,6 @@
 import { runLocalVision } from '../perception/localVision.js';
-import { verifyNetworkAuthorization } from '../security/releaseGate.js';
+import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
+import { pairLocalCompanion } from '../security/pairing.js';
 async function activeTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
@@ -26,7 +27,7 @@ async function captureActivePage() {
         }
     }
     const screenshotDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
-    const vision = await runLocalVision(screenshotDataUrl);
+    const vision = await runLocalVision(screenshotDataUrl, frames);
     return {
         schema: 'veilgraph.browser-local-capture.v1',
         capturedAt: new Date().toISOString(),
@@ -34,6 +35,7 @@ async function captureActivePage() {
         screenshotDataUrl,
         frames,
         visualPerceptionStatus: vision.status,
+        visualPerceptionReport: vision.report,
         visualFindings: vision.findings,
     };
 }
@@ -57,12 +59,29 @@ function snakeCaseCapture(bundle, task, audienceProfile, privacyLevel) {
         audience_profile: audienceProfile,
         requested_privacy_level: privacyLevel,
         visual_perception_status: bundle.visualPerceptionStatus,
+        visual_perception_report: {
+            status: bundle.visualPerceptionReport.status,
+            model_id: bundle.visualPerceptionReport.modelId,
+            backend: bundle.visualPerceptionReport.backend,
+            elapsed_ms: bundle.visualPerceptionReport.elapsedMs,
+            image_width: bundle.visualPerceptionReport.imageWidth,
+            image_height: bundle.visualPerceptionReport.imageHeight,
+            finding_count: bundle.visualPerceptionReport.findingCount,
+            capabilities: bundle.visualPerceptionReport.capabilities.map((capability) => ({
+                name: capability.name,
+                status: capability.status,
+                backend: capability.backend,
+                required: capability.required,
+                detail: capability.detail,
+            })),
+        },
         visual_findings: bundle.visualFindings.map((finding) => ({
             finding_id: finding.findingId,
             type: finding.type,
             confidence_basis_points: finding.confidenceBasisPoints,
             bbox: finding.bbox,
             ...(finding.label ? { label: finding.label } : {}),
+            ...(finding.provider ? { provider: finding.provider } : {}),
         })),
         frames: bundle.frames.map((frame) => ({
             frame_id: frame.frameId,
@@ -90,12 +109,12 @@ function snakeCaseCapture(bundle, task, audienceProfile, privacyLevel) {
         })),
     };
 }
-async function analyseWithLocalCompanion(bundle, task, audienceProfile, privacyLevel) {
+async function postToLocalCompanion(endpoint, bundle, task, audienceProfile, privacyLevel) {
     const form = new FormData();
     form.append('metadata', JSON.stringify(snakeCaseCapture(bundle, task, audienceProfile, privacyLevel)));
     const screenshot = dataUrlToBlob(bundle.screenshotDataUrl);
     form.append('screenshot', screenshot, screenshot.type === 'image/jpeg' ? 'capture.jpg' : 'capture.png');
-    const response = await fetch('http://127.0.0.1:8000/api/v1/browser/analyse-capture', {
+    const response = await fetch(`http://127.0.0.1:8000/api/v1/browser/${endpoint}`, {
         method: 'POST',
         body: form,
         credentials: 'omit',
@@ -103,12 +122,36 @@ async function analyseWithLocalCompanion(bundle, task, audienceProfile, privacyL
         redirect: 'error',
         referrerPolicy: 'no-referrer',
     });
-    if (!response.ok)
-        throw new Error(`local VeilGraph companion returned HTTP ${response.status}`);
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(`local VeilGraph companion returned HTTP ${response.status}${detail ? `: ${detail.slice(0, 240)}` : ''}`);
+    }
     return response.json();
 }
+async function analyseWithLocalCompanion(bundle, task, audienceProfile, privacyLevel) {
+    return postToLocalCompanion('analyse-capture', bundle, task, audienceProfile, privacyLevel);
+}
+async function prepareWithLocalCompanion(bundle, task, audienceProfile, privacyLevel) {
+    const raw = await postToLocalCompanion('prepare-release', bundle, task, audienceProfile, privacyLevel);
+    if (!raw || typeof raw !== 'object')
+        throw new Error('local VeilGraph companion returned an invalid release preparation');
+    const prepared = raw;
+    if (prepared.schema !== 'veilgraph.browser-release-preparation.v1' || !prepared.payload || !prepared.authorization || !prepared.verification) {
+        throw new Error('local VeilGraph companion returned an unsupported release preparation schema');
+    }
+    // An ALLOW decision is never trusted merely because the localhost service
+    // returned it. The extension independently verifies the exact payload hash,
+    // expiry, mandatory gate summary and Ed25519 signature before exposing it as
+    // eligible for the later egress path.
+    if (prepared.authorization.payload.decision === 'ALLOW_NETWORK_RELEASE') {
+        const verified = await verifyTrustedNetworkAuthorization(prepared.authorization, prepared.payload);
+        if (!verified.allowed)
+            throw new Error(`invalid local network authorization: ${verified.reason}`);
+    }
+    return prepared;
+}
 async function sendExternally(serverUrl, payload, authorization) {
-    const result = await verifyNetworkAuthorization(authorization, payload);
+    const result = await verifyTrustedNetworkAuthorization(authorization, payload);
     if (!result.allowed)
         throw new Error(`VeilGraph blocked external release: ${result.reason}`);
     const origin = new URL(serverUrl).origin + '/*';
@@ -136,6 +179,12 @@ chrome.action.onClicked.addListener((tab) => {
 });
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const request = message;
+    if (request.type === 'VG_PAIR_LOCAL_COMPANION') {
+        void pairLocalCompanion()
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => sendResponse({ ok: false, error: error instanceof Error ? error.message : 'local companion pairing failed' }));
+        return true;
+    }
     if (request.type === 'VG_CAPTURE_ACTIVE_PAGE') {
         void captureActivePage()
             .then((data) => sendResponse({ ok: true, data }))
@@ -153,6 +202,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             .then((bundle) => analyseWithLocalCompanion(bundle, request.task, audienceProfile, privacyLevel))
             .then((data) => sendResponse({ ok: true, data }))
             .catch((error) => sendResponse({ ok: false, error: error instanceof Error ? error.message : 'local analysis failed' }));
+        return true;
+    }
+    if (request.type === 'VG_PREPARE_ACTIVE_PAGE' && typeof request.task === 'string' && request.task.trim()) {
+        const audienceProfile = request.audienceProfile;
+        const privacyLevel = request.privacyLevel;
+        if (!audienceProfile || !privacyLevel) {
+            sendResponse({ ok: false, error: 'missing audience/privacy policy' });
+            return false;
+        }
+        void captureActivePage()
+            .then((bundle) => prepareWithLocalCompanion(bundle, request.task, audienceProfile, privacyLevel))
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => sendResponse({ ok: false, error: error instanceof Error ? error.message : 'privacy release preparation failed' }));
         return true;
     }
     if (request.type === 'VG_GET_STATUS') {

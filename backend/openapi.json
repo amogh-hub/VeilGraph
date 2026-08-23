@@ -1153,6 +1153,132 @@
         }
       }
     },
+    "/api/v1/browser/pair": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Pair Local Companion",
+        "description": "Return a short-lived challenge attestation for explicit extension pairing.\n\nThis endpoint does not authorize network release. It only proves that the\nlocalhost companion possesses its persistent device signing key so the\nextension can pin that identity and detect later key substitution.",
+        "operationId": "pair_local_companion_api_v1_browser_pair_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserPairingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserPairingAttestation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/browser/analyse-capture": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Analyse Capture",
+        "description": "Analyse raw browser context locally without authorizing external release.\n\nRaw metadata/screenshot bytes are processed in-memory and are not persisted by\nthis endpoint. The returned result is local analysis evidence only.",
+        "operationId": "analyse_capture_api_v1_browser_analyse_capture_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyse_capture_api_v1_browser_analyse_capture_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserLocalAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/browser/prepare-release": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Prepare Release",
+        "description": "Build, attack and sign the exact candidate external browser payload.\n\nCaller-supplied verification results are never accepted. Raw DOM/screenshot\nmaterial is processed only on the localhost companion. The returned\nauthorization is bound to the sanitized payload byte-for-byte.",
+        "operationId": "prepare_release_api_v1_browser_prepare_release_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_prepare_release_api_v1_browser_prepare_release_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserReleasePreparationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ops/status": {
       "get": {
         "tags": [
@@ -1495,6 +1621,44 @@
         ],
         "title": "AuditLedgerResponse"
       },
+      "Body_analyse_capture_api_v1_browser_analyse_capture_post": {
+        "properties": {
+          "metadata": {
+            "type": "string",
+            "title": "Metadata"
+          },
+          "screenshot": {
+            "type": "string",
+            "format": "binary",
+            "title": "Screenshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "screenshot"
+        ],
+        "title": "Body_analyse_capture_api_v1_browser_analyse_capture_post"
+      },
+      "Body_prepare_release_api_v1_browser_prepare_release_post": {
+        "properties": {
+          "metadata": {
+            "type": "string",
+            "title": "Metadata"
+          },
+          "screenshot": {
+            "type": "string",
+            "format": "binary",
+            "title": "Screenshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "screenshot"
+        ],
+        "title": "Body_prepare_release_api_v1_browser_prepare_release_post"
+      },
       "Body_upload_file_api_v1_jobs__job_id__files_post": {
         "properties": {
           "file": {
@@ -1508,6 +1672,912 @@
           "file"
         ],
         "title": "Body_upload_file_api_v1_jobs__job_id__files_post"
+      },
+      "BrowserDetectionSummary": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "mentions": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Mentions"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "pending_review": {
+            "type": "boolean",
+            "title": "Pending Review"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entity_type",
+          "mentions",
+          "sources",
+          "pending_review"
+        ],
+        "title": "BrowserDetectionSummary"
+      },
+      "BrowserGateResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TestStatus"
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Detail"
+          },
+          "attack_class": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Attack Class"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium"
+            ],
+            "title": "Severity"
+          },
+          "mandatory": {
+            "type": "boolean",
+            "title": "Mandatory",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "detail",
+          "attack_class",
+          "severity"
+        ],
+        "title": "BrowserGateResult"
+      },
+      "BrowserLocalAnalysisResponse": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-local-analysis.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-local-analysis.v1"
+          },
+          "capture_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Capture Sha256"
+          },
+          "screenshot_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Screenshot Sha256"
+          },
+          "semantic_elements": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Semantic Elements"
+          },
+          "credential_fields": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Credential Fields"
+          },
+          "detections": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserDetectionSummary"
+            },
+            "type": "array",
+            "title": "Detections"
+          },
+          "pending_reviews": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pending Reviews"
+          },
+          "identity_exposure_graph": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Identity Exposure Graph"
+          },
+          "risk_before": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Risk Before"
+          },
+          "residual_risk_preview": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Residual Risk Preview"
+          },
+          "utility_preview": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Utility Preview"
+          },
+          "browser_visual_perception_status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PARTIAL",
+              "UNAVAILABLE",
+              "ERROR"
+            ],
+            "title": "Browser Visual Perception Status"
+          },
+          "local_companion_visual_status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PARTIAL",
+              "UNAVAILABLE",
+              "ERROR"
+            ],
+            "title": "Local Companion Visual Status"
+          },
+          "visual_perception_status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PARTIAL",
+              "UNAVAILABLE",
+              "ERROR"
+            ],
+            "title": "Visual Perception Status"
+          },
+          "visual_capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserVisualCapability"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Visual Capabilities"
+          },
+          "ocr_lines": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Ocr Lines"
+          },
+          "visual_findings_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Visual Findings Count"
+          },
+          "readiness": {
+            "type": "string",
+            "enum": [
+              "READY_FOR_SANITIZATION",
+              "NEEDS_REVIEW",
+              "VISUAL_COVERAGE_INCOMPLETE"
+            ],
+            "title": "Readiness"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "capture_sha256",
+          "screenshot_sha256",
+          "semantic_elements",
+          "credential_fields",
+          "detections",
+          "pending_reviews",
+          "identity_exposure_graph",
+          "risk_before",
+          "residual_risk_preview",
+          "utility_preview",
+          "browser_visual_perception_status",
+          "local_companion_visual_status",
+          "visual_perception_status",
+          "ocr_lines",
+          "visual_findings_count",
+          "readiness",
+          "note"
+        ],
+        "title": "BrowserLocalAnalysisResponse"
+      },
+      "BrowserNetworkAuthorization": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/BrowserNetworkAuthorizationPayload"
+          },
+          "signature_algorithm": {
+            "type": "string",
+            "const": "Ed25519",
+            "title": "Signature Algorithm",
+            "default": "Ed25519"
+          },
+          "signature_b64": {
+            "type": "string",
+            "title": "Signature B64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payload",
+          "signature_b64"
+        ],
+        "title": "BrowserNetworkAuthorization"
+      },
+      "BrowserNetworkAuthorizationPayload": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-network-authorization.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-network-authorization.v1"
+          },
+          "authorization_id": {
+            "type": "string",
+            "pattern": "^VGN-[A-F0-9]{20}$",
+            "title": "Authorization Id"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ALLOW_NETWORK_RELEASE",
+              "DENY_NETWORK_RELEASE"
+            ],
+            "title": "Decision"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Payload Sha256"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "nonce": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 24,
+            "title": "Nonce"
+          },
+          "proof_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Proof Score"
+          },
+          "mandatory_gates": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Mandatory Gates"
+          },
+          "mandatory_passed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Mandatory Passed"
+          },
+          "critical_failures": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Critical Failures"
+          },
+          "identity_exposure_before": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Identity Exposure Before"
+          },
+          "residual_identity_exposure": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Residual Identity Exposure"
+          },
+          "task_utility_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Task Utility Score"
+          },
+          "signer": {
+            "$ref": "#/components/schemas/BrowserSigner"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authorization_id",
+          "decision",
+          "payload_sha256",
+          "session_id",
+          "task_id",
+          "issued_at",
+          "expires_at",
+          "nonce",
+          "proof_score",
+          "mandatory_gates",
+          "mandatory_passed",
+          "critical_failures",
+          "identity_exposure_before",
+          "residual_identity_exposure",
+          "task_utility_score",
+          "signer",
+          "disclaimer"
+        ],
+        "title": "BrowserNetworkAuthorizationPayload"
+      },
+      "BrowserPairingAttestation": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/BrowserPairingPayload"
+          },
+          "signature_algorithm": {
+            "type": "string",
+            "const": "Ed25519",
+            "title": "Signature Algorithm",
+            "default": "Ed25519"
+          },
+          "signature_b64": {
+            "type": "string",
+            "title": "Signature B64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payload",
+          "signature_b64"
+        ],
+        "title": "BrowserPairingAttestation"
+      },
+      "BrowserPairingPayload": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-companion-pairing.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-companion-pairing.v1"
+          },
+          "challenge": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge"
+          },
+          "purpose": {
+            "type": "string",
+            "const": "PAIR_LOCAL_VEILGRAPH_COMPANION",
+            "title": "Purpose",
+            "default": "PAIR_LOCAL_VEILGRAPH_COMPANION"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "signer": {
+            "$ref": "#/components/schemas/BrowserSigner"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "challenge",
+          "issued_at",
+          "expires_at",
+          "signer"
+        ],
+        "title": "BrowserPairingPayload"
+      },
+      "BrowserPairingRequest": {
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "challenge"
+        ],
+        "title": "BrowserPairingRequest"
+      },
+      "BrowserPublicElement": {
+        "properties": {
+          "element_id": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 8,
+            "pattern": "^vg_[A-Za-z0-9_-]+$",
+            "title": "Element Id"
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Role"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 256,
+            "title": "Label",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Text",
+            "default": ""
+          },
+          "control_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Control Type"
+          },
+          "disabled": {
+            "type": "boolean",
+            "title": "Disabled",
+            "default": false
+          },
+          "checked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked"
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 4,
+                "minItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "element_id",
+          "role"
+        ],
+        "title": "BrowserPublicElement",
+        "description": "Allow-listed, sanitized semantic UI element safe for external reasoning.\n\nThis model intentionally has no generic attributes/dataset/style/value fields.\nInternal capture objects must be transformed into this allow-list rather than\nserialized wholesale."
+      },
+      "BrowserPublicPage": {
+        "properties": {
+          "origin": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Origin"
+          },
+          "page_class": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Page Class",
+            "default": "web"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 256,
+            "title": "Title",
+            "default": ""
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserPublicElement"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Elements"
+          },
+          "visual_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserPublicVisualContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin"
+        ],
+        "title": "BrowserPublicPage"
+      },
+      "BrowserPublicVisualContext": {
+        "properties": {
+          "mime_type": {
+            "type": "string",
+            "enum": [
+              "image/webp",
+              "image/png"
+            ],
+            "title": "Mime Type"
+          },
+          "width": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 1.0,
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 1.0,
+            "title": "Height"
+          },
+          "image_base64": {
+            "type": "string",
+            "maxLength": 12582912,
+            "minLength": 8,
+            "title": "Image Base64"
+          },
+          "sanitized_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sanitized Sha256"
+          },
+          "redacted_regions": {
+            "type": "integer",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Redacted Regions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mime_type",
+          "width",
+          "height",
+          "image_base64",
+          "sanitized_sha256",
+          "redacted_regions"
+        ],
+        "title": "BrowserPublicVisualContext",
+        "description": "Sanitized raster context eligible for external reasoning.\n\nThe raw screenshot is never represented by this type. ``image_base64`` must\nbe a newly encoded, flattened image produced after local redaction."
+      },
+      "BrowserReleasePayload": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-release-payload.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-release-payload.v1"
+          },
+          "session_id": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 16,
+            "title": "Session Id"
+          },
+          "task_id": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 16,
+            "title": "Task Id"
+          },
+          "task": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Task"
+          },
+          "page": {
+            "$ref": "#/components/schemas/BrowserPublicPage"
+          },
+          "privacy_level": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Privacy Level"
+          },
+          "network_privacy_floor": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Network Privacy Floor"
+          },
+          "identity_exposure_before": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Identity Exposure Before"
+          },
+          "residual_identity_exposure": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Residual Identity Exposure"
+          },
+          "task_utility_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Task Utility Score"
+          },
+          "minimization_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Minimization Basis Points"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "task_id",
+          "task",
+          "page",
+          "privacy_level",
+          "network_privacy_floor",
+          "identity_exposure_before",
+          "residual_identity_exposure",
+          "task_utility_score",
+          "minimization_basis_points"
+        ],
+        "title": "BrowserReleasePayload",
+        "description": "The only page-context object eligible for external transmission."
+      },
+      "BrowserReleasePreparationResponse": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-release-preparation.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-release-preparation.v1"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/BrowserLocalAnalysisResponse"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BrowserReleasePayload"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/BrowserVerificationSummary"
+          },
+          "authorization": {
+            "$ref": "#/components/schemas/BrowserNetworkAuthorization"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "analysis",
+          "payload",
+          "verification",
+          "authorization"
+        ],
+        "title": "BrowserReleasePreparationResponse"
+      },
+      "BrowserSigner": {
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "const": "Ed25519",
+            "title": "Algorithm",
+            "default": "Ed25519"
+          },
+          "public_key_b64": {
+            "type": "string",
+            "title": "Public Key B64"
+          },
+          "public_key_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Public Key Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "public_key_b64",
+          "public_key_sha256"
+        ],
+        "title": "BrowserSigner"
+      },
+      "BrowserVerificationSummary": {
+        "properties": {
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserGateResult"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Tests"
+          },
+          "proof_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Proof Score"
+          },
+          "critical_failures": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Critical Failures"
+          },
+          "policy_floor_satisfied": {
+            "type": "boolean",
+            "title": "Policy Floor Satisfied"
+          },
+          "forbidden_raw_fields_present": {
+            "type": "boolean",
+            "title": "Forbidden Raw Fields Present"
+          },
+          "payload_commitment_valid": {
+            "type": "boolean",
+            "title": "Payload Commitment Valid"
+          },
+          "critical_exposure_present": {
+            "type": "boolean",
+            "title": "Critical Exposure Present",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tests",
+          "proof_score",
+          "critical_failures",
+          "policy_floor_satisfied",
+          "forbidden_raw_fields_present",
+          "payload_commitment_valid"
+        ],
+        "title": "BrowserVerificationSummary",
+        "description": "Trusted local verifier output consumed by the deterministic release gate."
+      },
+      "BrowserVisualCapability": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "SCREENSHOT_DECODE",
+              "FACE_DETECTION",
+              "QR_DETECTION",
+              "TEXT_REGION_DETECTION",
+              "DOM_SENSITIVE_PROJECTION",
+              "OCR_TEXT_EXTRACTION"
+            ],
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "UNAVAILABLE",
+              "ERROR"
+            ],
+            "title": "Status"
+          },
+          "backend": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Backend"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "backend",
+          "detail"
+        ],
+        "title": "BrowserVisualCapability"
       },
       "CanonicalEntityResponse": {
         "properties": {

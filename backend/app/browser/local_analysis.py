@@ -3,28 +3,46 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import shutil
+import time
 import uuid
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from typing import Any
 
+import cv2
 from PIL import Image
 
 from app.browser.models import (
     BrowserDetectionSummary,
     BrowserLocalAnalysisResponse,
     BrowserLocalCaptureMetadata,
+    BrowserVisualCapability,
 )
 from app.core.enums import AudienceProfile, DetectionSource, EntityType, FileType, PrivacyLevel, ReviewStatus, SensitivityLevel, TransformationType
 from app.detection.direct_identifiers import normalize_value
 from app.detection.models import DetectedMention
 from app.detection.pipeline import detect_all
-from app.extraction.document_processor import PageFrame, PositionedLine, PositionedToken, ProcessedDocument
+from app.extraction.document_processor import PageFrame, PositionedLine, PositionedToken, ProcessedDocument, process_document
 from app.graph.exposure_graph import build_exposure_graph
 from app.security.signing import canonical_json_bytes
 
 
 class BrowserAnalysisError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class BrowserAnalysisContext:
+    document: ProcessedDocument
+    detections: tuple[DetectedMention, ...]
+    entities: list[dict[str, Any]]
+    mentions_by_entity: dict[str, list[dict[str, Any]]]
+    audience: AudienceProfile
+    level: PrivacyLevel
+    graph: dict[str, Any]
+    companion_status: str
+    companion_capabilities: list[BrowserVisualCapability]
 
 
 def _pixel_bbox(bbox: tuple[int, int, int, int], width: int, height: int) -> tuple[float, float, float, float]:
@@ -67,18 +85,35 @@ def _semantic_text(element) -> str:
 
 
 def _make_processed_document(metadata: BrowserLocalCaptureMetadata, screenshot: bytes) -> ProcessedDocument:
-    try:
-        image = Image.open(io.BytesIO(screenshot)).convert("RGB")
-        image.load()
-    except Exception as exc:
-        raise BrowserAnalysisError("browser screenshot is not a decodable image") from exc
+    """Fuse screenshot OCR with DOM/accessibility semantics on-device.
 
+    The visible top-level screenshot is independently OCRed by the local
+    companion. DOM/accessibility text is then added as a second semantic view.
+    This deliberately preserves two independent evidence channels instead of
+    treating browser DOM extraction as proof that canvas/PDF/iframe pixels are
+    safe.
+    """
+    try:
+        visual_document = process_document(screenshot, FileType.IMAGE, "browser-visible-capture.png")
+    except Exception as exc:
+        raise BrowserAnalysisError("browser screenshot local OCR/visual decoding failed") from exc
+    if not visual_document.pages:
+        raise BrowserAnalysisError("browser screenshot produced no visual page")
+
+    visual_page = visual_document.pages[0]
     pages: list[PageFrame] = []
     for page_index, frame in enumerate(metadata.frames):
-        page_image = image.copy() if frame.is_top_frame else Image.new("RGB", (frame.viewport_width, frame.viewport_height), "white")
+        if frame.is_top_frame:
+            page_image = visual_page.image.copy()
+            lines: list[PositionedLine] = list(visual_page.lines)
+            used_ocr = True
+        else:
+            page_image = Image.new("RGB", (frame.viewport_width, frame.viewport_height), "white")
+            lines = []
+            used_ocr = False
+
         page_width, page_height = page_image.size
-        lines: list[PositionedLine] = []
-        running_offset = 0
+        running_offset = sum(len(line.text) + 1 for line in lines)
         for element in frame.elements:
             text = _semantic_text(element)
             if not text:
@@ -102,16 +137,75 @@ def _make_processed_document(metadata: BrowserLocalCaptureMetadata, screenshot: 
                 height=float(page_height),
                 image=page_image,
                 lines=tuple(lines),
-                used_ocr=False,
+                used_ocr=used_ocr,
             )
         )
     return ProcessedDocument(
         file_type=FileType.IMAGE,
         pages=tuple(pages),
         page_count=len(pages),
-        scanned_pages=0,
-        metadata={"source": "browser-local-capture", "visual_perception_status": metadata.visual_perception_status},
+        scanned_pages=1,
+        metadata={
+            "source": "browser-local-capture",
+            "browser_visual_perception_status": metadata.visual_perception_status,
+            "local_companion_ocr": True,
+        },
     )
+
+
+def _companion_visual_capabilities(document: ProcessedDocument) -> tuple[str, list[BrowserVisualCapability]]:
+    capabilities: list[BrowserVisualCapability] = []
+    capabilities.append(
+        BrowserVisualCapability(
+            name="SCREENSHOT_DECODE", status="READY", backend="local-companion-pillow", required=True,
+            detail="Visible browser screenshot decoded locally in the VeilGraph companion",
+        )
+    )
+    ocr_ready = shutil.which("tesseract") is not None and any(page.used_ocr for page in document.pages)
+    capabilities.append(
+        BrowserVisualCapability(
+            name="OCR_TEXT_EXTRACTION", status="READY" if ocr_ready else "UNAVAILABLE", backend="local-companion-tesseract", required=True,
+            detail="Independent local screenshot OCR executed" if ocr_ready else "Tesseract OCR is unavailable",
+        )
+    )
+    cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    cascade = cv2.CascadeClassifier(cascade_path)
+    face_ready = not cascade.empty()
+    capabilities.append(
+        BrowserVisualCapability(
+            name="FACE_DETECTION", status="READY" if face_ready else "UNAVAILABLE", backend="local-companion-opencv-haar", required=True,
+            detail="OpenCV local face detector loaded" if face_ready else "OpenCV face cascade is unavailable",
+        )
+    )
+    try:
+        detector = cv2.QRCodeDetector()
+        qr_ready = detector is not None
+    except Exception:
+        qr_ready = False
+    capabilities.append(
+        BrowserVisualCapability(
+            name="QR_DETECTION", status="READY" if qr_ready else "UNAVAILABLE", backend="local-companion-opencv-qr", required=True,
+            detail="OpenCV local QR detector loaded" if qr_ready else "OpenCV QR detector is unavailable",
+        )
+    )
+    capabilities.append(
+        BrowserVisualCapability(
+            name="TEXT_REGION_DETECTION", status="READY" if ocr_ready else "UNAVAILABLE", backend="local-companion-tesseract", required=True,
+            detail="OCR word geometry supplies local visual text regions" if ocr_ready else "Visual text-region geometry unavailable",
+        )
+    )
+    capabilities.append(
+        BrowserVisualCapability(
+            name="DOM_SENSITIVE_PROJECTION", status="READY", backend="browser-dom-fusion", required=True,
+            detail="DOM/accessibility sensitive fields are fused with screenshot geometry",
+        )
+    )
+    required = [item for item in capabilities if item.required]
+    if required and all(item.status == "READY" for item in required):
+        return "READY", capabilities
+    if any(item.status == "READY" for item in required):
+        return "PARTIAL", capabilities
+    return "UNAVAILABLE", capabilities
 
 
 def _merge_browser_visual_findings(
@@ -142,11 +236,68 @@ def _merge_browser_visual_findings(
                 sensitivity=SensitivityLevel.HIGH,
                 transformation=TransformationType.REMOVE_REGION,
                 review_status=ReviewStatus.NOT_REQUIRED,
-                context_label="browser-local-vision",
+                context_label=f"browser-local-vision:{finding.provider or 'unknown'}",
             )
         )
     return result
 
+
+
+def _rect_overlap_ratio(
+    left: tuple[float, float, float, float],
+    right: tuple[float, float, float, float],
+) -> float:
+    lx0, ly0, lx1, ly1 = left
+    rx0, ry0, rx1, ry1 = right
+    ix0, iy0 = max(lx0, rx0), max(ly0, ry0)
+    ix1, iy1 = min(lx1, rx1), min(ly1, ry1)
+    intersection = max(0.0, ix1 - ix0) * max(0.0, iy1 - iy0)
+    area = max(1.0, (lx1 - lx0) * (ly1 - ly0))
+    return intersection / area
+
+
+def _filter_browser_label_false_positives(
+    detections: list[DetectedMention],
+    metadata: BrowserLocalCaptureMetadata,
+    document: ProcessedDocument,
+) -> list[DetectedMention]:
+    """Suppress detector hits that are clearly UI field labels, not values.
+
+    Browser forms repeatedly contain words such as ``Email``, ``Location`` and
+    ``Password``. Treating those labels as person/location entities inflates the
+    Identity Exposure Graph and can corrupt policy replacements. A hit is only
+    suppressed when it is text-layer evidence spatially bound to a control whose
+    distinct raw value is captured separately and the detected plaintext equals
+    the label/visible UI text rather than that value.
+    """
+    if not document.pages:
+        return detections
+    result: list[DetectedMention] = []
+    for detection in detections:
+        if detection.source != DetectionSource.TEXT_LAYER or detection.page_index >= len(metadata.frames):
+            result.append(detection)
+            continue
+        frame = metadata.frames[detection.page_index]
+        page = document.pages[detection.page_index]
+        detected = detection.plaintext.strip().casefold()
+        suppress = False
+        for element in frame.elements:
+            raw = (element.raw_value or "").strip()
+            if not raw:
+                continue
+            labels = {
+                element.accessible_name.strip().casefold(),
+                element.visible_text.strip().casefold(),
+            } - {""}
+            if detected not in labels or detected == raw.casefold():
+                continue
+            element_rect = _pixel_bbox(element.bbox, int(page.width), int(page.height))
+            if _rect_overlap_ratio(detection.rect, element_rect) >= 0.75:
+                suppress = True
+                break
+        if not suppress:
+            result.append(detection)
+    return result
 
 def _canonical_rows(detections: list[DetectedMention]) -> tuple[list[dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     grouped: dict[tuple[EntityType, str], dict[str, Any]] = {}
@@ -207,26 +358,33 @@ def _credential_fields(metadata: BrowserLocalCaptureMetadata) -> int:
     return total
 
 
-def analyse_browser_capture(metadata: BrowserLocalCaptureMetadata, screenshot: bytes) -> BrowserLocalAnalysisResponse:
+def build_browser_analysis_context(
+    metadata: BrowserLocalCaptureMetadata,
+    screenshot: bytes,
+    *,
+    level_override: PrivacyLevel | None = None,
+) -> BrowserAnalysisContext:
     if not screenshot:
         raise BrowserAnalysisError("browser screenshot is empty")
     document = _make_processed_document(metadata, screenshot)
+    companion_status, companion_capabilities = _companion_visual_capabilities(document)
     detections = detect_all(document)
     detections = _merge_browser_visual_findings(detections, metadata, document)
+    detections = _filter_browser_label_false_positives(detections, metadata, document)
     entities, mentions_by_entity = _canonical_rows(detections)
 
     try:
         audience = AudienceProfile(metadata.audience_profile)
-        level = PrivacyLevel(metadata.requested_privacy_level)
+        level = level_override or PrivacyLevel(metadata.requested_privacy_level)
     except ValueError as exc:
         raise BrowserAnalysisError("unsupported browser audience/privacy level") from exc
 
+    top_frame = next((frame for frame in metadata.frames if frame.is_top_frame), metadata.frames[0])
     job = {
         "id": "browser-local",
         "audience_profile": audience.value,
         "privacy_level": int(level),
     }
-    top_frame = next((frame for frame in metadata.frames if frame.is_top_frame), metadata.frames[0])
     file_row = {
         "id": "browser-capture",
         "file_type": FileType.IMAGE.value,
@@ -234,6 +392,29 @@ def analyse_browser_capture(metadata: BrowserLocalCaptureMetadata, screenshot: b
         "page_count": document.page_count,
     }
     graph = build_exposure_graph(job, file_row, entities, mentions_by_entity, level)
+    return BrowserAnalysisContext(
+        document=document,
+        detections=tuple(detections),
+        entities=entities,
+        mentions_by_entity=mentions_by_entity,
+        audience=audience,
+        level=level,
+        graph=graph,
+        companion_status=companion_status,
+        companion_capabilities=companion_capabilities,
+    )
+
+
+def browser_analysis_response_from_context(
+    metadata: BrowserLocalCaptureMetadata,
+    screenshot: bytes,
+    context: BrowserAnalysisContext,
+    *,
+    started: float | None = None,
+) -> BrowserLocalAnalysisResponse:
+    started_at = started if started is not None else time.perf_counter()
+    detections = list(context.detections)
+    graph = context.graph
 
     by_type: dict[EntityType, list[DetectedMention]] = defaultdict(list)
     for detection in detections:
@@ -257,12 +438,23 @@ def analyse_browser_capture(metadata: BrowserLocalCaptureMetadata, screenshot: b
     capture_sha = hashlib.sha256(canonical_json_bytes(metadata_payload)).hexdigest()
     screenshot_sha = hashlib.sha256(screenshot).hexdigest()
 
-    if metadata.visual_perception_status != "READY":
+    browser_status = metadata.visual_perception_status
+    overall_visual_status = "READY" if context.companion_status == "READY" else browser_status
+    if overall_visual_status != "READY":
         readiness = "VISUAL_COVERAGE_INCOMPLETE"
     elif pending:
         readiness = "NEEDS_REVIEW"
     else:
         readiness = "READY_FOR_SANITIZATION"
+
+    browser_capabilities = list(metadata.visual_perception_report.capabilities) if metadata.visual_perception_report else []
+    visual_capabilities = browser_capabilities + context.companion_capabilities
+    ocr_lines = sum(
+        line.source == DetectionSource.OCR
+        for page in context.document.pages
+        for line in page.lines
+    )
+    visual_findings_count = sum(item.source == DetectionSource.VISUAL for item in detections)
 
     risk = graph["risk"]
     return BrowserLocalAnalysisResponse(
@@ -276,10 +468,23 @@ def analyse_browser_capture(metadata: BrowserLocalCaptureMetadata, screenshot: b
         risk_before=int(risk["before"]),
         residual_risk_preview=int(risk["after"]),
         utility_preview=int(risk["utility_score"]),
-        visual_perception_status=metadata.visual_perception_status,
+        browser_visual_perception_status=browser_status,
+        local_companion_visual_status=context.companion_status,
+        visual_perception_status=overall_visual_status,
+        visual_capabilities=visual_capabilities,
+        ocr_lines=ocr_lines,
+        visual_findings_count=visual_findings_count,
         readiness=readiness,
         note=(
-            "Local analysis only. This response does not authorize external transmission. "
-            "A sanitized payload must still pass the Browser Privacy Red Team and signed Network Release Gate."
+            "Local multimodal analysis only. Browser-native perception is independently fused with localhost OCR/OpenCV coverage; "
+            "raw screenshot/DOM data remains on-device. This response does not authorize external transmission. "
+            "A sanitized payload must still pass the Browser Privacy Red Team and signed Network Release Gate. "
+            f"Analysis elapsed {int((time.perf_counter() - started_at) * 1000)} ms."
         ),
     )
+
+
+def analyse_browser_capture(metadata: BrowserLocalCaptureMetadata, screenshot: bytes) -> BrowserLocalAnalysisResponse:
+    started = time.perf_counter()
+    context = build_browser_analysis_context(metadata, screenshot)
+    return browser_analysis_response_from_context(metadata, screenshot, context, started=started)

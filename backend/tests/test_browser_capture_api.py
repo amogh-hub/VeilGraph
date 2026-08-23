@@ -72,8 +72,12 @@ def test_browser_capture_api_is_local_analysis_only(client):
     assert response.status_code == 200, response.text
     payload = response.json()
     assert payload["schema"] == "veilgraph.browser-local-analysis.v1"
-    assert payload["visual_perception_status"] == "UNAVAILABLE"
-    assert payload["readiness"] == "VISUAL_COVERAGE_INCOMPLETE"
+    assert payload["browser_visual_perception_status"] == "UNAVAILABLE"
+    assert payload["local_companion_visual_status"] == "READY"
+    assert payload["visual_perception_status"] == "READY"
+    assert payload["readiness"] in {"READY_FOR_SANITIZATION", "NEEDS_REVIEW"}
+    assert payload["ocr_lines"] >= 0
+    assert any(item["backend"] == "local-companion-tesseract" for item in payload["visual_capabilities"])
     assert any(item["entity_type"] == "EMAIL" for item in payload["detections"])
     assert "does not authorize external transmission" in payload["note"]
     assert "local@example.test" not in response.text

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.enums import TestStatus
 
@@ -47,6 +47,23 @@ class BrowserPublicElement(BaseModel):
         return value
 
 
+class BrowserPublicVisualContext(BaseModel):
+    """Sanitized raster context eligible for external reasoning.
+
+    The raw screenshot is never represented by this type. ``image_base64`` must
+    be a newly encoded, flattened image produced after local redaction.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mime_type: Literal["image/webp", "image/png"]
+    width: int = Field(ge=1, le=16_384)
+    height: int = Field(ge=1, le=16_384)
+    image_base64: str = Field(min_length=8, max_length=12 * 1024 * 1024)
+    sanitized_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    redacted_regions: int = Field(ge=0, le=5000)
+
+
 class BrowserPublicPage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -54,6 +71,7 @@ class BrowserPublicPage(BaseModel):
     page_class: str = Field(default="web", max_length=64)
     title: str = Field(default="", max_length=256)
     elements: list[BrowserPublicElement] = Field(default_factory=list, max_length=500)
+    visual_context: BrowserPublicVisualContext | None = None
 
 
 class BrowserReleasePayload(BaseModel):
@@ -150,6 +168,45 @@ class BrowserNetworkAuthorization(BaseModel):
     signature_algorithm: Literal["Ed25519"] = "Ed25519"
     signature_b64: str
 
+
+class BrowserPairingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    challenge: str = Field(min_length=32, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class BrowserPairingPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal["veilgraph.browser-companion-pairing.v1"] = Field(
+        default="veilgraph.browser-companion-pairing.v1", alias="schema", serialization_alias="schema"
+    )
+    challenge: str = Field(min_length=32, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    purpose: Literal["PAIR_LOCAL_VEILGRAPH_COMPANION"] = "PAIR_LOCAL_VEILGRAPH_COMPANION"
+    issued_at: datetime
+    expires_at: datetime
+    signer: BrowserSigner
+
+
+class BrowserPairingAttestation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    payload: BrowserPairingPayload
+    signature_algorithm: Literal["Ed25519"] = "Ed25519"
+    signature_b64: str
+
+
+class BrowserReleasePreparationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal["veilgraph.browser-release-preparation.v1"] = Field(
+        default="veilgraph.browser-release-preparation.v1", alias="schema", serialization_alias="schema"
+    )
+    analysis: "BrowserLocalAnalysisResponse"
+    payload: BrowserReleasePayload
+    verification: BrowserVerificationSummary
+    authorization: BrowserNetworkAuthorization
+
 class BrowserLocalElement(BaseModel):
     """Raw/local-only semantic element captured by the extension.
 
@@ -204,6 +261,37 @@ class BrowserLocalVisualFinding(BaseModel):
     confidence_basis_points: int = Field(ge=0, le=10_000)
     bbox: tuple[int, int, int, int]
     label: str | None = Field(default=None, max_length=256)
+    provider: str | None = Field(default=None, max_length=128)
+
+
+class BrowserVisualCapability(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Literal[
+        "SCREENSHOT_DECODE",
+        "FACE_DETECTION",
+        "QR_DETECTION",
+        "TEXT_REGION_DETECTION",
+        "DOM_SENSITIVE_PROJECTION",
+        "OCR_TEXT_EXTRACTION",
+    ]
+    status: Literal["READY", "UNAVAILABLE", "ERROR"]
+    backend: str = Field(min_length=1, max_length=128)
+    required: bool = True
+    detail: str = Field(min_length=1, max_length=512)
+
+
+class BrowserVisualPerceptionReport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    model_id: str = Field(min_length=1, max_length=128)
+    backend: str = Field(min_length=1, max_length=128)
+    elapsed_ms: int = Field(ge=0, le=120_000)
+    image_width: int = Field(ge=0, le=16_384)
+    image_height: int = Field(ge=0, le=16_384)
+    capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=32)
+    finding_count: int = Field(ge=0, le=10_000)
 
 
 class BrowserLocalCaptureMetadata(BaseModel):
@@ -220,8 +308,21 @@ class BrowserLocalCaptureMetadata(BaseModel):
     audience_profile: str = Field(default="PUBLIC_RELEASE", max_length=64)
     requested_privacy_level: int = Field(default=4, ge=1, le=5)
     frames: list[BrowserLocalFrame] = Field(min_length=1, max_length=64)
-    visual_perception_status: Literal["READY", "UNAVAILABLE", "ERROR"]
+    visual_perception_status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    visual_perception_report: BrowserVisualPerceptionReport | None = None
     visual_findings: list[BrowserLocalVisualFinding] = Field(default_factory=list, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_frame_geometry_contract(self):
+        frame_ids = [frame.frame_id for frame in self.frames]
+        if len(frame_ids) != len(set(frame_ids)):
+            raise ValueError("browser capture frame_id values must be unique")
+        top_frames = [frame for frame in self.frames if frame.is_top_frame]
+        if len(top_frames) != 1 or top_frames[0].frame_id != 0:
+            raise ValueError("browser capture must contain exactly one top frame with frame_id=0")
+        if not self.frames[0].is_top_frame or self.frames[0].frame_id != 0:
+            raise ValueError("top frame must be first so screenshot pixel geometry remains unambiguous")
+        return self
 
 
 class BrowserDetectionSummary(BaseModel):
@@ -251,6 +352,13 @@ class BrowserLocalAnalysisResponse(BaseModel):
     risk_before: int = Field(ge=0, le=100)
     residual_risk_preview: int = Field(ge=0, le=100)
     utility_preview: int = Field(ge=0, le=100)
-    visual_perception_status: Literal["READY", "UNAVAILABLE", "ERROR"]
+    browser_visual_perception_status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    local_companion_visual_status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    visual_perception_status: Literal["READY", "PARTIAL", "UNAVAILABLE", "ERROR"]
+    visual_capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=64)
+    ocr_lines: int = Field(ge=0)
+    visual_findings_count: int = Field(ge=0)
     readiness: Literal["READY_FOR_SANITIZATION", "NEEDS_REVIEW", "VISUAL_COVERAGE_INCOMPLETE"]
     note: str
+
+BrowserReleasePreparationResponse.model_rebuild()

@@ -20,4 +20,10 @@ cd "$ROOT/frontend"
 npm install
 npm run generate:api
 
-echo "Final hardened Slice E setup complete. Dependencies, signing support, proof-package verification and OpenAPI-derived contracts are ready."
+cd "$ROOT/browser-extension"
+npm install
+npm run typecheck
+npm run build
+npm run verify:visual
+
+echo "Final hardened Slice E setup complete. Backend, frontend, browser-extension, signing support, proof-package verification and OpenAPI-derived contracts are ready."
