@@ -1,0 +1,225 @@
+{
+  "contains_real_personal_data": false,
+  "dataset_id": "VG-JUDGE-SHOWCASE-1.0",
+  "dataset_name": "VeilGraph Judge Showcase Dataset",
+  "entity_counts": {
+    "AADHAAR_LIKE": 2,
+    "AGE": 40,
+    "CASE_REFERENCE": 55,
+    "EMAIL": 45,
+    "EMPLOYER": 41,
+    "GENERIC_DATE": 41,
+    "LOCALITY": 46,
+    "PAN_LIKE": 2,
+    "PERSON_NAME": 49,
+    "PHONE": 46,
+    "POSTCODE": 36,
+    "QR_CODE": 4,
+    "SIGNATURE_CANDIDATE": 2
+  },
+  "fictional_only": true,
+  "file_count": 11,
+  "files": [
+    {
+      "bytes": 506,
+      "case_id": "SC-TXT-001",
+      "dataset": "showcase",
+      "format": "TXT",
+      "ground_truth_occurrences": 10,
+      "path": "01_case_brief.txt",
+      "recommended_levels": "L1-L4",
+      "scenario": "Direct + contextual identifiers with a deliberate blank line",
+      "sha256": "0a06415c4593a59af48cc79b5cf4f09fffa664c971be7c33e03d733aa69fa4cf",
+      "stress_tags": [
+        "blank-lines",
+        "repeated-context",
+        "direct-pii",
+        "quasi-pii"
+      ]
+    },
+    {
+      "bytes": 429,
+      "case_id": "SC-MD-001",
+      "dataset": "showcase",
+      "format": "MD",
+      "ground_truth_occurrences": 8,
+      "path": "02_research_note.md",
+      "recommended_levels": "L3-L4",
+      "scenario": "Research handoff demonstrating why L3/L4 may be preferred",
+      "sha256": "97bde1d58326371bd5273324a6925487b978dff80d81e0d26e20b1103c58af30",
+      "stress_tags": [
+        "markdown",
+        "research",
+        "rare-event"
+      ]
+    },
+    {
+      "bytes": 265,
+      "case_id": "SC-RTF-001",
+      "dataset": "showcase",
+      "format": "RTF",
+      "ground_truth_occurrences": 6,
+      "path": "03_service_letter.rtf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Service letter with labelled fields",
+      "sha256": "d49a975b638f0d468098b98c979a0065e67038e28f243fc44a62ded27048ec08",
+      "stress_tags": [
+        "rtf",
+        "labelled-fields"
+      ]
+    },
+    {
+      "bytes": 2838,
+      "case_id": "SC-PDF-001",
+      "dataset": "showcase",
+      "format": "PDF",
+      "ground_truth_occurrences": 12,
+      "path": "04_case_packet.pdf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Two-page digital PDF with repeated/correlated identity context",
+      "sha256": "cacae2ac9efd6e51ed89115f067a3e90f053d68a904d9d01196f7930eb7f080f",
+      "stress_tags": [
+        "multipage",
+        "relationship",
+        "digital-pdf"
+      ]
+    },
+    {
+      "bytes": 83143,
+      "case_id": "SC-SCANPDF-001",
+      "dataset": "showcase",
+      "format": "PDF",
+      "ground_truth_occurrences": 9,
+      "path": "05_scanned_application.pdf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Scanned application with OCR + QR + signature candidate",
+      "sha256": "d6267e21d8917d686170e3eb9dc5475773a13ed608358ff38767637792d4ce3f",
+      "stress_tags": [
+        "scanned-pdf",
+        "ocr",
+        "qr",
+        "signature"
+      ]
+    },
+    {
+      "bytes": 48877,
+      "case_id": "SC-PNG-001",
+      "dataset": "showcase",
+      "format": "PNG",
+      "ground_truth_occurrences": 9,
+      "path": "06_identity_card.png",
+      "recommended_levels": "L1-L4",
+      "scenario": "Image-only identity card with textual + visual identifiers",
+      "sha256": "ed2dfaec6ae87bcf0d79dbee0e06cbed3d525accc879965d0f2caf9ba8aca118",
+      "stress_tags": [
+        "image",
+        "ocr",
+        "qr",
+        "signature"
+      ]
+    },
+    {
+      "bytes": 36662,
+      "case_id": "SC-DOCX-001",
+      "dataset": "showcase",
+      "format": "DOCX",
+      "ground_truth_occurrences": 13,
+      "path": "07_case_report.docx",
+      "recommended_levels": "L1-L4",
+      "scenario": "DOCX body/table/header/footer with repeated identities",
+      "sha256": "70902b97da36c9720643e37d90ca8f50f019f531ce4904b1e367e8dcd9548e69",
+      "stress_tags": [
+        "docx",
+        "header",
+        "footer",
+        "table",
+        "repeated-identity"
+      ]
+    },
+    {
+      "bytes": 1511,
+      "case_id": "SC-CSV-001",
+      "dataset": "showcase",
+      "format": "CSV",
+      "ground_truth_occurrences": 108,
+      "path": "08_research_records.csv",
+      "recommended_levels": "L1-L5",
+      "scenario": "Structured research dataset for L1-L5 including Synthetic Twin",
+      "sha256": "ab0f87084dd89fb9b5d1eb1b71a1c91cf0258dba174be66bf43f5bb49a2ffe4b",
+      "stress_tags": [
+        "structured",
+        "synthetic-twin",
+        "12-records"
+      ]
+    },
+    {
+      "bytes": 5059,
+      "case_id": "SC-JSON-001",
+      "dataset": "showcase",
+      "format": "JSON",
+      "ground_truth_occurrences": 108,
+      "path": "09_research_records.json",
+      "recommended_levels": "L1-L5",
+      "scenario": "Nested structured dataset for L5 and JSON-pointer evidence",
+      "sha256": "ecc74bd0c665a2c15bf67cfbcc0870be64fb96be42c51b40b77a5ae68e4b4d44",
+      "stress_tags": [
+        "structured",
+        "nested-json",
+        "synthetic-twin"
+      ]
+    },
+    {
+      "bytes": 66730,
+      "case_id": "SC-MP4-001",
+      "dataset": "showcase",
+      "format": "MP4",
+      "ground_truth_occurrences": 18,
+      "path": "11_privacy_clip.mp4",
+      "recommended_levels": "L1-L4",
+      "scenario": "Video with persistent case ref, transient name/email and QR payload",
+      "sha256": "76953cc6f1fab21a8d4619b139b9a2bbc6b0456515144852ae72917df60b0eac",
+      "stress_tags": [
+        "video",
+        "transient",
+        "qr",
+        "ocr"
+      ]
+    },
+    {
+      "bytes": 5707,
+      "case_id": "SC-XLSX-001",
+      "dataset": "showcase",
+      "format": "XLSX",
+      "ground_truth_occurrences": 108,
+      "path": "10_research_records.xlsx",
+      "recommended_levels": "L1-L5",
+      "scenario": "Formatted structured workbook for L5 Synthetic Twin",
+      "sha256": "448ceba585038b5fe5a18fd6ba77ec84fc42e561eaa38eac40dc60f10ab350b4",
+      "stress_tags": [
+        "structured",
+        "xlsx",
+        "synthetic-twin",
+        "data-card"
+      ]
+    }
+  ],
+  "formats": [
+    "CSV",
+    "DOCX",
+    "JSON",
+    "MD",
+    "MP4",
+    "PDF",
+    "PNG",
+    "RTF",
+    "TXT",
+    "XLSX"
+  ],
+  "ground_truth_occurrences": 409,
+  "relationship_ground_truth_edges": 2,
+  "split_role": "judge_demo_and_development",
+  "tuning_allowed": true,
+  "untouched_holdout": false,
+  "veilgraph_milestone": "Judge Dataset Readiness v8",
+  "version": "1.0.0"
+}

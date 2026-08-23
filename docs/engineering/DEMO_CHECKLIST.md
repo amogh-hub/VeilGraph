@@ -1,0 +1,28 @@
+# VeilGraph Final Hardened Slice E — Manual Acceptance Checklist
+
+- [ ] `./scripts/run_checks.sh` reports **46 passed**.
+- [ ] TypeScript typecheck passes.
+- [ ] Vite production build passes.
+- [ ] Optional: `./scripts/run_veilbench.sh` reports **2/2 PASS**.
+- [ ] Wi-Fi is disabled before the competition-mode start.
+- [ ] `LOCAL MODE ACTIVE` appears.
+- [ ] A local Ed25519 signer fingerprint appears in the status card.
+- [ ] Upload `backend/test_identity_graph_document.pdf`.
+- [ ] Identity Exposure Graph shows 15 entities / 17 mentions and non-zero quasi/relationship risk.
+- [ ] Level 4 shows approximately `100 → 37` exposure and `66` retained utility.
+- [ ] Both genuine person-name candidates are protected.
+- [ ] Level 4 is applied once.
+- [ ] Page 1 uses Person A / Organisation A / Contact A / Case A and generalized context.
+- [ ] Page 2 uses Person B / Contact B while Organisation A / Case A remain stable.
+- [ ] 12-attack Privacy Red Team returns `VERIFIED_SAFE`, `12/12`, `100/100`, zero critical blockers.
+- [ ] Signed privacy proof panel appears automatically.
+- [ ] Certificate reports `ED25519 VALID`.
+- [ ] Audit ledger reports intact.
+- [ ] Protected output can be downloaded.
+- [ ] Certificate PDF can be downloaded.
+- [ ] Complete signed proof package can be downloaded.
+- [ ] Package contains manifest, Identity Exposure Graph, verification JSON, certification audit ledger, signed bundle receipt and export audit ledger.
+- [ ] `python3 scripts/verify_proof_package.py <complete-proof-package.zip>` ends with `PACKAGE_VALID`.
+- [ ] Certificate-only verifier still reports `SIGNATURE_VALID` and `ARTIFACT_HASH_VALID` for extracted files.
+- [ ] Destroy workspace.
+- [ ] Signed destruction receipt reports VALID and includes final audit-chain head.

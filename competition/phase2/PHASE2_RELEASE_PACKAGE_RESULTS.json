@@ -1,0 +1,18 @@
+{
+  "entry_count": 9564,
+  "output": "competition/releases/veilgraph-sih-phase2-sanitized.zip",
+  "schema": "veilgraph.phase2-release.v1",
+  "sha256": "397b0fb69e023e5a138b9ebe730b0f093bbe01f01569b1fc64aef311894a1317",
+  "size_bytes": 144421253,
+  "verification": {
+    "checks": [
+      {
+        "detail": "Sanitized release package paths, exclusions and hashes are valid",
+        "name": "release_package",
+        "valid": true
+      }
+    ],
+    "entry_count": 9564,
+    "valid": true
+  }
+}

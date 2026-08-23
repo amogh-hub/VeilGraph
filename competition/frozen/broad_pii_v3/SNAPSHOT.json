@@ -1,0 +1,7 @@
+{
+  "schema": "veilgraph.historical-detector-snapshot.v1",
+  "detector": "Broad-Coverage PII Engine v3",
+  "source_manifest": "competition/HOLDOUT_FREEZE_MANIFEST.json",
+  "source_manifest_sha256": "59764fce09d1f652267c0079b42d0eab38809607d85a6294d1d9c80b76aa54c8",
+  "purpose": "Byte-exact historical snapshot of the detector surface used for the original untouched Nemotron holdout. Current production pipeline may evolve under separately frozen generations."
+}

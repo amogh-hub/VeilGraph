@@ -1,0 +1,40 @@
+{
+  "case": "VG-CHAOS-010",
+  "participants": [
+    {
+      "name": "Kabir Shah",
+      "contacts": [
+        {
+          "kind": "email",
+          "value": "kabir.shah@example.org"
+        },
+        {
+          "kind": "phone",
+          "value": "+91 90000 10003"
+        }
+      ],
+      "places": [
+        "Ahmedabad",
+        null
+      ],
+      "employer": {
+        "name": "Cedar Finance Services"
+      }
+    },
+    {
+      "name": "Tara Singh",
+      "contacts": [
+        {
+          "kind": "email",
+          "value": "tara.singh@example.org"
+        }
+      ],
+      "places": [
+        "Jaipur"
+      ],
+      "employer": {
+        "name": "Desert Grid Research"
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "veilgraph.phase1-freeze.v1",
+  "phase": "PHASE 1 \u2014 ACCURACY & JUDGE-DATA READINESS",
+  "status": "COMPLETE_AND_FROZEN",
+  "closed_at_utc": "2026-08-12T09:14:12.502280+00:00",
+  "frozen_detector": "Broad PII v5",
+  "semantic_ner": {
+    "version": "3.0.0",
+    "training_examples": 2330,
+    "runtime_network_required": false
+  },
+  "regression_acceptance": {
+    "backend_tests_passed": 237,
+    "backend_tests_failed": 0,
+    "nonfatal_warnings": 5,
+    "typescript_typecheck": "PASS",
+    "vite_production_build": "PASS"
+  },
+  "manual_browser_acceptance": {
+    "docx_l4_recommendation": "PASS",
+    "docx_l5_unsupported_restriction": "PASS",
+    "xlsx_l5_synthetic_twin_recommendation": "PASS"
+  },
+  "external_evidence_policy": {
+    "tab_v4_preserved": true,
+    "ari_v5_preserved": true,
+    "ari_quality_gate": "FAIL_DOCUMENTED_LIMITATION",
+    "external_gate_failure_reopens_phase_automatically": false,
+    "broad_pii_v6_required_for_phase1_completion": false
+  },
+  "artifacts": {
+    "competition/phase1/PHASE_1_FINAL_REPORT.md": "1ed01169471492970acd88943a54523c3f50fdbfd1394a048b4b35cea6ec275b",
+    "competition/phase1/PHASE_1_LIMITATIONS.md": "cbf9e4d6542ee8da07ace4c61c78c32c82473c090dee66e5450f760e16f69781",
+    "competition/phase1/PHASE_1_REQUIREMENT_TRACEABILITY.md": "55855b158e0d798aeb13da31caadbfaea3adb6cf4618d90955d90c2bd64942d8",
+    "competition/phase1/PHASE_1_COMPLETE.md": "f8ed8b4f0200422f3e84e13d709d50163a46f3d878d850fae107408349203706",
+    "competition/phase1/PHASE1_SCOPE_LOCK.md": "4b6e13b843778b76d0e0acccfd6aad2b858b5d26d2d1ecfb4b7caacec50ccc65",
+    "competition/phase1/JUDGE_READINESS_RESULTS.json": "9f1286f47dd1f0afb3f25694a0eccc7ebae27f273c8de2e58a2cb2053c911dbf",
+    "competition/phase1/EXTERNAL_HOLDOUT_TAB_RESULTS.json": "c9e7063e76ea3921ed998f3dbd1a8fb013f6641d6b0c1b4a52fe3441a1587ba0",
+    "competition/phase1/EXTERNAL_HOLDOUT_ARI_SYNTHETIC_TEST_RESULTS.json": "5c624489a8ac51c70fe69bfadfb0f4d21b9b5ada8b80d90991b737fa83e70f0d",
+    "competition/phase1/BROAD_PII_V5_FREEZE_MANIFEST.json": "56035dfb7fcbc0bc5bceb04abbd360fd21d50a9330bc408a6488e6355c29fae1"
+  },
+  "next_phase": "PHASE 2 \u2014 PRODUCTION, SECURITY & SCALE"
+}

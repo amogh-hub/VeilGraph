@@ -1,0 +1,129 @@
+{
+  "classifiers": {
+    "EMPLOYER": {
+      "intercept": 0.2221242,
+      "threshold": 0.64,
+      "training_examples": {
+        "negative": 96,
+        "positive": 436
+      },
+      "weights": {
+        "address_term": 0.0262422,
+        "alpha_ratio": 0.2221242,
+        "bias": 0.2221242,
+        "employment_context": -0.5688152,
+        "generic_block": -4.8614743,
+        "legal_context": 0.0262422,
+        "org_term": 3.575075,
+        "pattern_employment_org": -0.5688152,
+        "pattern_org_suffix": 0.7909394,
+        "role_term": -1.5085235,
+        "title_ratio": 0.2038335,
+        "token_count_2": -1.1083592,
+        "token_count_3_5": 1.3304835
+      }
+    },
+    "JOB_TITLE": {
+      "intercept": 0.5877638,
+      "threshold": 0.67,
+      "training_examples": {
+        "negative": 120,
+        "positive": 220
+      },
+      "weights": {
+        "alpha_ratio": 0.5877638,
+        "bias": 0.5877638,
+        "field_like": -0.9962283,
+        "generic_block": -6.8240617,
+        "legal_context": 0.9061793,
+        "org_term": -2.3230784,
+        "pattern_job_title": 0.5877638,
+        "role_context": 0.5877638,
+        "role_term": 3.7956489,
+        "title_ratio": 0.5877638,
+        "token_count_2": 0.5665728,
+        "token_count_3_5": 0.021191
+      }
+    },
+    "LOCALITY": {
+      "intercept": -0.2798003,
+      "threshold": 0.62,
+      "training_examples": {
+        "negative": 120,
+        "positive": 260
+      },
+      "weights": {
+        "alpha_ratio": -0.2798003,
+        "bias": -0.2798003,
+        "generic_block": -5.2136938,
+        "legal_context": -0.2798003,
+        "location_context": -0.2798003,
+        "org_term": -0.5388969,
+        "pattern_location_place": -0.2798003,
+        "role_term": -0.5388969,
+        "title_ratio": 5.3222764,
+        "token_count_1": 1.9508022,
+        "token_count_2": -2.2306026
+      }
+    },
+    "PERSON_NAME": {
+      "intercept": 1.0572956,
+      "threshold": 0.58,
+      "training_examples": {
+        "negative": 158,
+        "positive": 580
+      },
+      "weights": {
+        "alpha_ratio": 1.0572956,
+        "bias": 1.0572956,
+        "generic_block": -7.5376024,
+        "honorific_context": 0.8008949,
+        "legal_context": -1.2735397,
+        "next_person_role": 0.8713299,
+        "next_person_verb": -0.1864579,
+        "org_term": -7.1415575,
+        "pattern_action_person": 0.5781287,
+        "pattern_honorific_person": 0.8008949,
+        "pattern_person_before_role": 0.8713299,
+        "pattern_role_person": -0.2057051,
+        "pattern_sentence_person": -0.9873528,
+        "person_action_context": 0.5781287,
+        "person_role_context": -0.2057051,
+        "role_context": 0.0743138,
+        "role_term": -0.7796686,
+        "sentence_start": -0.1160229,
+        "title_ratio": 1.0572956,
+        "token_count_1": 0.2592637,
+        "token_count_2": 0.4187555,
+        "token_count_3_5": 0.3792764
+      }
+    },
+    "STREET_ADDRESS": {
+      "intercept": -0.3837034,
+      "threshold": 0.67,
+      "training_examples": {
+        "negative": 120,
+        "positive": 220
+      },
+      "weights": {
+        "address_context": -0.3837034,
+        "address_term": 7.8389061,
+        "alpha_ratio": 0.3389189,
+        "bias": -0.3837034,
+        "contains_digit": -0.3837034,
+        "field_like": -1.4440313,
+        "pattern_address_label": -0.3837034,
+        "title_ratio": -0.3837034,
+        "token_count_2": -0.618008,
+        "token_count_3_5": 0.2343046
+      }
+    }
+  },
+  "model_family": "local logistic-regression contextual span classifier",
+  "runtime_network_required": false,
+  "schema": "veilgraph.semantic-ner.linear.v3",
+  "training_corpus_sha256": "875fab62286dcda32255e3a338c5773d5fcdd637ce175b4a96efc5f4990e76df",
+  "training_examples": 2330,
+  "training_source": "VeilGraph synthetic multi-domain semantic-context corpus v3",
+  "version": "3.0.0"
+}

@@ -1,0 +1,242 @@
+{
+  "contains_real_personal_data": false,
+  "dataset_id": "VG-JUDGE-CHAOS-1.0",
+  "dataset_name": "VeilGraph Judge Chaos / Generalization Dataset",
+  "entity_counts": {
+    "AADHAAR_LIKE": 2,
+    "AGE": 5,
+    "CASE_REFERENCE": 16,
+    "EMAIL": 18,
+    "EMPLOYER": 8,
+    "GENERIC_DATE": 1,
+    "LOCALITY": 14,
+    "PAN_LIKE": 2,
+    "PERSON_NAME": 21,
+    "PHONE": 15,
+    "POSTCODE": 1,
+    "QR_CODE": 3,
+    "SIGNATURE_CANDIDATE": 2
+  },
+  "fictional_only": true,
+  "file_count": 12,
+  "files": [
+    {
+      "bytes": 153,
+      "case_id": "CH-TXT-001",
+      "dataset": "chaos",
+      "format": "TXT",
+      "ground_truth_occurrences": 6,
+      "path": "01_blank_tabs.txt",
+      "recommended_levels": "L1-L4",
+      "scenario": "Blank rows, tabs, inline identifiers and repeated entity",
+      "sha256": "8619e285d8d11231f9ed7cd59b5bdef384764e036d11f6578820b560fd634f81",
+      "stress_tags": [
+        "blank-lines",
+        "tabs",
+        "inline-token",
+        "repeated-identity"
+      ]
+    },
+    {
+      "bytes": 375,
+      "case_id": "CH-MD-001",
+      "dataset": "chaos",
+      "format": "MD",
+      "ground_truth_occurrences": 7,
+      "path": "02_unicode_mixed.md",
+      "recommended_levels": "L1-L4",
+      "scenario": "Unicode and mixed-script stress case",
+      "sha256": "3997e9fcbb289bf4c54f21563fd74eb6e7c644837418dac2901c749ebab995e1",
+      "stress_tags": [
+        "unicode",
+        "mixed-script",
+        "emdash"
+      ]
+    },
+    {
+      "bytes": 134,
+      "case_id": "CH-RTF-001",
+      "dataset": "chaos",
+      "format": "RTF",
+      "ground_truth_occurrences": 5,
+      "path": "03_dense_inline.rtf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Dense inline tokens without comfortable whitespace",
+      "sha256": "d2aa0cbfdd63c7460af4e5563f1b95fd5c3a38978ab27572cc5e4fcb722f32a1",
+      "stress_tags": [
+        "dense-inline",
+        "rtf"
+      ]
+    },
+    {
+      "bytes": 1848,
+      "case_id": "CH-PDF-001",
+      "dataset": "chaos",
+      "format": "PDF",
+      "ground_truth_occurrences": 8,
+      "path": "04_multicolumn.pdf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Two-column PDF with footer repetition",
+      "sha256": "7f519b9e4174a79cb7e01b5c7eaa2447efc8ea08273295558bfee3d081976863",
+      "stress_tags": [
+        "two-column",
+        "footer",
+        "pdf"
+      ]
+    },
+    {
+      "bytes": 64368,
+      "case_id": "CH-SCANPDF-001",
+      "dataset": "chaos",
+      "format": "PDF",
+      "ground_truth_occurrences": 9,
+      "path": "05_low_contrast_scan.pdf",
+      "recommended_levels": "L1-L4",
+      "scenario": "Low-contrast scan for OCR robustness",
+      "sha256": "16638b846a6be31ee98ac22ee26f3d268208768b9be67b80aa85cd6c8282969c",
+      "stress_tags": [
+        "low-contrast",
+        "scan",
+        "ocr",
+        "qr"
+      ]
+    },
+    {
+      "bytes": 75108,
+      "case_id": "CH-PNG-001",
+      "dataset": "chaos",
+      "format": "PNG",
+      "ground_truth_occurrences": 9,
+      "path": "06_rotated_image.png",
+      "recommended_levels": "L1-L4",
+      "scenario": "Slight rotation with OCR and visual identifiers",
+      "sha256": "fc4cfae35b805c398c17e969c039e6d8da805b9349a5e1095f48c1f3f9caa90d",
+      "stress_tags": [
+        "rotation",
+        "image",
+        "ocr",
+        "qr"
+      ]
+    },
+    {
+      "bytes": 39428,
+      "case_id": "CH-JPEG-001",
+      "dataset": "chaos",
+      "format": "JPEG",
+      "ground_truth_occurrences": 6,
+      "path": "07_longline.jpg",
+      "recommended_levels": "L1-L4",
+      "scenario": "Long single-line OCR with dense separators",
+      "sha256": "e025563c70202d537aaf941ec2b71f7b51505b70ff06fc23a38c2f93f805e086",
+      "stress_tags": [
+        "long-line",
+        "jpeg",
+        "ocr"
+      ]
+    },
+    {
+      "bytes": 36525,
+      "case_id": "CH-DOCX-001",
+      "dataset": "chaos",
+      "format": "DOCX",
+      "ground_truth_occurrences": 9,
+      "path": "08_headers_tables.docx",
+      "recommended_levels": "L1-L4",
+      "scenario": "Header/footer/table/body routing stress",
+      "sha256": "bae333f428ac6a49ae2f1175d0788c4d554e22d2f7dafbb1993d4d0cd3d06c6d",
+      "stress_tags": [
+        "header",
+        "footer",
+        "table",
+        "repeat"
+      ]
+    },
+    {
+      "bytes": 335,
+      "case_id": "CH-CSV-001",
+      "dataset": "chaos",
+      "format": "CSV",
+      "ground_truth_occurrences": 12,
+      "path": "09_messy.csv",
+      "recommended_levels": "L1-L5",
+      "scenario": "Quoted newline, spacing, alias email, varied phone styles",
+      "sha256": "7a666f420ab1f9667b1e47885cdfeae5a030b00b6b380f1a6eee7b9941a11bbd",
+      "stress_tags": [
+        "structured",
+        "quoted-newline",
+        "email-alias",
+        "phone-variants"
+      ]
+    },
+    {
+      "bytes": 700,
+      "case_id": "CH-JSON-001",
+      "dataset": "chaos",
+      "format": "JSON",
+      "ground_truth_occurrences": 10,
+      "path": "10_nested.json",
+      "recommended_levels": "L1-L5",
+      "scenario": "Nested arrays, nulls and mixed participant structures",
+      "sha256": "5f3900b86e4b10dec1a6f267b21651801a631c33840be4c9a4901197ef814649",
+      "stress_tags": [
+        "nested-json",
+        "arrays",
+        "nulls"
+      ]
+    },
+    {
+      "bytes": 47871,
+      "case_id": "CH-MP4-001",
+      "dataset": "chaos",
+      "format": "MP4",
+      "ground_truth_occurrences": 2,
+      "path": "12_transient.mp4",
+      "recommended_levels": "L1-L4",
+      "scenario": "Between-sample transient email plus final-frame QR",
+      "sha256": "22366361d5e0c32f524772ef9d01066fbf46e965fb3dc19136865edc634abb5f",
+      "stress_tags": [
+        "video",
+        "transient-frame",
+        "qr"
+      ]
+    },
+    {
+      "bytes": 4703,
+      "case_id": "CH-XLSX-001",
+      "dataset": "chaos",
+      "format": "XLSX",
+      "ground_truth_occurrences": 25,
+      "path": "11_merged_mixed.xlsx",
+      "recommended_levels": "L1-L5",
+      "scenario": "Multi-sheet workbook with blank row, awkward headers and mixed formats",
+      "sha256": "bf3beb886b69c5b96845c4001892a59b3971fac394041d3cf7d00fe7e1c87658",
+      "stress_tags": [
+        "xlsx",
+        "multi-sheet",
+        "blank-row",
+        "awkward-headers",
+        "case-variants"
+      ]
+    }
+  ],
+  "formats": [
+    "CSV",
+    "DOCX",
+    "JPEG",
+    "JSON",
+    "MD",
+    "MP4",
+    "PDF",
+    "PNG",
+    "RTF",
+    "TXT",
+    "XLSX"
+  ],
+  "ground_truth_occurrences": 108,
+  "relationship_ground_truth_edges": 0,
+  "split_role": "adversarial_development_and_regression",
+  "tuning_allowed": true,
+  "untouched_holdout": false,
+  "veilgraph_milestone": "Judge Dataset Readiness v8",
+  "version": "1.0.0"
+}

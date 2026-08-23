@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VeilGraph</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="mark">VG</div>
+      <div><strong>VeilGraph</strong><span>Privacy-governed browser agent</span></div>
+    </header>
+    <section class="gate"><span>Network release</span><strong>FAIL-CLOSED</strong></section>
+    <label for="task">What should the agent do?</label>
+    <input id="task" type="text" autocomplete="off" placeholder="e.g. Book the follow-up appointment">
+    <p id="status">Ready for local analysis.</p>
+    <button id="analyse" type="button">Analyse current page locally</button>
+    <pre id="detail" aria-live="polite"></pre>
+    <footer>Raw screen context is sent only to the local VeilGraph companion on 127.0.0.1. External release remains impossible without a signed privacy authorization.</footer>
+  </main>
+  <script type="module" src="index.js"></script>
+</body>
+</html>

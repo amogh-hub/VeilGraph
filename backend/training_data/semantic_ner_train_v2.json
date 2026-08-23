@@ -1,0 +1,881 @@
+{
+  "contains_real_pii": false,
+  "examples": [
+    {
+      "accept": true,
+      "end": 11,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Rohan Mehta submitted the fictional record today.",
+      "value": "Rohan Mehta"
+    },
+    {
+      "accept": true,
+      "end": 14,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Nisha Kulkarni attended the fictional record today.",
+      "value": "Nisha Kulkarni"
+    },
+    {
+      "accept": true,
+      "end": 10,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Tara Singh reported the fictional record today.",
+      "value": "Tara Singh"
+    },
+    {
+      "accept": true,
+      "end": 10,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Kabir Shah requested the fictional record today.",
+      "value": "Kabir Shah"
+    },
+    {
+      "accept": true,
+      "end": 12,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Leena Thomas filed the fictional record today.",
+      "value": "Leena Thomas"
+    },
+    {
+      "accept": true,
+      "end": 12,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Dev Malhotra works the fictional record today.",
+      "value": "Dev Malhotra"
+    },
+    {
+      "accept": true,
+      "end": 11,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Aarav Menon reviewed the fictional record today.",
+      "value": "Aarav Menon"
+    },
+    {
+      "accept": true,
+      "end": 10,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Meera Iyer asked the fictional record today.",
+      "value": "Meera Iyer"
+    },
+    {
+      "accept": true,
+      "end": 25,
+      "entity_type": "PERSON_NAME",
+      "pattern": "action-person",
+      "start": 16,
+      "text": "The officer met Isha Nair after the review.",
+      "value": "Isha Nair"
+    },
+    {
+      "accept": true,
+      "end": 31,
+      "entity_type": "PERSON_NAME",
+      "pattern": "action-person",
+      "start": 19,
+      "text": "The team contacted Vikram Joshi after the review.",
+      "value": "Vikram Joshi"
+    },
+    {
+      "accept": true,
+      "end": 25,
+      "entity_type": "PERSON_NAME",
+      "pattern": "action-person",
+      "start": 12,
+      "text": "Reviewed by Ananya Shetty after the review.",
+      "value": "Ananya Shetty"
+    },
+    {
+      "accept": true,
+      "end": 22,
+      "entity_type": "PERSON_NAME",
+      "pattern": "action-person",
+      "start": 12,
+      "text": "Prepared by Arjun Bhat after the review.",
+      "value": "Arjun Bhat"
+    },
+    {
+      "accept": true,
+      "end": 24,
+      "entity_type": "PERSON_NAME",
+      "pattern": "action-person",
+      "start": 13,
+      "text": "Submitted by Meera Menon after the review.",
+      "value": "Meera Menon"
+    },
+    {
+      "accept": false,
+      "end": 20,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Desert Grid Research submitted the generic template.",
+      "value": "Desert Grid Research"
+    },
+    {
+      "accept": false,
+      "end": 22,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Central Mobility Works submitted the generic template.",
+      "value": "Central Mobility Works"
+    },
+    {
+      "accept": false,
+      "end": 14,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Privacy Policy submitted the generic template.",
+      "value": "Privacy Policy"
+    },
+    {
+      "accept": false,
+      "end": 14,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Public Release submitted the generic template.",
+      "value": "Public Release"
+    },
+    {
+      "accept": false,
+      "end": 15,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Data Protection submitted the generic template.",
+      "value": "Data Protection"
+    },
+    {
+      "accept": false,
+      "end": 16,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Security Analyst submitted the generic template.",
+      "value": "Security Analyst"
+    },
+    {
+      "accept": false,
+      "end": 16,
+      "entity_type": "PERSON_NAME",
+      "pattern": "sentence-person",
+      "start": 0,
+      "text": "Machine Learning submitted the generic template.",
+      "value": "Machine Learning"
+    },
+    {
+      "accept": false,
+      "end": 6,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 0,
+      "text": "Jaipur | sample",
+      "value": "Jaipur"
+    },
+    {
+      "accept": false,
+      "end": 4,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 0,
+      "text": "Pune | sample",
+      "value": "Pune"
+    },
+    {
+      "accept": false,
+      "end": 6,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 0,
+      "text": "Mysuru | sample",
+      "value": "Mysuru"
+    },
+    {
+      "accept": false,
+      "end": 9,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 0,
+      "text": "Ahmedabad | sample",
+      "value": "Ahmedabad"
+    },
+    {
+      "accept": true,
+      "end": 16,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 6,
+      "text": "Owner Tara Singh | sample",
+      "value": "Tara Singh"
+    },
+    {
+      "accept": true,
+      "end": 16,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 6,
+      "text": "Owner Kabir Shah | sample",
+      "value": "Kabir Shah"
+    },
+    {
+      "accept": true,
+      "end": 18,
+      "entity_type": "PERSON_NAME",
+      "pattern": "pipe",
+      "start": 6,
+      "text": "Owner Dev Malhotra | sample",
+      "value": "Dev Malhotra"
+    },
+    {
+      "accept": true,
+      "end": 52,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Orion Analytics Pvt Ltd as an Engineer.",
+      "value": "Orion Analytics Pvt Ltd"
+    },
+    {
+      "accept": true,
+      "end": 32,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Orion Analytics Pvt Ltd | end",
+      "value": "Orion Analytics Pvt Ltd"
+    },
+    {
+      "accept": true,
+      "end": 55,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Nimbus Research Foundation as an Engineer.",
+      "value": "Nimbus Research Foundation"
+    },
+    {
+      "accept": true,
+      "end": 35,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Nimbus Research Foundation | end",
+      "value": "Nimbus Research Foundation"
+    },
+    {
+      "accept": true,
+      "end": 51,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Cedar Finance Services as an Engineer.",
+      "value": "Cedar Finance Services"
+    },
+    {
+      "accept": true,
+      "end": 31,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Cedar Finance Services | end",
+      "value": "Cedar Finance Services"
+    },
+    {
+      "accept": true,
+      "end": 49,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Sapphire Health Labs as an Engineer.",
+      "value": "Sapphire Health Labs"
+    },
+    {
+      "accept": true,
+      "end": 29,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Sapphire Health Labs | end",
+      "value": "Sapphire Health Labs"
+    },
+    {
+      "accept": true,
+      "end": 52,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Northstar Legal Systems as an Engineer.",
+      "value": "Northstar Legal Systems"
+    },
+    {
+      "accept": true,
+      "end": 32,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Northstar Legal Systems | end",
+      "value": "Northstar Legal Systems"
+    },
+    {
+      "accept": true,
+      "end": 51,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Central Mobility Works as an Engineer.",
+      "value": "Central Mobility Works"
+    },
+    {
+      "accept": true,
+      "end": 31,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Central Mobility Works | end",
+      "value": "Central Mobility Works"
+    },
+    {
+      "accept": true,
+      "end": 46,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Helix Diagnostics as an Engineer.",
+      "value": "Helix Diagnostics"
+    },
+    {
+      "accept": true,
+      "end": 26,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Helix Diagnostics | end",
+      "value": "Helix Diagnostics"
+    },
+    {
+      "accept": true,
+      "end": 49,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Desert Grid Research as an Engineer.",
+      "value": "Desert Grid Research"
+    },
+    {
+      "accept": true,
+      "end": 29,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Desert Grid Research | end",
+      "value": "Desert Grid Research"
+    },
+    {
+      "accept": true,
+      "end": 56,
+      "entity_type": "EMPLOYER",
+      "pattern": "employment-org",
+      "start": 29,
+      "text": "A fictional analyst works at Kaveri Public Research Unit as an Engineer.",
+      "value": "Kaveri Public Research Unit"
+    },
+    {
+      "accept": true,
+      "end": 36,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Kaveri Public Research Unit | end",
+      "value": "Kaveri Public Research Unit"
+    },
+    {
+      "accept": false,
+      "end": 19,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Tara Singh | end",
+      "value": "Tara Singh"
+    },
+    {
+      "accept": false,
+      "end": 19,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Kabir Shah | end",
+      "value": "Kabir Shah"
+    },
+    {
+      "accept": false,
+      "end": 15,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Jaipur | end",
+      "value": "Jaipur"
+    },
+    {
+      "accept": false,
+      "end": 13,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Pune | end",
+      "value": "Pune"
+    },
+    {
+      "accept": false,
+      "end": 23,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Public Release | end",
+      "value": "Public Release"
+    },
+    {
+      "accept": false,
+      "end": 25,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Security Analyst | end",
+      "value": "Security Analyst"
+    },
+    {
+      "accept": false,
+      "end": 21,
+      "entity_type": "EMPLOYER",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Data Analyst | end",
+      "value": "Data Analyst"
+    },
+    {
+      "accept": true,
+      "end": 47,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Bengaluru for this study.",
+      "value": "Bengaluru"
+    },
+    {
+      "accept": true,
+      "end": 18,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Bengaluru | end",
+      "value": "Bengaluru"
+    },
+    {
+      "accept": true,
+      "end": 45,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Chennai for this study.",
+      "value": "Chennai"
+    },
+    {
+      "accept": true,
+      "end": 16,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Chennai | end",
+      "value": "Chennai"
+    },
+    {
+      "accept": true,
+      "end": 47,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Ahmedabad for this study.",
+      "value": "Ahmedabad"
+    },
+    {
+      "accept": true,
+      "end": 18,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Ahmedabad | end",
+      "value": "Ahmedabad"
+    },
+    {
+      "accept": true,
+      "end": 42,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Pune for this study.",
+      "value": "Pune"
+    },
+    {
+      "accept": true,
+      "end": 13,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Pune | end",
+      "value": "Pune"
+    },
+    {
+      "accept": true,
+      "end": 43,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Kochi for this study.",
+      "value": "Kochi"
+    },
+    {
+      "accept": true,
+      "end": 14,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Kochi | end",
+      "value": "Kochi"
+    },
+    {
+      "accept": true,
+      "end": 47,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Hyderabad for this study.",
+      "value": "Hyderabad"
+    },
+    {
+      "accept": true,
+      "end": 18,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Hyderabad | end",
+      "value": "Hyderabad"
+    },
+    {
+      "accept": true,
+      "end": 44,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Mysuru for this study.",
+      "value": "Mysuru"
+    },
+    {
+      "accept": true,
+      "end": 15,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Mysuru | end",
+      "value": "Mysuru"
+    },
+    {
+      "accept": true,
+      "end": 46,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Gurugram for this study.",
+      "value": "Gurugram"
+    },
+    {
+      "accept": true,
+      "end": 17,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Gurugram | end",
+      "value": "Gurugram"
+    },
+    {
+      "accept": true,
+      "end": 44,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Jaipur for this study.",
+      "value": "Jaipur"
+    },
+    {
+      "accept": true,
+      "end": 15,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Jaipur | end",
+      "value": "Jaipur"
+    },
+    {
+      "accept": true,
+      "end": 44,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Nagpur for this study.",
+      "value": "Nagpur"
+    },
+    {
+      "accept": true,
+      "end": 15,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Nagpur | end",
+      "value": "Nagpur"
+    },
+    {
+      "accept": true,
+      "end": 47,
+      "entity_type": "LOCALITY",
+      "pattern": "location-place",
+      "start": 38,
+      "text": "The fictional participant is based in Mangaluru for this study.",
+      "value": "Mangaluru"
+    },
+    {
+      "accept": true,
+      "end": 18,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Mangaluru | end",
+      "value": "Mangaluru"
+    },
+    {
+      "accept": false,
+      "end": 24,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Orion Analytics | end",
+      "value": "Orion Analytics"
+    },
+    {
+      "accept": false,
+      "end": 29,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Desert Grid Research | end",
+      "value": "Desert Grid Research"
+    },
+    {
+      "accept": false,
+      "end": 19,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Tara Singh | end",
+      "value": "Tara Singh"
+    },
+    {
+      "accept": false,
+      "end": 23,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Public Release | end",
+      "value": "Public Release"
+    },
+    {
+      "accept": false,
+      "end": 25,
+      "entity_type": "LOCALITY",
+      "pattern": "pipe",
+      "start": 9,
+      "text": "sample | Security Analyst | end",
+      "value": "Security Analyst"
+    },
+    {
+      "accept": true,
+      "end": 46,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 22 Sample Road Mysuru before review.",
+      "value": "22 Sample Road Mysuru"
+    },
+    {
+      "accept": true,
+      "end": 44,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 7 Fixture Lane Pune before review.",
+      "value": "7 Fixture Lane Pune"
+    },
+    {
+      "accept": true,
+      "end": 48,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 108 Demo Street Chennai before review.",
+      "value": "108 Demo Street Chennai"
+    },
+    {
+      "accept": true,
+      "end": 45,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 4 Model Avenue Kochi before review.",
+      "value": "4 Model Avenue Kochi"
+    },
+    {
+      "accept": true,
+      "end": 49,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 51 Test Boulevard Jaipur before review.",
+      "value": "51 Test Boulevard Jaipur"
+    },
+    {
+      "accept": false,
+      "end": 49,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 51 Project Version Alpha before review.",
+      "value": "51 Project Version Alpha"
+    },
+    {
+      "accept": false,
+      "end": 50,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 22 Release Candidate Beta before review.",
+      "value": "22 Release Candidate Beta"
+    },
+    {
+      "accept": false,
+      "end": 47,
+      "entity_type": "STREET_ADDRESS",
+      "pattern": "address",
+      "start": 25,
+      "text": "The notice was mailed to 9 Dataset Record Seven before review.",
+      "value": "9 Dataset Record Seven"
+    },
+    {
+      "accept": true,
+      "end": 76,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Data Scientist.",
+      "value": "Data Scientist"
+    },
+    {
+      "accept": true,
+      "end": 79,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Security Engineer.",
+      "value": "Security Engineer"
+    },
+    {
+      "accept": true,
+      "end": 77,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Privacy Analyst.",
+      "value": "Privacy Analyst"
+    },
+    {
+      "accept": true,
+      "end": 78,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Research Officer.",
+      "value": "Research Officer"
+    },
+    {
+      "accept": true,
+      "end": 80,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Software Architect.",
+      "value": "Software Architect"
+    },
+    {
+      "accept": true,
+      "end": 80,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 62,
+      "text": "The fictional employee works at Demo Research Foundation as a Compliance Auditor.",
+      "value": "Compliance Auditor"
+    },
+    {
+      "accept": false,
+      "end": 61,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 47,
+      "text": "The fictional employee works at Demo Labs as a Public Release.",
+      "value": "Public Release"
+    },
+    {
+      "accept": false,
+      "end": 64,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 47,
+      "text": "The fictional employee works at Demo Labs as a Identity Exposure.",
+      "value": "Identity Exposure"
+    },
+    {
+      "accept": false,
+      "end": 61,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 47,
+      "text": "The fictional employee works at Demo Labs as a Sample Dataset.",
+      "value": "Sample Dataset"
+    },
+    {
+      "accept": false,
+      "end": 59,
+      "entity_type": "JOB_TITLE",
+      "pattern": "job-title",
+      "start": 47,
+      "text": "The fictional employee works at Demo Labs as a Model Output.",
+      "value": "Model Output"
+    }
+  ],
+  "license": "CC0-1.0",
+  "purpose": "Independent fictional semantic-context corpus for Broad PII v4 local logistic span classifiers. Judge Showcase/Chaos and all external holdouts remain separate evaluation sources.",
+  "schema": "veilgraph.semantic-ner-training.v2"
+}

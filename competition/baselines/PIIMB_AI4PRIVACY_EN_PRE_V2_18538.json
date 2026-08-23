@@ -1,0 +1,46 @@
+{
+  "characters_scored": 1774805,
+  "claim_boundary": "Metrics are corpus-specific measured evidence, not universal accuracy or anonymity guarantees.",
+  "dataset": {
+    "input_file": "test_sentences.jsonl",
+    "label_accounting": {
+      "language:en": 18538,
+      "task:ai4privacy-en": 18538
+    },
+    "label_agnostic": true,
+    "license": "CC-BY-NC-4.0",
+    "name": "PIIMB: PII Masking Benchmark",
+    "row_limit": 18538,
+    "rows_scored": 18538,
+    "task_filter": "ai4privacy-en"
+  },
+  "detector_baseline": "VeilGraph pre-Broad-Coverage PII Engine v2 (104-test verified snapshot)",
+  "exact_mask_matches": 6060,
+  "generated_at": "2026-08-08T17:46:06.388434+00:00",
+  "gold_mask_spans": 38481,
+  "integrity_note": "The original 104-test snapshot did not yet record the external dataset SHA-256. Broad-Coverage v2 adds automatic input_sha256 recording for all subsequent PIIMB runs.",
+  "overall": {
+    "f1": 0.390671,
+    "f2": 0.28695,
+    "fn_characters": 298289,
+    "fp_characters": 1697,
+    "fpr": 0.001229,
+    "non_pii_characters": 1380348,
+    "precision": 0.98266,
+    "recall": 0.243798,
+    "tp_characters": 96168
+  },
+  "performance": {
+    "cpu_ms": 19289.818,
+    "mean_sentence_ms": 1.038,
+    "median_sentence_ms": 0.902,
+    "p95_sentence_ms": 2.092,
+    "peak_process_rss_mb": 179.422,
+    "sentences_per_second": 960.437,
+    "wall_ms": 19301.632
+  },
+  "predicted_mask_spans": 6800,
+  "rows_scored": 18538,
+  "schema": "veilgraph.piimb-baseline.v1",
+  "source_report_schema": "veilgraph.veilbench.v1.0"
+}

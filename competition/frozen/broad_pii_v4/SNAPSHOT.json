@@ -1,0 +1,7 @@
+{
+  "schema": "veilgraph.historical-detector-snapshot.v1",
+  "detector": "Broad PII v4 + Semantic NER v2",
+  "source_manifest": "competition/phase1/BROAD_PII_V4_FREEZE_MANIFEST.json",
+  "source_manifest_sha256": "5738d8f858f39ec56872c5a5aa297054c8db5311b1b1e98842feb0c1710840b4",
+  "purpose": "Byte-exact historical snapshot of the v4 detector/model surface used for the untouched TAB evaluation. Live production may evolve under a separately frozen v5 generation."
+}

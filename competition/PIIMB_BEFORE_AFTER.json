@@ -1,0 +1,86 @@
+{
+  "baseline": {
+    "dataset": {
+      "input_file": "test_sentences.jsonl",
+      "label_accounting": {
+        "language:en": 18538,
+        "task:ai4privacy-en": 18538
+      },
+      "label_agnostic": true,
+      "license": "CC-BY-NC-4.0",
+      "name": "PIIMB: PII Masking Benchmark",
+      "row_limit": 18538,
+      "rows_scored": 18538,
+      "task_filter": "ai4privacy-en"
+    },
+    "detector": "VeilGraph pre-Broad-Coverage PII Engine v2 (104-test verified snapshot)",
+    "generated_at": "2026-08-08T17:46:06.388434+00:00",
+    "overall": {
+      "f1": 0.390671,
+      "f2": 0.28695,
+      "fn_characters": 298289,
+      "fp_characters": 1697,
+      "fpr": 0.001229,
+      "non_pii_characters": 1380348,
+      "precision": 0.98266,
+      "recall": 0.243798,
+      "tp_characters": 96168
+    },
+    "performance": {
+      "cpu_ms": 19289.818,
+      "mean_sentence_ms": 1.038,
+      "median_sentence_ms": 0.902,
+      "p95_sentence_ms": 2.092,
+      "peak_process_rss_mb": 179.422,
+      "sentences_per_second": 960.437,
+      "wall_ms": 19301.632
+    }
+  },
+  "claim_boundary": "Same-task before/after engineering evidence; corpus-specific metrics, not universal accuracy or anonymity guarantees.",
+  "comparable_task_and_row_count": true,
+  "current": {
+    "dataset": {
+      "input_file": "test_sentences.jsonl",
+      "input_sha256": "5ff46f3a80316318794f94596fa374060d70f2f32a85909f958cbabc70bae41f",
+      "label_accounting": {
+        "language:en": 18538,
+        "task:ai4privacy-en": 18538
+      },
+      "label_agnostic": true,
+      "license": "CC-BY-NC-4.0",
+      "name": "PIIMB: PII Masking Benchmark",
+      "row_limit": 18538,
+      "rows_scored": 18538,
+      "task_filter": "ai4privacy-en"
+    },
+    "generated_at": "2026-08-08T19:34:10.580651+00:00",
+    "overall": {
+      "f1": 0.706719,
+      "f2": 0.614798,
+      "fn_characters": 171296,
+      "fp_characters": 13923,
+      "fpr": 0.010087,
+      "non_pii_characters": 1380348,
+      "precision": 0.941274,
+      "recall": 0.565742,
+      "tp_characters": 223161
+    },
+    "performance": {
+      "cpu_ms": 20083.682,
+      "mean_sentence_ms": 1.078,
+      "median_sentence_ms": 0.935,
+      "p95_sentence_ms": 2.184,
+      "peak_process_rss_mb": 176.812,
+      "sentences_per_second": 922.561,
+      "wall_ms": 20094.06
+    }
+  },
+  "delta": {
+    "f1": 0.316048,
+    "f2": 0.327848,
+    "fpr": 0.008858,
+    "precision": -0.041386,
+    "recall": 0.321944
+  },
+  "schema": "veilgraph.piimb-before-after.v1"
+}

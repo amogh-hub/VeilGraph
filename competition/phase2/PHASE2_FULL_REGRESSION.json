@@ -1,0 +1,11 @@
+{
+  "all_passed": true,
+  "openapi_written": true,
+  "pytest_failed": 0,
+  "pytest_passed": 254,
+  "run_checks_exit_zero": true,
+  "schema": "veilgraph.phase2-full-regression.v2",
+  "typescript_typecheck": true,
+  "vite_production_build": true,
+  "warnings": 5
+}

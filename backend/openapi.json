@@ -1,0 +1,3229 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VeilGraph",
+    "description": "Local-first privacy compiler with Identity Exposure Graph, L1\u2013L5 transformations, fail-closed adversarial verification, cryptographic retention expiry, signed proof packages and Phase-2 production/security/scale controls.",
+    "version": "0.6.1-phase2-final-hardening"
+  },
+  "paths": {
+    "/api/v1/status": {
+      "get": {
+        "summary": "Offline Status",
+        "operationId": "offline_status_api_v1_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs": {
+      "post": {
+        "summary": "Create Job",
+        "operationId": "create_job_api_v1_jobs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "summary": "Get Job",
+        "operationId": "get_job_api_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/destruction-receipt": {
+      "get": {
+        "summary": "Destruction Receipt",
+        "operationId": "destruction_receipt_api_v1_jobs__job_id__destruction_receipt_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DestructionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files": {
+      "post": {
+        "summary": "Upload File",
+        "operationId": "upload_file_api_v1_jobs__job_id__files_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_api_v1_jobs__job_id__files_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/analyse": {
+      "post": {
+        "summary": "Analyse File",
+        "operationId": "analyse_file_api_v1_jobs__job_id__files__file_id__analyse_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/entities": {
+      "get": {
+        "summary": "List Entities",
+        "operationId": "list_entities_api_v1_jobs__job_id__files__file_id__entities_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityWithMentions"
+                  },
+                  "title": "Response List Entities Api V1 Jobs  Job Id  Files  File Id  Entities Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/graph": {
+      "get": {
+        "summary": "Exposure Graph",
+        "operationId": "exposure_graph_api_v1_jobs__job_id__files__file_id__graph_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          },
+          {
+            "name": "privacy_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivacyLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Privacy Level"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExposureGraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/privacy-recommendation": {
+      "get": {
+        "summary": "Privacy Recommendation",
+        "operationId": "privacy_recommendation_api_v1_jobs__job_id__files__file_id__privacy_recommendation_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivacyRecommendationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/preview": {
+      "get": {
+        "summary": "Original Preview",
+        "operationId": "original_preview_api_v1_jobs__job_id__files__file_id__preview_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/preview": {
+      "get": {
+        "summary": "Protected Preview",
+        "operationId": "protected_preview_api_v1_jobs__job_id__outputs__output_id__preview_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/mentions/{mention_id}/review": {
+      "post": {
+        "summary": "Review Mention",
+        "operationId": "review_mention_api_v1_jobs__job_id__mentions__mention_id__review_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "mention_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mention Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/files/{file_id}/transform": {
+      "post": {
+        "summary": "Transform File",
+        "operationId": "transform_file_api_v1_jobs__job_id__files__file_id__transform_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransformRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/verify": {
+      "post": {
+        "summary": "Verify Output",
+        "operationId": "verify_output_api_v1_jobs__job_id__outputs__output_id__verify_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/audit": {
+      "get": {
+        "summary": "Audit Ledger",
+        "operationId": "audit_ledger_api_v1_jobs__job_id__audit_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLedgerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/certificate": {
+      "get": {
+        "summary": "Proof Certificate",
+        "operationId": "proof_certificate_api_v1_jobs__job_id__outputs__output_id__certificate_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/certificate.pdf": {
+      "get": {
+        "summary": "Proof Certificate Pdf",
+        "operationId": "proof_certificate_pdf_api_v1_jobs__job_id__outputs__output_id__certificate_pdf_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/proof-bundle": {
+      "get": {
+        "summary": "Proof Bundle",
+        "operationId": "proof_bundle_api_v1_jobs__job_id__outputs__output_id__proof_bundle_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/proof-package": {
+      "get": {
+        "summary": "Proof Package",
+        "operationId": "proof_package_api_v1_jobs__job_id__outputs__output_id__proof_package_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/annotated-export": {
+      "get": {
+        "summary": "Annotated Output Export",
+        "operationId": "annotated_output_export_api_v1_jobs__job_id__outputs__output_id__annotated_export_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/download": {
+      "get": {
+        "summary": "Download Output",
+        "operationId": "download_output_api_v1_jobs__job_id__outputs__output_id__download_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/synthetic-export": {
+      "get": {
+        "summary": "Synthetic Format Export",
+        "operationId": "synthetic_format_export_api_v1_jobs__job_id__outputs__output_id__synthetic_export_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 5,
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/outputs/{output_id}/synthetic-export-receipt": {
+      "get": {
+        "summary": "Synthetic Format Export Receipt",
+        "operationId": "synthetic_format_export_receipt_api_v1_jobs__job_id__outputs__output_id__synthetic_export_receipt_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "output_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Output Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 5,
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Synthetic Format Export Receipt Api V1 Jobs  Job Id  Outputs  Output Id  Synthetic Export Receipt Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/destroy": {
+      "delete": {
+        "summary": "Destroy Job",
+        "operationId": "destroy_job_api_v1_jobs__job_id__destroy_delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DestructionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ops/status": {
+      "get": {
+        "tags": [
+          "operations"
+        ],
+        "summary": "Operations Status",
+        "operationId": "operations_status_api_v1_ops_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "file_type": {
+            "$ref": "#/components/schemas/FileType"
+          },
+          "page_count": {
+            "type": "integer",
+            "title": "Page Count"
+          },
+          "scanned_pages": {
+            "type": "integer",
+            "title": "Scanned Pages"
+          },
+          "canonical_entities": {
+            "type": "integer",
+            "title": "Canonical Entities"
+          },
+          "mentions": {
+            "type": "integer",
+            "title": "Mentions"
+          },
+          "direct_identifier_mentions": {
+            "type": "integer",
+            "title": "Direct Identifier Mentions"
+          },
+          "quasi_identifier_mentions": {
+            "type": "integer",
+            "title": "Quasi Identifier Mentions"
+          },
+          "visual_mentions": {
+            "type": "integer",
+            "title": "Visual Mentions"
+          },
+          "pending_reviews": {
+            "type": "integer",
+            "title": "Pending Reviews"
+          },
+          "privacy_ir_schema": {
+            "type": "string",
+            "title": "Privacy Ir Schema"
+          },
+          "privacy_ir_units": {
+            "type": "integer",
+            "title": "Privacy Ir Units"
+          },
+          "privacy_ir_commitment_sha256": {
+            "type": "string",
+            "title": "Privacy Ir Commitment Sha256"
+          },
+          "structured_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured Format"
+          },
+          "structured_records": {
+            "type": "integer",
+            "title": "Structured Records",
+            "default": 0
+          },
+          "structured_fields": {
+            "type": "integer",
+            "title": "Structured Fields",
+            "default": 0
+          },
+          "structured_sheets": {
+            "type": "integer",
+            "title": "Structured Sheets",
+            "default": 0
+          },
+          "structured_cells": {
+            "type": "integer",
+            "title": "Structured Cells",
+            "default": 0
+          },
+          "structured_schema_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured Schema Sha256"
+          },
+          "docx_text_parts": {
+            "type": "integer",
+            "title": "Docx Text Parts",
+            "default": 0
+          },
+          "docx_media_images": {
+            "type": "integer",
+            "title": "Docx Media Images",
+            "default": 0
+          },
+          "docx_units": {
+            "items": {
+              "$ref": "#/components/schemas/DocxEvidenceUnitResponse"
+            },
+            "type": "array",
+            "title": "Docx Units"
+          },
+          "video_duration_seconds": {
+            "type": "number",
+            "title": "Video Duration Seconds",
+            "default": 0.0
+          },
+          "video_fps": {
+            "type": "number",
+            "title": "Video Fps",
+            "default": 0.0
+          },
+          "video_width": {
+            "type": "integer",
+            "title": "Video Width",
+            "default": 0
+          },
+          "video_height": {
+            "type": "integer",
+            "title": "Video Height",
+            "default": 0
+          },
+          "video_total_frames": {
+            "type": "integer",
+            "title": "Video Total Frames",
+            "default": 0
+          },
+          "video_sampled_frames": {
+            "type": "integer",
+            "title": "Video Sampled Frames",
+            "default": 0
+          },
+          "video_security_frames_analyzed": {
+            "type": "integer",
+            "title": "Video Security Frames Analyzed",
+            "default": 0
+          },
+          "video_security_detection_frames": {
+            "type": "integer",
+            "title": "Video Security Detection Frames",
+            "default": 0
+          },
+          "video_novel_security_frames": {
+            "type": "integer",
+            "title": "Video Novel Security Frames",
+            "default": 0
+          },
+          "video_security_coverage_percent": {
+            "type": "number",
+            "title": "Video Security Coverage Percent",
+            "default": 0.0
+          },
+          "video_security_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Security Policy"
+          },
+          "video_has_audio": {
+            "type": "boolean",
+            "title": "Video Has Audio",
+            "default": false
+          },
+          "video_audio_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Audio Policy"
+          },
+          "video_units": {
+            "items": {
+              "$ref": "#/components/schemas/VideoEvidenceUnitResponse"
+            },
+            "type": "array",
+            "title": "Video Units"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "file_id",
+          "file_type",
+          "page_count",
+          "scanned_pages",
+          "canonical_entities",
+          "mentions",
+          "direct_identifier_mentions",
+          "quasi_identifier_mentions",
+          "visual_mentions",
+          "pending_reviews",
+          "privacy_ir_schema",
+          "privacy_ir_units",
+          "privacy_ir_commitment_sha256",
+          "status"
+        ],
+        "title": "AnalysisResponse"
+      },
+      "AudienceProfile": {
+        "type": "string",
+        "enum": [
+          "PUBLIC_RELEASE",
+          "RESEARCH_PARTNER",
+          "INTERNAL_OPERATIONS"
+        ],
+        "title": "AudienceProfile"
+      },
+      "AuditEventResponse": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "event_hash": {
+            "type": "string",
+            "title": "Event Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence",
+          "event_type",
+          "timestamp",
+          "details",
+          "prev_hash",
+          "event_hash"
+        ],
+        "title": "AuditEventResponse"
+      },
+      "AuditLedgerResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "event_count": {
+            "type": "integer",
+            "title": "Event Count"
+          },
+          "chain_head": {
+            "type": "string",
+            "title": "Chain Head"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponse"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "valid",
+          "event_count",
+          "chain_head",
+          "events"
+        ],
+        "title": "AuditLedgerResponse"
+      },
+      "Body_upload_file_api_v1_jobs__job_id__files_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_api_v1_jobs__job_id__files_post"
+      },
+      "CanonicalEntityResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "placeholder": {
+            "type": "string",
+            "title": "Placeholder"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/SensitivityLevel"
+          },
+          "transformation": {
+            "$ref": "#/components/schemas/TransformationType"
+          },
+          "mention_count": {
+            "type": "integer",
+            "title": "Mention Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "job_id",
+          "file_id",
+          "entity_type",
+          "fingerprint",
+          "placeholder",
+          "sensitivity",
+          "transformation",
+          "mention_count"
+        ],
+        "title": "CanonicalEntityResponse"
+      },
+      "CertificatePayloadResponse": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "title": "Schema"
+          },
+          "certificate_id": {
+            "type": "string",
+            "title": "Certificate Id"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "product_version": {
+            "type": "string",
+            "title": "Product Version"
+          },
+          "issued_at": {
+            "type": "string",
+            "title": "Issued At"
+          },
+          "verified_at": {
+            "type": "string",
+            "title": "Verified At"
+          },
+          "job_commitment_sha256": {
+            "type": "string",
+            "title": "Job Commitment Sha256"
+          },
+          "output_sha256": {
+            "type": "string",
+            "title": "Output Sha256"
+          },
+          "input_sha256": {
+            "type": "string",
+            "title": "Input Sha256"
+          },
+          "manifest_sha256": {
+            "type": "string",
+            "title": "Manifest Sha256"
+          },
+          "graph_sha256": {
+            "type": "string",
+            "title": "Graph Sha256"
+          },
+          "verification_sha256": {
+            "type": "string",
+            "title": "Verification Sha256"
+          },
+          "privacy_level": {
+            "type": "integer",
+            "title": "Privacy Level"
+          },
+          "audience_profile": {
+            "type": "string",
+            "title": "Audience Profile"
+          },
+          "proof_score": {
+            "type": "integer",
+            "title": "Proof Score"
+          },
+          "attack_coverage": {
+            "type": "integer",
+            "title": "Attack Coverage"
+          },
+          "critical_failures": {
+            "type": "integer",
+            "title": "Critical Failures"
+          },
+          "release_decision": {
+            "type": "string",
+            "title": "Release Decision"
+          },
+          "risk_before": {
+            "type": "integer",
+            "title": "Risk Before"
+          },
+          "residual_risk": {
+            "type": "integer",
+            "title": "Residual Risk"
+          },
+          "utility_score": {
+            "type": "integer",
+            "title": "Utility Score"
+          },
+          "audit_head_at_certification": {
+            "type": "string",
+            "title": "Audit Head At Certification"
+          },
+          "audit_events_at_certification": {
+            "type": "integer",
+            "title": "Audit Events At Certification"
+          },
+          "signer": {
+            "$ref": "#/components/schemas/SignerResponse"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema",
+          "certificate_id",
+          "product",
+          "product_version",
+          "issued_at",
+          "verified_at",
+          "job_commitment_sha256",
+          "output_sha256",
+          "input_sha256",
+          "manifest_sha256",
+          "graph_sha256",
+          "verification_sha256",
+          "privacy_level",
+          "audience_profile",
+          "proof_score",
+          "attack_coverage",
+          "critical_failures",
+          "release_decision",
+          "risk_before",
+          "residual_risk",
+          "utility_score",
+          "audit_head_at_certification",
+          "audit_events_at_certification",
+          "signer",
+          "disclaimer"
+        ],
+        "title": "CertificatePayloadResponse"
+      },
+      "CertificateResponse": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/CertificatePayloadResponse"
+          },
+          "signature_algorithm": {
+            "type": "string",
+            "title": "Signature Algorithm"
+          },
+          "signature_b64": {
+            "type": "string",
+            "title": "Signature B64"
+          },
+          "signature_valid": {
+            "type": "boolean",
+            "title": "Signature Valid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload",
+          "signature_algorithm",
+          "signature_b64",
+          "signature_valid"
+        ],
+        "title": "CertificateResponse"
+      },
+      "DestructionReceiptPayloadResponse": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "title": "Schema"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "product_version": {
+            "type": "string",
+            "title": "Product Version"
+          },
+          "issued_at": {
+            "type": "string",
+            "title": "Issued At"
+          },
+          "job_commitment_sha256": {
+            "type": "string",
+            "title": "Job Commitment Sha256"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "audit_integrity_valid": {
+            "type": "boolean",
+            "title": "Audit Integrity Valid"
+          },
+          "retention_deadline": {
+            "type": "string",
+            "title": "Retention Deadline"
+          },
+          "final_audit_head": {
+            "type": "string",
+            "title": "Final Audit Head"
+          },
+          "final_audit_event_count": {
+            "type": "integer",
+            "title": "Final Audit Event Count"
+          },
+          "deleted_workspace_files": {
+            "type": "integer",
+            "title": "Deleted Workspace Files"
+          },
+          "cleared_plaintext_entities": {
+            "type": "integer",
+            "title": "Cleared Plaintext Entities"
+          },
+          "destroyed_outputs": {
+            "type": "integer",
+            "title": "Destroyed Outputs"
+          },
+          "deleted_database_rows": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Deleted Database Rows"
+          },
+          "signer": {
+            "$ref": "#/components/schemas/SignerResponse"
+          },
+          "scope_note": {
+            "type": "string",
+            "title": "Scope Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema",
+          "product",
+          "product_version",
+          "issued_at",
+          "job_commitment_sha256",
+          "trigger",
+          "audit_integrity_valid",
+          "retention_deadline",
+          "final_audit_head",
+          "final_audit_event_count",
+          "deleted_workspace_files",
+          "cleared_plaintext_entities",
+          "destroyed_outputs",
+          "deleted_database_rows",
+          "signer",
+          "scope_note"
+        ],
+        "title": "DestructionReceiptPayloadResponse"
+      },
+      "DestructionReceiptResponse": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/DestructionReceiptPayloadResponse"
+          },
+          "signature_algorithm": {
+            "type": "string",
+            "title": "Signature Algorithm"
+          },
+          "signature_b64": {
+            "type": "string",
+            "title": "Signature B64"
+          },
+          "signature_valid": {
+            "type": "boolean",
+            "title": "Signature Valid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload",
+          "signature_algorithm",
+          "signature_b64",
+          "signature_valid"
+        ],
+        "title": "DestructionReceiptResponse"
+      },
+      "DestructionResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "deleted_workspace_files": {
+            "type": "integer",
+            "title": "Deleted Workspace Files"
+          },
+          "cleared_plaintext_entities": {
+            "type": "integer",
+            "title": "Cleared Plaintext Entities"
+          },
+          "destroyed_outputs": {
+            "type": "integer",
+            "title": "Destroyed Outputs"
+          },
+          "deleted_database_rows": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Deleted Database Rows"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "destruction_receipt": {
+            "$ref": "#/components/schemas/DestructionReceiptResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "trigger",
+          "deleted_workspace_files",
+          "cleared_plaintext_entities",
+          "destroyed_outputs",
+          "deleted_database_rows",
+          "note",
+          "destruction_receipt"
+        ],
+        "title": "DestructionResponse"
+      },
+      "DetectionSource": {
+        "type": "string",
+        "enum": [
+          "TEXT_LAYER",
+          "OCR",
+          "VISUAL"
+        ],
+        "title": "DetectionSource"
+      },
+      "DocxEvidenceUnitResponse": {
+        "properties": {
+          "page_index": {
+            "type": "integer",
+            "title": "Page Index"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "part_name": {
+            "type": "string",
+            "title": "Part Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_index",
+          "kind",
+          "part_name",
+          "label"
+        ],
+        "title": "DocxEvidenceUnitResponse"
+      },
+      "EntityMentionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "canonical_entity_id": {
+            "type": "string",
+            "title": "Canonical Entity Id"
+          },
+          "page_index": {
+            "type": "integer",
+            "title": "Page Index"
+          },
+          "page_char_start": {
+            "type": "integer",
+            "title": "Page Char Start"
+          },
+          "page_char_end": {
+            "type": "integer",
+            "title": "Page Char End"
+          },
+          "x0": {
+            "type": "number",
+            "title": "X0"
+          },
+          "y0": {
+            "type": "number",
+            "title": "Y0"
+          },
+          "x1": {
+            "type": "number",
+            "title": "X1"
+          },
+          "y1": {
+            "type": "number",
+            "title": "Y1"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DetectionSource"
+          },
+          "review_status": {
+            "$ref": "#/components/schemas/ReviewStatus"
+          },
+          "context_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "canonical_entity_id",
+          "page_index",
+          "page_char_start",
+          "page_char_end",
+          "x0",
+          "y0",
+          "x1",
+          "y1",
+          "confidence",
+          "source",
+          "review_status"
+        ],
+        "title": "EntityMentionResponse"
+      },
+      "EntityType": {
+        "type": "string",
+        "enum": [
+          "PHONE",
+          "EMAIL",
+          "AADHAAR_LIKE",
+          "PAN_LIKE",
+          "PERSON_NAME",
+          "PERSON_TITLE",
+          "DATE_OF_BIRTH",
+          "GENERIC_DATE",
+          "AGE",
+          "STREET_ADDRESS",
+          "BUILDING_NUMBER",
+          "LOCALITY",
+          "POSTCODE",
+          "EMPLOYER",
+          "JOB_TITLE",
+          "CASE_REFERENCE",
+          "NATIONAL_ID",
+          "PASSPORT_NUMBER",
+          "DRIVER_LICENSE_NUMBER",
+          "TAX_IDENTIFIER",
+          "SOCIAL_IDENTIFIER",
+          "PAYMENT_CARD_NUMBER",
+          "DEMOGRAPHIC_ATTRIBUTE",
+          "FACE",
+          "QR_CODE",
+          "SIGNATURE_CANDIDATE"
+        ],
+        "title": "EntityType"
+      },
+      "EntityWithMentions": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/CanonicalEntityResponse"
+          },
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/EntityMentionResponse"
+            },
+            "type": "array",
+            "title": "Mentions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity",
+          "mentions"
+        ],
+        "title": "EntityWithMentions"
+      },
+      "ExposureGraphResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "graph_version": {
+            "type": "string",
+            "title": "Graph Version"
+          },
+          "graph_sha256": {
+            "type": "string",
+            "title": "Graph Sha256"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyResponse"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/GraphNodeResponse"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/GraphEdgeResponse"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "high_risk_paths": {
+            "items": {
+              "$ref": "#/components/schemas/RiskPathResponse"
+            },
+            "type": "array",
+            "title": "High Risk Paths"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskSummaryResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "file_id",
+          "graph_version",
+          "graph_sha256",
+          "policy",
+          "nodes",
+          "edges",
+          "high_risk_paths",
+          "risk"
+        ],
+        "title": "ExposureGraphResponse"
+      },
+      "FileResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "original_filename": {
+            "type": "string",
+            "title": "Original Filename"
+          },
+          "file_type": {
+            "$ref": "#/components/schemas/FileType"
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "page_count": {
+            "type": "integer",
+            "title": "Page Count"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "job_id",
+          "original_filename",
+          "file_type",
+          "media_type",
+          "sha256",
+          "page_count",
+          "status",
+          "created_at"
+        ],
+        "title": "FileResponse"
+      },
+      "FileType": {
+        "type": "string",
+        "enum": [
+          "PDF",
+          "IMAGE",
+          "TEXT",
+          "DATASET",
+          "DOCX",
+          "VIDEO"
+        ],
+        "title": "FileType"
+      },
+      "GraphEdgeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "edge_type": {
+            "$ref": "#/components/schemas/GraphEdgeType"
+          },
+          "weight": {
+            "type": "integer",
+            "title": "Weight"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "target",
+          "edge_type",
+          "weight",
+          "explanation"
+        ],
+        "title": "GraphEdgeResponse"
+      },
+      "GraphEdgeType": {
+        "type": "string",
+        "enum": [
+          "CONTAINS",
+          "IDENTIFIES",
+          "DESCRIBES",
+          "RELATED_TO",
+          "CO_OCCURS_WITH"
+        ],
+        "title": "GraphEdgeType"
+      },
+      "GraphNodeKind": {
+        "type": "string",
+        "enum": [
+          "DOCUMENT",
+          "SUBJECT",
+          "RELATED_PERSON",
+          "DIRECT_IDENTIFIER",
+          "QUASI_IDENTIFIER",
+          "VISUAL_IDENTIFIER"
+        ],
+        "title": "GraphNodeKind"
+      },
+      "GraphNodeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GraphNodeKind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntityType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sensitivity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SensitivityLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mention_count": {
+            "type": "integer",
+            "title": "Mention Count",
+            "default": 0
+          },
+          "review_state": {
+            "type": "string",
+            "title": "Review State",
+            "default": "approved"
+          },
+          "page_indexes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Page Indexes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "label"
+        ],
+        "title": "GraphNodeResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "JobCreate": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Purpose"
+          },
+          "recipient": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Recipient"
+          },
+          "audience_profile": {
+            "$ref": "#/components/schemas/AudienceProfile",
+            "default": "PUBLIC_RELEASE"
+          },
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel",
+            "default": 3
+          },
+          "retention_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 60.0,
+            "title": "Retention Seconds",
+            "default": 3600
+          }
+        },
+        "type": "object",
+        "required": [
+          "purpose",
+          "recipient"
+        ],
+        "title": "JobCreate"
+      },
+      "JobResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient"
+          },
+          "audience_profile": {
+            "$ref": "#/components/schemas/AudienceProfile"
+          },
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "retention_seconds": {
+            "type": "integer",
+            "title": "Retention Seconds"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "purpose",
+          "recipient",
+          "audience_profile",
+          "privacy_level",
+          "retention_seconds",
+          "expires_at",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "JobResponse"
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "UPLOADED",
+          "ANALYSED",
+          "HUMAN_REVIEW_REQUIRED",
+          "TRANSFORMED",
+          "VERIFIED",
+          "BLOCKED",
+          "DESTROYED",
+          "FAILED"
+        ],
+        "title": "JobStatus"
+      },
+      "OfflineStatusResponse": {
+        "properties": {
+          "offline_mode": {
+            "type": "boolean",
+            "title": "Offline Mode"
+          },
+          "backend_address": {
+            "type": "string",
+            "title": "Backend Address"
+          },
+          "processing_location": {
+            "type": "string",
+            "title": "Processing Location"
+          },
+          "external_model_calls": {
+            "type": "string",
+            "title": "External Model Calls"
+          },
+          "automatic_retention": {
+            "type": "boolean",
+            "title": "Automatic Retention"
+          },
+          "retention_sweep_seconds": {
+            "type": "number",
+            "title": "Retention Sweep Seconds"
+          },
+          "restart_key_loss_policy": {
+            "type": "string",
+            "title": "Restart Key Loss Policy"
+          },
+          "bundled_components": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Bundled Components"
+          },
+          "non_local_inbound_requests": {
+            "type": "integer",
+            "title": "Non Local Inbound Requests"
+          },
+          "local_api_requests": {
+            "type": "integer",
+            "title": "Local Api Requests"
+          },
+          "device_signer_fingerprint": {
+            "type": "string",
+            "title": "Device Signer Fingerprint"
+          },
+          "certificate_algorithm": {
+            "type": "string",
+            "title": "Certificate Algorithm"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offline_mode",
+          "backend_address",
+          "processing_location",
+          "external_model_calls",
+          "automatic_retention",
+          "retention_sweep_seconds",
+          "restart_key_loss_policy",
+          "bundled_components",
+          "non_local_inbound_requests",
+          "local_api_requests",
+          "device_signer_fingerprint",
+          "certificate_algorithm",
+          "statement"
+        ],
+        "title": "OfflineStatusResponse"
+      },
+      "OutputStatus": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "VERIFIED_SAFE",
+          "RELEASE_BLOCKED",
+          "DESTROYED"
+        ],
+        "title": "OutputStatus"
+      },
+      "PolicyResponse": {
+        "properties": {
+          "audience_profile": {
+            "$ref": "#/components/schemas/AudienceProfile"
+          },
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuleResponse"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "audience_profile",
+          "privacy_level",
+          "name",
+          "objective",
+          "rules"
+        ],
+        "title": "PolicyResponse"
+      },
+      "PolicyRuleResponse": {
+        "properties": {
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "MASK",
+              "PROTECT",
+              "REMOVE",
+              "GENERALIZE",
+              "PSEUDONYMIZE",
+              "SYNTHESIZE",
+              "RETAIN"
+            ],
+            "title": "Action"
+          },
+          "replacement_preview": {
+            "type": "string",
+            "title": "Replacement Preview"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "action",
+          "replacement_preview",
+          "rationale"
+        ],
+        "title": "PolicyRuleResponse"
+      },
+      "PrivacyLevel": {
+        "type": "integer",
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "title": "PrivacyLevel"
+      },
+      "PrivacyLevelPreviewResponse": {
+        "properties": {
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "supported": {
+            "type": "boolean",
+            "title": "Supported"
+          },
+          "risk_before": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Risk Before"
+          },
+          "residual_risk": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Residual Risk"
+          },
+          "utility_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Utility Score"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "limitation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limitation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "privacy_level",
+          "supported",
+          "risk_before",
+          "residual_risk",
+          "utility_score",
+          "label"
+        ],
+        "title": "PrivacyLevelPreviewResponse"
+      },
+      "PrivacyRecommendationResponse": {
+        "properties": {
+          "recommended_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "minimum_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "policy_floor_enforced": {
+            "type": "boolean",
+            "title": "Policy Floor Enforced"
+          },
+          "override_allowed": {
+            "type": "boolean",
+            "title": "Override Allowed"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "previews": {
+            "items": {
+              "$ref": "#/components/schemas/PrivacyLevelPreviewResponse"
+            },
+            "type": "array",
+            "title": "Previews"
+          },
+          "methodology": {
+            "type": "string",
+            "title": "Methodology"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recommended_level",
+          "minimum_level",
+          "policy_floor_enforced",
+          "override_allowed",
+          "reasons",
+          "previews",
+          "methodology",
+          "disclaimer"
+        ],
+        "title": "PrivacyRecommendationResponse"
+      },
+      "ReviewRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ReviewStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReviewRequest"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "mention_id": {
+            "type": "string",
+            "title": "Mention Id"
+          },
+          "review_status": {
+            "$ref": "#/components/schemas/ReviewStatus"
+          },
+          "pending_reviews": {
+            "type": "integer",
+            "title": "Pending Reviews"
+          },
+          "job_status": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mention_id",
+          "review_status",
+          "pending_reviews",
+          "job_status"
+        ],
+        "title": "ReviewResponse"
+      },
+      "ReviewStatus": {
+        "type": "string",
+        "enum": [
+          "NOT_REQUIRED",
+          "PENDING",
+          "PROTECT",
+          "IGNORE"
+        ],
+        "title": "ReviewStatus"
+      },
+      "RiskBreakdownResponse": {
+        "properties": {
+          "direct": {
+            "type": "integer",
+            "title": "Direct"
+          },
+          "quasi_identifier": {
+            "type": "integer",
+            "title": "Quasi Identifier"
+          },
+          "relationship": {
+            "type": "integer",
+            "title": "Relationship"
+          },
+          "combination_bonus": {
+            "type": "integer",
+            "title": "Combination Bonus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "direct",
+          "quasi_identifier",
+          "relationship",
+          "combination_bonus"
+        ],
+        "title": "RiskBreakdownResponse"
+      },
+      "RiskPathResponse": {
+        "properties": {
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_ids",
+          "score",
+          "reason"
+        ],
+        "title": "RiskPathResponse"
+      },
+      "RiskSummaryResponse": {
+        "properties": {
+          "before": {
+            "type": "integer",
+            "title": "Before"
+          },
+          "after": {
+            "type": "integer",
+            "title": "After"
+          },
+          "reduction": {
+            "type": "integer",
+            "title": "Reduction"
+          },
+          "utility_score": {
+            "type": "integer",
+            "title": "Utility Score"
+          },
+          "band_before": {
+            "type": "string",
+            "title": "Band Before"
+          },
+          "band_after": {
+            "type": "string",
+            "title": "Band After"
+          },
+          "breakdown_before": {
+            "$ref": "#/components/schemas/RiskBreakdownResponse"
+          },
+          "breakdown_after": {
+            "$ref": "#/components/schemas/RiskBreakdownResponse"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "before",
+          "after",
+          "reduction",
+          "utility_score",
+          "band_before",
+          "band_after",
+          "breakdown_before",
+          "breakdown_after",
+          "disclaimer"
+        ],
+        "title": "RiskSummaryResponse"
+      },
+      "SensitivityLevel": {
+        "type": "string",
+        "enum": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "title": "SensitivityLevel"
+      },
+      "SignerResponse": {
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm"
+          },
+          "public_key_b64": {
+            "type": "string",
+            "title": "Public Key B64"
+          },
+          "public_key_sha256": {
+            "type": "string",
+            "title": "Public Key Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "algorithm",
+          "public_key_b64",
+          "public_key_sha256"
+        ],
+        "title": "SignerResponse"
+      },
+      "TestStatus": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "FAIL",
+          "INCONCLUSIVE"
+        ],
+        "title": "TestStatus"
+      },
+      "TransformRequest": {
+        "properties": {
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "title": "TransformRequest"
+      },
+      "TransformResponse": {
+        "properties": {
+          "output_id": {
+            "type": "string",
+            "title": "Output Id"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "privacy_level": {
+            "$ref": "#/components/schemas/PrivacyLevel"
+          },
+          "transformations_applied": {
+            "type": "integer",
+            "title": "Transformations Applied"
+          },
+          "output_media_type": {
+            "type": "string",
+            "title": "Output Media Type"
+          },
+          "download_name": {
+            "type": "string",
+            "title": "Download Name"
+          },
+          "risk_before": {
+            "type": "integer",
+            "title": "Risk Before"
+          },
+          "residual_risk": {
+            "type": "integer",
+            "title": "Residual Risk"
+          },
+          "utility_score": {
+            "type": "integer",
+            "title": "Utility Score"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OutputStatus"
+          },
+          "synthetic_twin": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Twin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "output_id",
+          "job_id",
+          "file_id",
+          "privacy_level",
+          "transformations_applied",
+          "output_media_type",
+          "download_name",
+          "risk_before",
+          "residual_risk",
+          "utility_score",
+          "status"
+        ],
+        "title": "TransformResponse"
+      },
+      "TransformationType": {
+        "type": "string",
+        "enum": [
+          "MASK",
+          "REMOVE_REGION",
+          "GENERALIZE",
+          "PSEUDONYMIZE",
+          "SYNTHESIZE"
+        ],
+        "title": "TransformationType"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerificationResponse": {
+        "properties": {
+          "output_id": {
+            "type": "string",
+            "title": "Output Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OutputStatus"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationTestResult"
+            },
+            "type": "array",
+            "title": "Tests"
+          },
+          "passed": {
+            "type": "integer",
+            "title": "Passed"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "inconclusive": {
+            "type": "integer",
+            "title": "Inconclusive"
+          },
+          "proof_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Proof Score"
+          },
+          "attack_coverage": {
+            "type": "integer",
+            "title": "Attack Coverage"
+          },
+          "critical_failures": {
+            "type": "integer",
+            "title": "Critical Failures"
+          },
+          "risk_before": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Risk Before"
+          },
+          "residual_risk": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Residual Risk"
+          },
+          "utility_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Utility Score"
+          },
+          "release_decision": {
+            "type": "string",
+            "enum": [
+              "ALLOW_RELEASE",
+              "BLOCK_RELEASE"
+            ],
+            "title": "Release Decision"
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Verified At"
+          },
+          "synthetic_twin": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Twin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "output_id",
+          "status",
+          "tests",
+          "passed",
+          "failed",
+          "inconclusive",
+          "proof_score",
+          "attack_coverage",
+          "critical_failures",
+          "risk_before",
+          "residual_risk",
+          "utility_score",
+          "release_decision",
+          "verified_at"
+        ],
+        "title": "VerificationResponse"
+      },
+      "VerificationTestResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TestStatus"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "attack_class": {
+            "type": "string",
+            "title": "Attack Class"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium"
+            ],
+            "title": "Severity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "detail",
+          "attack_class",
+          "severity"
+        ],
+        "title": "VerificationTestResult"
+      },
+      "VideoEvidenceUnitResponse": {
+        "properties": {
+          "page_index": {
+            "type": "integer",
+            "title": "Page Index"
+          },
+          "frame_index": {
+            "type": "integer",
+            "title": "Frame Index"
+          },
+          "timestamp_seconds": {
+            "type": "number",
+            "title": "Timestamp Seconds"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "is_evidence": {
+            "type": "boolean",
+            "title": "Is Evidence",
+            "default": false
+          },
+          "security_scanned": {
+            "type": "boolean",
+            "title": "Security Scanned",
+            "default": true
+          },
+          "full_ocr_selected": {
+            "type": "boolean",
+            "title": "Full Ocr Selected",
+            "default": false
+          },
+          "security_promoted": {
+            "type": "boolean",
+            "title": "Security Promoted",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_index",
+          "frame_index",
+          "timestamp_seconds",
+          "label"
+        ],
+        "title": "VideoEvidenceUnitResponse"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "VeilGraph",
+  "version": "1.0.0",
+  "description": "Privacy-governed browser agent: raw screen context stays local until VeilGraph authorizes a sanitized release.",
+  "minimum_chrome_version": "121",
+  "permissions": ["activeTab", "scripting", "storage", "sidePanel", "tabs", "webNavigation"],
+  "host_permissions": ["http://127.0.0.1:8000/*"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background/serviceWorker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open VeilGraph"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/contentScript.js"],
+      "run_at": "document_idle",
+      "all_frames": true,
+      "match_about_blank": false
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+  }
+}

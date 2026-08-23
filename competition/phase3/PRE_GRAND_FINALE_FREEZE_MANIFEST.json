@@ -1,0 +1,81 @@
+{
+  "payload": {
+    "closed_at_utc": "2026-08-12T21:37:39.301625+00:00",
+    "closure": {
+      "commercial_cots_quantitative_benchmark": true,
+      "controlled_model_learning": true,
+      "full_regression": {
+        "all_passed": true,
+        "generated_at_unix": 1786570658,
+        "openapi_written": true,
+        "pytest_failed": 0,
+        "pytest_passed": 259,
+        "run_checks_exit_code": 0,
+        "schema": "veilgraph.phase3-full-regression.v1",
+        "typescript_typecheck": true,
+        "vite_production_build": true,
+        "warnings": 5
+      },
+      "gradation_calibration": true,
+      "l5_verified_synthetic_exports": [
+        "csv",
+        "json",
+        "xlsx",
+        "docx",
+        "pdf"
+      ],
+      "secure_online_tls_acceptance": true
+    },
+    "only_external_pending_item": {
+      "reason": "Dataset is supplied by NTRO only at Grand Finale; no pre-finale implementation can execute it.",
+      "requirement": "NTRO Stage-2 private Grand Finale dataset evaluation",
+      "status": "PENDING_EXTERNAL_DATA"
+    },
+    "phase1_freeze_manifest_sha256": "2e4c1e5a863f648013a96e8c8f3b61c9c9e8688065c223bb3dc0d09f67539bf3",
+    "phase2_parent_freeze_manifest_sha256": "8d106cc14331f11d20da54b1aa6c11bf8c00cd476c9c5177bfb983fdd9a6eac7",
+    "phase3_evidence_sha256": {
+      "competition/phase3/CONTROLLED_MODEL_LEARNING_LIFECYCLE.md": "f21443d9011b423dc619c86505c26b7c175e97df47a6ad761ace7d4af03c55de",
+      "competition/phase3/COTS_QUANTITATIVE_PROTOCOL.md": "99ecf4694381a42bccfe658c0c65ee882ee9478006f25568a41b84cdf4abfdf8",
+      "competition/phase3/COTS_QUANTITATIVE_REPORT.md": "8baf9af9e5be342a3030eee468a8b4b67709457df27a94e7b205c0e040365549",
+      "competition/phase3/COTS_QUANTITATIVE_RESULTS.json": "db25a09407de1b318ee455ebe84c48a04c7c430855a77d6c5a400d8733f4fcd5",
+      "competition/phase3/GRADATION_CALIBRATION_REPORT.md": "48de046ebc7e5dc3f257e89b92ccdb0e2ca1575cf853b858c338a8d30d170d69",
+      "competition/phase3/GRADATION_CALIBRATION_RESULTS.json": "9f2a039bb94adca38e0f73c98544edc93ad586a35a9dbfb5c18a6eda21aade08",
+      "competition/phase3/MODEL_LEARNING_EVIDENCE.json": "496cfe0b90a7b0424146d4f1e7df191a1ed13ef204bd47c838078c297cdb35e3",
+      "competition/phase3/PHASE2_PARENT_ACCEPTANCE.json": "375053416f3ca89b83c19b6ae6bef481ed5245a4cd65100620d1384b266a9c03",
+      "competition/phase3/PHASE3_FULL_REGRESSION.json": "2481c9be01cc93565cdbff69d97e45e7759521fd82b8b3e83e45a34fa55dd954",
+      "competition/phase3/PHASE3_FULL_REGRESSION.log": "c09af6845896a8752af873ceec6eeb01b2f9f6cfaedb1c9c3a4c2da994fb538d",
+      "competition/phase3/SECURE_ONLINE_ACCEPTANCE.json": "a932d3d75761f95045e442f1d8e2141e96b70ad49bb67fa5596bde137c2d4b1f",
+      "competition/phase3/SIH260381_FINAL_TRACEABILITY.md": "5a35af53db073199844fe94c1e41e0c2e66a8dc19b9f9e237416c06b82667471"
+    },
+    "phase3_surface_sha256": {
+      "backend/app/api/routes.py": "121272681bab371d2ee4479a9bac47fd3db966e01d295da650ed0f31ce968343",
+      "backend/app/transformation/synthetic_export.py": "4015bef6f42edbdf14a7336a7ea6ac1eda56dcfe3edfd9630e5b5f557ca4517c",
+      "backend/app/verification/red_team.py": "ecba5724d3a95bed79bfa70e773080a8a8d313a0624ac4bb3db2567762dc9aa1",
+      "deployment/online/README.md": "49f9e3f9438771ac1f97a4122b08fb14e173e4b74f3534603caf70464f8e5f78",
+      "frontend/src/App.tsx": "731c278b6be7bcc3fb6f4c67a596e47ace5aaa95048970429cbaf308da1a1743",
+      "frontend/src/api/client.ts": "5e1017be1a3c8c48d429c79864b0bc1e10e718c91b90700cdaff740e2b00a143",
+      "frontend/src/api/schema.d.ts": "5c495def331182b1618747fa9af2cbea97b3ddb44227d59ffc9c8daf008f3bc3",
+      "frontend/src/styles.css": "e56c931e968eae4be056a142fdb5c0628784e6dfbc4d8c043cce69e4ad123053",
+      "scripts/finalize_phase3_pre_finals.py": "3b08704718be0356350e080bc1aa95f31cffc4a147dd6ac4800ed20b49081645",
+      "scripts/record_phase3_regression.py": "ba3de4e431c28745d8c828d8b930569dec1cc7cff4718f29cbe31533761838ac",
+      "scripts/run_cots_benchmark.py": "3e84b0875deb8720e9d0e7ecbda6eda2c1fa0f52cb3b52749c2434061091ad7e",
+      "scripts/run_gradation_calibration.py": "7eea02ca07b82a16cd6ac3c6f7c50647c56603c5672de5e037d08dd736fc7415",
+      "scripts/run_model_learning_evidence.py": "ce37004cbda4c71a8180f26d16d0caff3accd86846f74dbb68a8ed482d3d8482",
+      "scripts/run_phase3_pre_finals.sh": "c0a4985110dbb179bd1d66f29dcc61adbbdeea3e8426002f856f08812e5ad8e0",
+      "scripts/run_secure_online_acceptance.py": "9dc03bc9e4fd021abef5c581edd285a8926b7d359593bbb54dea16160d697263",
+      "scripts/setup_cots_benchmark.sh": "29a97fa0fea595df5edeb7c0e87ae16cfbb8ceb486edf6accb5fea77bde41c26",
+      "scripts/verify_phase3_pre_finals.py": "526385a32e7f46f4011f0d0e3ec3bcb15efc4a8c8ed04b5b37bdc19d70daba1d"
+    },
+    "problem_owner": "NTRO",
+    "schema": "veilgraph.pre-grand-finale-freeze.v1",
+    "signer": {
+      "algorithm": "Ed25519",
+      "public_key_b64": "pK+Gb/ivpEJOEv4i4HIykHJOPUghXGvlmDqd5aeXEjw=",
+      "public_key_sha256": "38ba2d121c5e91a52dbbefc6372c267e3de94c33a54616f3a0ab96bf71aa4703"
+    },
+    "sih_problem_id": "SIH260381",
+    "status": "PRE_GRAND_FINALE_COMPLETE_AND_FROZEN"
+  },
+  "signature_algorithm": "Ed25519",
+  "signature_b64": "GD0UzgrHMbUnGPrs2qQTC6E+yIrh4EkZKkQC4TUQ201r1gfILRqKCJ106Po6YSUyE0lKHK7/RUYm8jIIF5QdCA=="
+}

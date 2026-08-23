@@ -1,0 +1,522 @@
+{
+  "benchmark": {
+    "by_task": {
+      "nemotron-pii": {
+        "f1": 0.474262,
+        "f2": 0.37424,
+        "fn_characters": 417217,
+        "fp_characters": 34493,
+        "fpr": 0.00838,
+        "non_pii_characters": 4116302,
+        "precision": 0.855214,
+        "recall": 0.328108,
+        "tp_characters": 203741
+      }
+    },
+    "characters_scored": 4737260,
+    "dataset": {
+      "input_file": "test_sentences.jsonl",
+      "input_sha256": "5ff46f3a80316318794f94596fa374060d70f2f32a85909f958cbabc70bae41f",
+      "label_accounting": {
+        "language:en": 77907,
+        "task:nemotron-pii": 77907,
+        "task_filtered": 72115
+      },
+      "label_agnostic": true,
+      "license": "CC-BY-NC-4.0",
+      "name": "PIIMB: PII Masking Benchmark",
+      "row_limit": 100000,
+      "rows_scored": 77907,
+      "task_filter": "nemotron-pii"
+    },
+    "diagnostic_by_gold_label": {
+      "ACCOUNT_NUMBER": {
+        "covered_characters": 5635,
+        "full_span_rate": 0.486041,
+        "fully_covered_spans": 383,
+        "gold_characters": 10033,
+        "recall": 0.561647,
+        "span_count": 788
+      },
+      "AGE": {
+        "covered_characters": 448,
+        "full_span_rate": 0.649275,
+        "fully_covered_spans": 224,
+        "gold_characters": 690,
+        "recall": 0.649275,
+        "span_count": 345
+      },
+      "API_KEY": {
+        "covered_characters": 10,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 9528,
+        "recall": 0.00105,
+        "span_count": 222
+      },
+      "BANK_ROUTING_NUMBER": {
+        "covered_characters": 9,
+        "full_span_rate": 0.002591,
+        "fully_covered_spans": 1,
+        "gold_characters": 3472,
+        "recall": 0.002592,
+        "span_count": 386
+      },
+      "BIOMETRIC_IDENTIFIER": {
+        "covered_characters": 6577,
+        "full_span_rate": 0.004747,
+        "fully_covered_spans": 3,
+        "gold_characters": 8198,
+        "recall": 0.802269,
+        "span_count": 632
+      },
+      "BLOOD_TYPE": {
+        "covered_characters": 2,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 1359,
+        "recall": 0.001472,
+        "span_count": 289
+      },
+      "CERTIFICATE_LICENSE_NUMBER": {
+        "covered_characters": 71,
+        "full_span_rate": 0.028369,
+        "fully_covered_spans": 4,
+        "gold_characters": 1600,
+        "recall": 0.044375,
+        "span_count": 141
+      },
+      "CITY": {
+        "covered_characters": 1999,
+        "full_span_rate": 0.269877,
+        "fully_covered_spans": 241,
+        "gold_characters": 7312,
+        "recall": 0.273386,
+        "span_count": 893
+      },
+      "COMPANY_NAME": {
+        "covered_characters": 10578,
+        "full_span_rate": 0.185911,
+        "fully_covered_spans": 512,
+        "gold_characters": 51475,
+        "recall": 0.205498,
+        "span_count": 2754
+      },
+      "COORDINATE": {
+        "covered_characters": 941,
+        "full_span_rate": 0.002571,
+        "fully_covered_spans": 1,
+        "gold_characters": 7758,
+        "recall": 0.121294,
+        "span_count": 389
+      },
+      "COUNTRY": {
+        "covered_characters": 421,
+        "full_span_rate": 0.051471,
+        "fully_covered_spans": 63,
+        "gold_characters": 7415,
+        "recall": 0.056777,
+        "span_count": 1224
+      },
+      "COUNTY": {
+        "covered_characters": 627,
+        "full_span_rate": 0.090703,
+        "fully_covered_spans": 40,
+        "gold_characters": 6335,
+        "recall": 0.098974,
+        "span_count": 441
+      },
+      "CREDIT_DEBIT_CARD": {
+        "covered_characters": 11463,
+        "full_span_rate": 0.947452,
+        "fully_covered_spans": 595,
+        "gold_characters": 11667,
+        "recall": 0.982515,
+        "span_count": 628
+      },
+      "CUSTOMER_ID": {
+        "covered_characters": 2862,
+        "full_span_rate": 0.279093,
+        "fully_covered_spans": 283,
+        "gold_characters": 9720,
+        "recall": 0.294444,
+        "span_count": 1014
+      },
+      "CVV": {
+        "covered_characters": 0,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 699,
+        "recall": 0.0,
+        "span_count": 233
+      },
+      "DATE": {
+        "covered_characters": 35252,
+        "full_span_rate": 0.854298,
+        "fully_covered_spans": 3260,
+        "gold_characters": 40415,
+        "recall": 0.87225,
+        "span_count": 3816
+      },
+      "DATE_OF_BIRTH": {
+        "covered_characters": 8920,
+        "full_span_rate": 0.994426,
+        "fully_covered_spans": 892,
+        "gold_characters": 8970,
+        "recall": 0.994426,
+        "span_count": 897
+      },
+      "DATE_TIME": {
+        "covered_characters": 11627,
+        "full_span_rate": 0.927803,
+        "fully_covered_spans": 604,
+        "gold_characters": 12406,
+        "recall": 0.937208,
+        "span_count": 651
+      },
+      "DEVICE_IDENTIFIER": {
+        "covered_characters": 685,
+        "full_span_rate": 0.348837,
+        "fully_covered_spans": 45,
+        "gold_characters": 2853,
+        "recall": 0.240098,
+        "span_count": 129
+      },
+      "EDUCATION_LEVEL": {
+        "covered_characters": 0,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 7565,
+        "recall": 0.0,
+        "span_count": 516
+      },
+      "EMAIL": {
+        "covered_characters": 42837,
+        "full_span_rate": 0.624528,
+        "fully_covered_spans": 1655,
+        "gold_characters": 69081,
+        "recall": 0.620098,
+        "span_count": 2650
+      },
+      "EMPLOYEE_ID": {
+        "covered_characters": 46,
+        "full_span_rate": 0.009217,
+        "fully_covered_spans": 4,
+        "gold_characters": 3196,
+        "recall": 0.014393,
+        "span_count": 434
+      },
+      "EMPLOYMENT_STATUS": {
+        "covered_characters": 13,
+        "full_span_rate": 0.001805,
+        "fully_covered_spans": 1,
+        "gold_characters": 5173,
+        "recall": 0.002513,
+        "span_count": 554
+      },
+      "FAX_NUMBER": {
+        "covered_characters": 2729,
+        "full_span_rate": 0.573099,
+        "fully_covered_spans": 196,
+        "gold_characters": 4532,
+        "recall": 0.602162,
+        "span_count": 342
+      },
+      "FIRST_NAME": {
+        "covered_characters": 8647,
+        "full_span_rate": 0.353875,
+        "fully_covered_spans": 1493,
+        "gold_characters": 24311,
+        "recall": 0.355683,
+        "span_count": 4219
+      },
+      "GENDER": {
+        "covered_characters": 1010,
+        "full_span_rate": 0.450839,
+        "fully_covered_spans": 188,
+        "gold_characters": 2283,
+        "recall": 0.4424,
+        "span_count": 417
+      },
+      "HEALTH_PLAN_BENEFICIARY_NUMBER": {
+        "covered_characters": 1920,
+        "full_span_rate": 0.058271,
+        "fully_covered_spans": 31,
+        "gold_characters": 7020,
+        "recall": 0.273504,
+        "span_count": 532
+      },
+      "HTTP_COOKIE": {
+        "covered_characters": 682,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 21147,
+        "recall": 0.03225,
+        "span_count": 241
+      },
+      "IPV4": {
+        "covered_characters": 1602,
+        "full_span_rate": 0.275542,
+        "fully_covered_spans": 89,
+        "gold_characters": 4273,
+        "recall": 0.374912,
+        "span_count": 323
+      },
+      "IPV6": {
+        "covered_characters": 492,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 6570,
+        "recall": 0.074886,
+        "span_count": 186
+      },
+      "LANGUAGE": {
+        "covered_characters": 21,
+        "full_span_rate": 0.007092,
+        "fully_covered_spans": 3,
+        "gold_characters": 3003,
+        "recall": 0.006993,
+        "span_count": 423
+      },
+      "LAST_NAME": {
+        "covered_characters": 7995,
+        "full_span_rate": 0.410473,
+        "fully_covered_spans": 1215,
+        "gold_characters": 19523,
+        "recall": 0.409517,
+        "span_count": 2960
+      },
+      "LICENSE_PLATE": {
+        "covered_characters": 15,
+        "full_span_rate": 0.005405,
+        "fully_covered_spans": 1,
+        "gold_characters": 1500,
+        "recall": 0.01,
+        "span_count": 185
+      },
+      "MAC_ADDRESS": {
+        "covered_characters": 4,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 3706,
+        "recall": 0.001079,
+        "span_count": 218
+      },
+      "MEDICAL_RECORD_NUMBER": {
+        "covered_characters": 2341,
+        "full_span_rate": 0.372822,
+        "fully_covered_spans": 214,
+        "gold_characters": 6009,
+        "recall": 0.389582,
+        "span_count": 574
+      },
+      "NATIONAL_ID": {
+        "covered_characters": 1484,
+        "full_span_rate": 0.762963,
+        "fully_covered_spans": 103,
+        "gold_characters": 1784,
+        "recall": 0.831839,
+        "span_count": 135
+      },
+      "OCCUPATION": {
+        "covered_characters": 1660,
+        "full_span_rate": 0.045429,
+        "fully_covered_spans": 82,
+        "gold_characters": 36275,
+        "recall": 0.045762,
+        "span_count": 1805
+      },
+      "PASSWORD": {
+        "covered_characters": 63,
+        "full_span_rate": 0.012085,
+        "fully_covered_spans": 4,
+        "gold_characters": 4041,
+        "recall": 0.01559,
+        "span_count": 331
+      },
+      "PHONE_NUMBER": {
+        "covered_characters": 12711,
+        "full_span_rate": 0.860692,
+        "fully_covered_spans": 970,
+        "gold_characters": 14556,
+        "recall": 0.873248,
+        "span_count": 1127
+      },
+      "PIN": {
+        "covered_characters": 1451,
+        "full_span_rate": 0.85209,
+        "fully_covered_spans": 265,
+        "gold_characters": 1732,
+        "recall": 0.83776,
+        "span_count": 311
+      },
+      "POLITICAL_VIEW": {
+        "covered_characters": 8,
+        "full_span_rate": 0.003021,
+        "fully_covered_spans": 1,
+        "gold_characters": 4839,
+        "recall": 0.001653,
+        "span_count": 331
+      },
+      "POSTCODE": {
+        "covered_characters": 1269,
+        "full_span_rate": 0.780952,
+        "fully_covered_spans": 246,
+        "gold_characters": 1636,
+        "recall": 0.775672,
+        "span_count": 315
+      },
+      "RACE_ETHNICITY": {
+        "covered_characters": 97,
+        "full_span_rate": 0.022075,
+        "fully_covered_spans": 10,
+        "gold_characters": 3053,
+        "recall": 0.031772,
+        "span_count": 453
+      },
+      "RELIGIOUS_BELIEF": {
+        "covered_characters": 27,
+        "full_span_rate": 0.008547,
+        "fully_covered_spans": 3,
+        "gold_characters": 4180,
+        "recall": 0.006459,
+        "span_count": 351
+      },
+      "SEXUALITY": {
+        "covered_characters": 8,
+        "full_span_rate": 0.006329,
+        "fully_covered_spans": 1,
+        "gold_characters": 1196,
+        "recall": 0.006689,
+        "span_count": 158
+      },
+      "SSN": {
+        "covered_characters": 3486,
+        "full_span_rate": 0.984472,
+        "fully_covered_spans": 317,
+        "gold_characters": 3541,
+        "recall": 0.984468,
+        "span_count": 322
+      },
+      "STATE": {
+        "covered_characters": 216,
+        "full_span_rate": 0.037204,
+        "fully_covered_spans": 33,
+        "gold_characters": 6322,
+        "recall": 0.034166,
+        "span_count": 887
+      },
+      "STREET_ADDRESS": {
+        "covered_characters": 10063,
+        "full_span_rate": 0.039125,
+        "fully_covered_spans": 34,
+        "gold_characters": 15668,
+        "recall": 0.642264,
+        "span_count": 869
+      },
+      "SWIFT_BIC": {
+        "covered_characters": 2,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 3066,
+        "recall": 0.000652,
+        "span_count": 288
+      },
+      "TAX_ID": {
+        "covered_characters": 645,
+        "full_span_rate": 0.888889,
+        "fully_covered_spans": 56,
+        "gold_characters": 702,
+        "recall": 0.918803,
+        "span_count": 63
+      },
+      "TIME": {
+        "covered_characters": 151,
+        "full_span_rate": 0.011345,
+        "fully_covered_spans": 14,
+        "gold_characters": 10332,
+        "recall": 0.014615,
+        "span_count": 1234
+      },
+      "UNIQUE_ID": {
+        "covered_characters": 318,
+        "full_span_rate": 0.267327,
+        "fully_covered_spans": 27,
+        "gold_characters": 2670,
+        "recall": 0.119101,
+        "span_count": 101
+      },
+      "URL": {
+        "covered_characters": 964,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 102530,
+        "recall": 0.009402,
+        "span_count": 1949
+      },
+      "USER_NAME": {
+        "covered_characters": 620,
+        "full_span_rate": 0.045643,
+        "fully_covered_spans": 33,
+        "gold_characters": 8207,
+        "recall": 0.075545,
+        "span_count": 723
+      },
+      "VEHICLE_IDENTIFIER": {
+        "covered_characters": 17,
+        "full_span_rate": 0.0,
+        "fully_covered_spans": 0,
+        "gold_characters": 3831,
+        "recall": 0.004437,
+        "span_count": 227
+      }
+    },
+    "exact_mask_matches": 54355,
+    "gold_mask_spans": 42620,
+    "metric_definition": {
+      "diagnostic_by_gold_label": "Non-ranking diagnostic only; per-label gold-character coverage does not alter official label-agnostic PIIMB scoring.",
+      "f1": "harmonic mean of precision and recall",
+      "f2": "harmonic mean weighting recall twice as strongly as precision",
+      "fpr": "predicted PII characters outside gold PII / all non-PII characters",
+      "level": "character-level, label-agnostic masking",
+      "precision": "predicted PII characters overlapping true PII / all predicted PII characters",
+      "recall": "true PII characters covered / all true PII characters",
+      "span_preprocessing": "overlapping or consecutive regions are merged before scoring"
+    },
+    "overall": {
+      "f1": 0.474262,
+      "f2": 0.37424,
+      "fn_characters": 417217,
+      "fp_characters": 34493,
+      "fpr": 0.00838,
+      "non_pii_characters": 4116302,
+      "precision": 0.855214,
+      "recall": 0.328108,
+      "tp_characters": 203741
+    },
+    "performance": {
+      "cpu_ms": 64500.279,
+      "mean_sentence_ms": 0.826,
+      "median_sentence_ms": 0.662,
+      "p95_sentence_ms": 1.605,
+      "peak_process_rss_mb": 240.859,
+      "sentences_per_second": 1205.041,
+      "wall_ms": 64650.926
+    },
+    "predicted_mask_spans": 19646,
+    "rows_scored": 77907
+  },
+  "claim_boundary": "Post-freeze external generalization evidence only; not a universal accuracy or anonymity guarantee.",
+  "generated_at": "2026-08-09T08:53:17.205181+00:00",
+  "integrity": {
+    "detector_frozen_before_evaluation": true,
+    "frozen_detector": "Broad-Coverage PII Engine v3",
+    "holdout_feedback_may_tune_detector": false,
+    "locked_files_total": 49,
+    "locked_files_verified": 49,
+    "production_source_changed_during_run": false,
+    "source_snapshot": "veilgraph-sih-final-135passed-v3-frozen.zip",
+    "source_snapshot_sha256": "89d6a287c71b6d4010d5e40100dc0a0f22b89e743ab912011ecf6b665713b01d"
+  },
+  "schema": "veilgraph.holdout-result.v1"
+}

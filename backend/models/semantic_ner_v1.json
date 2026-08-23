@@ -1,0 +1,73 @@
+{
+  "classifiers": {
+    "EMPLOYER": {
+      "intercept": -0.753722,
+      "threshold": 0.7,
+      "training_examples": {
+        "negative": 2,
+        "positive": 4
+      },
+      "weights": {
+        "before_action": 0.836755,
+        "org_term": 4.803218,
+        "role_term": -1.652754,
+        "title_ratio": -0.673395,
+        "token_count": 0.691286,
+        "works_context": -0.673395
+      }
+    },
+    "JOB_TITLE": {
+      "intercept": -0.716717,
+      "threshold": 0.7,
+      "training_examples": {
+        "negative": 2,
+        "positive": 4
+      },
+      "weights": {
+        "as_context": -0.639485,
+        "role_term": 5.403161,
+        "title_ratio": -0.639485,
+        "token_count": -0.776359
+      }
+    },
+    "PERSON_NAME": {
+      "intercept": 1.388036,
+      "threshold": 0.7,
+      "training_examples": {
+        "negative": 3,
+        "positive": 5
+      },
+      "weights": {
+        "after_action": -0.092354,
+        "before_action": 1.301293,
+        "generic_block": -4.963913,
+        "role_term": -1.096908,
+        "sentence_start": -0.092354,
+        "title_ratio": 1.208939,
+        "token_count": 0.483575
+      }
+    },
+    "STREET_ADDRESS": {
+      "intercept": -0.455794,
+      "threshold": 0.7,
+      "training_examples": {
+        "negative": 2,
+        "positive": 4
+      },
+      "weights": {
+        "address_term": 5.498666,
+        "before_action": -0.405968,
+        "delivery_context": -0.405968,
+        "starts_digit": -0.405968,
+        "title_ratio": -0.405968,
+        "token_count": -0.324774
+      }
+    }
+  },
+  "model_family": "local logistic-regression span classifier",
+  "runtime_network_required": false,
+  "schema": "veilgraph.semantic-ner.linear.v1",
+  "training_corpus_sha256": "76ba810afbce192aaf288a08675279ad22181cb4386a2c3cdc6a5dfc6d014729",
+  "training_source": "VeilGraph independent fictional semantic-context corpus v1",
+  "version": "1.0.0"
+}
