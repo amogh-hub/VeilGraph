@@ -201,6 +201,13 @@ export interface LearnedModelEvidence {
   fallbackReason?: string
 }
 
+export interface VisualFusionSummary {
+  totalFindings: number
+  corroboratedFindings: number
+  singleSourceFindings: number
+  learnedNativeFaceAgreements: number
+}
+
 export interface VisualPerceptionReport {
   status: LocalPerceptionStatus
   modelId: string
@@ -211,6 +218,7 @@ export interface VisualPerceptionReport {
   capabilities: VisualCapability[]
   findingCount: number
   stageTimingsMs: VisualStageTimings
+  fusionSummary: VisualFusionSummary
   learnedModel?: LearnedModelEvidence
 }
 
@@ -254,6 +262,9 @@ export interface VisualFinding {
   provider?: string
   modalities?: PerceptionModality[]
   relatedElementIds?: Array<`vg_${string}`>
+  supportingProviders?: string[]
+  supportCount?: number
+  consensus?: 'SINGLE_SOURCE' | 'CORROBORATED'
 }
 
 export type BrowserActionType = 'CLICK' | 'SCROLL' | 'TYPE' | 'SELECT' | 'NAVIGATE' | 'READ' | 'WAIT'

@@ -70,25 +70,66 @@ function iou(a: [number, number, number, number], b: [number, number, number, nu
   return intersection / Math.max(1, areaA + areaB - intersection)
 }
 
-function mergeModalities(left: VisualFinding, right: VisualFinding): VisualFinding {
+function providerSet(finding: VisualFinding): string[] {
+  return Array.from(new Set([...(finding.supportingProviders ?? []), ...(finding.provider ? [finding.provider] : [])]))
+}
+
+function bboxUnion(
+  left: [number, number, number, number],
+  right: [number, number, number, number],
+): [number, number, number, number] {
+  return [
+    Math.min(left[0], right[0]),
+    Math.min(left[1], right[1]),
+    Math.max(left[2], right[2]),
+    Math.max(left[3], right[3]),
+  ]
+}
+
+function withEvidence(finding: VisualFinding): VisualFinding {
+  const supportingProviders = providerSet(finding)
+  const supportCount = supportingProviders.length
+  return {
+    ...finding,
+    ...(supportingProviders.length ? { supportingProviders } : {}),
+    ...(supportCount ? { supportCount } : {}),
+    ...(supportCount ? { consensus: supportCount >= 2 ? 'CORROBORATED' : 'SINGLE_SOURCE' } : {}),
+  }
+}
+
+function mergeEvidence(left: VisualFinding, right: VisualFinding): VisualFinding {
   const modalities = Array.from(new Set([...(left.modalities ?? []), ...(right.modalities ?? [])]))
   const relatedElementIds = Array.from(new Set([...(left.relatedElementIds ?? []), ...(right.relatedElementIds ?? [])]))
+  const supportingProviders = Array.from(new Set([...providerSet(left), ...providerSet(right)]))
+  const supportCount = supportingProviders.length
+  const agreementBonus = supportCount >= 2 ? 250 : 0
   return {
     ...left,
-    confidenceBasisPoints: Math.max(left.confidenceBasisPoints, right.confidenceBasisPoints),
+    confidenceBasisPoints: Math.min(10_000, Math.max(left.confidenceBasisPoints, right.confidenceBasisPoints) + agreementBonus),
+    bbox: bboxUnion(left.bbox, right.bbox),
     ...(modalities.length ? { modalities } : {}),
     ...(relatedElementIds.length ? { relatedElementIds } : {}),
+    ...(supportingProviders.length ? { supportingProviders } : {}),
+    ...(supportCount ? { supportCount } : {}),
+    ...(supportCount ? { consensus: supportCount >= 2 ? 'CORROBORATED' : 'SINGLE_SOURCE' } : {}),
   }
 }
 
 function deduplicate(findings: VisualFinding[]): VisualFinding[] {
-  const sorted = [...findings].sort((left, right) => right.confidenceBasisPoints - left.confidenceBasisPoints)
+  const sorted = findings.map(withEvidence).sort((left, right) => right.confidenceBasisPoints - left.confidenceBasisPoints)
   const kept: VisualFinding[] = []
   for (const finding of sorted) {
-    const duplicateIndex = kept.findIndex((existing) => existing.type === finding.type && iou(existing.bbox, finding.bbox) >= 0.72)
+    const duplicateIndex = kept.findIndex((existing) => {
+      if (existing.type !== finding.type) return false
+      const existingProviders = new Set(providerSet(existing))
+      const findingProviders = providerSet(finding)
+      const crossProvider = findingProviders.some((provider) => !existingProviders.has(provider))
+      const overlapThreshold = finding.type === 'FACE' && crossProvider ? 0.40 : 0.72
+      return iou(existing.bbox, finding.bbox) >= overlapThreshold
+    })
     if (duplicateIndex >= 0) {
       const existing = kept[duplicateIndex]
-      if (existing) kept[duplicateIndex] = mergeModalities(existing, finding)
+      if (existing) kept[duplicateIndex] = mergeEvidence(existing, finding)
       continue
     }
     kept.push(finding)
@@ -104,12 +145,27 @@ function fuseCrossModalSensitiveRegions(findings: VisualFinding[]): VisualFindin
     let merged = finding
     for (const text of textRegions) {
       if (iou(finding.bbox, text.bbox) < 0.35) continue
-      merged = mergeModalities(merged, text)
+      merged = mergeEvidence(merged, text)
       consumedText.add(text.findingId)
     }
     return merged
   })
   return fused.filter((finding) => finding.type !== 'TEXT_REGION' || !consumedText.has(finding.findingId))
+}
+
+function summarizeFusion(findings: VisualFinding[]) {
+  const corroborated = findings.filter((finding) => finding.consensus === 'CORROBORATED')
+  const learnedNativeFaceAgreements = findings.filter((finding) => {
+    if (finding.type !== 'FACE') return false
+    const providers = finding.supportingProviders ?? []
+    return providers.some((provider) => provider.startsWith('onnx:')) && providers.includes('shape-detection-api')
+  }).length
+  return {
+    totalFindings: findings.length,
+    corroboratedFindings: corroborated.length,
+    singleSourceFindings: findings.filter((finding) => finding.consensus === 'SINGLE_SOURCE').length,
+    learnedNativeFaceAgreements,
+  }
 }
 
 async function timed<T>(operation: () => Promise<T>): Promise<{ value: T; elapsedMs: number }> {
@@ -391,6 +447,7 @@ export async function runLocalVision(
         textRegionMs,
         fusionMs,
       },
+      fusionSummary: { totalFindings: 0, corroboratedFindings: 0, singleSourceFindings: 0, learnedNativeFaceAgreements: 0 },
     }
     return { status: 'ERROR', findings: [], report }
   }
@@ -452,6 +509,7 @@ export async function runLocalVision(
       textRegionMs,
       fusionMs,
     },
+    fusionSummary: summarizeFusion(deduped),
     learnedModel: learnedFaces.evidence,
   }
   bitmap.close()

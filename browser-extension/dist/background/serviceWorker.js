@@ -191,6 +191,12 @@ function snakeCaseCapture(bundle, task, audienceProfile, privacyLevel) {
                 text_region_ms: bundle.visualPerceptionReport.stageTimingsMs.textRegionMs,
                 fusion_ms: bundle.visualPerceptionReport.stageTimingsMs.fusionMs,
             },
+            fusion_summary: {
+                total_findings: bundle.visualPerceptionReport.fusionSummary.totalFindings,
+                corroborated_findings: bundle.visualPerceptionReport.fusionSummary.corroboratedFindings,
+                single_source_findings: bundle.visualPerceptionReport.fusionSummary.singleSourceFindings,
+                learned_native_face_agreements: bundle.visualPerceptionReport.fusionSummary.learnedNativeFaceAgreements,
+            },
             ...(bundle.visualPerceptionReport.learnedModel ? {
                 learned_model: {
                     model_id: bundle.visualPerceptionReport.learnedModel.modelId,
@@ -223,6 +229,9 @@ function snakeCaseCapture(bundle, task, audienceProfile, privacyLevel) {
             ...(finding.provider ? { provider: finding.provider } : {}),
             ...(finding.modalities ? { modalities: finding.modalities } : {}),
             ...(finding.relatedElementIds ? { related_element_ids: finding.relatedElementIds } : {}),
+            ...(finding.supportingProviders ? { supporting_providers: finding.supportingProviders } : {}),
+            ...(finding.supportCount !== undefined ? { support_count: finding.supportCount } : {}),
+            ...(finding.consensus ? { consensus: finding.consensus } : {}),
         })),
         frames: bundle.frames.map((frame) => ({
             frame_id: frame.frameId,

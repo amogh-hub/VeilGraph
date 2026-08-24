@@ -4,7 +4,7 @@ const onePixelPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAA
 
 globalThis.createImageBitmap = async () => ({ width: 1000, height: 800, close() {} })
 class Rect { constructor(x, y, width, height) { Object.assign(this, { x, y, width, height, top: y, left: x, right: x + width, bottom: y + height }) } }
-globalThis.FaceDetector = class { async detect() { return [{ boundingBox: new Rect(100, 100, 200, 220) }] } }
+globalThis.FaceDetector = class { async detect() { return [{ boundingBox: new Rect(105, 95, 205, 230) }] } }
 globalThis.BarcodeDetector = class { async detect() { return [{ boundingBox: new Rect(700, 100, 120, 120), rawValue: 'local-qr' }] } }
 globalThis.TextDetector = class {
   async detect() {
@@ -89,8 +89,18 @@ assert.equal(result.report.modelId, 'veilgraph-hybrid-local-perception-v3')
 assert.equal(result.report.backend, 'hybrid-local')
 assert.equal(result.report.learnedModel?.modelId, 'ultraface-rfb-320')
 assert.equal(result.report.learnedModel?.executionProvider, 'wasm')
-assert.ok(result.findings.some((finding) => finding.type === 'FACE'))
-assert.ok(result.findings.some((finding) => finding.type === 'QR_CODE'))
+const face = result.findings.find((finding) => finding.type === 'FACE')
+assert.ok(face)
+assert.equal(face.consensus, 'CORROBORATED')
+assert.equal(face.supportCount, 2)
+assert.deepEqual(new Set(face.supportingProviders), new Set(['onnx:ultraface-rfb-320', 'shape-detection-api']))
+assert.deepEqual(face.bbox, [1000, 1188, 3100, 4063])
+assert.equal(result.report.fusionSummary.learnedNativeFaceAgreements, 1)
+assert.ok(result.report.fusionSummary.corroboratedFindings >= 2)
+const qr = result.findings.find((finding) => finding.type === 'QR_CODE')
+assert.ok(qr)
+assert.equal(qr.consensus, 'SINGLE_SOURCE')
+assert.equal(qr.supportCount, 1)
 assert.ok(result.findings.some((finding) => finding.type === 'TEXT_REGION'))
 const password = result.findings.find((finding) => finding.type === 'PASSWORD_FIELD')
 assert.ok(password)
@@ -99,4 +109,4 @@ assert.deepEqual(password.relatedElementIds, ['vg_password_001'])
 assert.equal(result.report.capabilities.filter((item) => item.required && item.status === 'READY').length, 5)
 assert.ok(result.report.capabilities.some((item) => item.name === 'LEARNED_FACE_DETECTION' && item.status === 'READY'))
 for (const value of Object.values(result.report.stageTimingsMs)) assert.ok(Number.isInteger(value) && value >= 0)
-console.log(JSON.stringify({ status: result.status, findings: result.findings.length, capabilities: result.report.capabilities.length, fusedPasswordModalities: password.modalities.length }))
+console.log(JSON.stringify({ status: result.status, contract: 'MULTIMODAL_FUSION_V1', findings: result.findings.length, capabilities: result.report.capabilities.length, fusedPasswordModalities: password.modalities.length, corroboratedFindings: result.report.fusionSummary.corroboratedFindings, learnedNativeFaceAgreements: result.report.fusionSummary.learnedNativeFaceAgreements }))

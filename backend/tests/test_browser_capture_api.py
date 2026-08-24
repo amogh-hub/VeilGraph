@@ -153,6 +153,12 @@ def test_browser_capture_metadata_accepts_packaged_learned_model_evidence():
             "text_region_ms": 2,
             "fusion_ms": 2,
         },
+        "fusion_summary": {
+            "total_findings": 1,
+            "corroborated_findings": 1,
+            "single_source_findings": 0,
+            "learned_native_face_agreements": 1,
+        },
         "learned_model": {
             "model_id": "ultraface-rfb-320",
             "model_sha256": "34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017",
@@ -181,3 +187,48 @@ def test_browser_capture_metadata_accepts_packaged_learned_model_evidence():
     assert parsed.visual_perception_report.learned_model is not None
     assert parsed.visual_perception_report.learned_model.model_id == "ultraface-rfb-320"
     assert parsed.visual_perception_report.stage_timings_ms.learned_face_ms == 9
+
+
+def test_browser_visual_finding_accepts_corroborated_provider_evidence():
+    from app.browser.models import BrowserLocalVisualFinding
+
+    finding = BrowserLocalVisualFinding.model_validate({
+        "finding_id": "face-fused-1",
+        "type": "FACE",
+        "confidence_basis_points": 9800,
+        "bbox": [1000, 1000, 3000, 3500],
+        "provider": "onnx:ultraface-rfb-320",
+        "modalities": ["VISUAL"],
+        "supporting_providers": ["onnx:ultraface-rfb-320", "shape-detection-api"],
+        "support_count": 2,
+        "consensus": "CORROBORATED",
+    })
+    assert finding.support_count == 2
+    assert finding.consensus == "CORROBORATED"
+
+
+def test_browser_visual_finding_rejects_false_corroboration():
+    from app.browser.models import BrowserLocalVisualFinding
+
+    with pytest.raises(ValueError, match="CORROBORATED"):
+        BrowserLocalVisualFinding.model_validate({
+            "finding_id": "face-invalid",
+            "type": "FACE",
+            "confidence_basis_points": 9000,
+            "bbox": [1000, 1000, 3000, 3500],
+            "supporting_providers": ["onnx:ultraface-rfb-320"],
+            "support_count": 1,
+            "consensus": "CORROBORATED",
+        })
+
+
+def test_browser_visual_fusion_summary_rejects_impossible_agreement_count():
+    from app.browser.models import BrowserVisualFusionSummary
+
+    with pytest.raises(ValueError, match="cannot exceed corroborated"):
+        BrowserVisualFusionSummary.model_validate({
+            "total_findings": 2,
+            "corroborated_findings": 0,
+            "single_source_findings": 2,
+            "learned_native_face_agreements": 1,
+        })

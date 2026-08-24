@@ -45,3 +45,10 @@ Each learned inference records:
 `browser-extension/scripts/verify_learned_model_contract.mjs` verifies the model hash and size, built-extension asset packaging, CSP support for WebAssembly, ONNX Runtime WASM model loading, a real zero-input inference, and expected output tensor shapes.
 
 This is an **engineering validation checkpoint**, not the final accuracy benchmark. The later labelled SIH browser benchmark will measure face recall/precision, visual-context accuracy, memory/resource use, WebGPU/WASM latency, and redaction precision.
+
+
+## Multimodal fusion contract
+
+The learned detector is not treated as an oracle. Browser-local fusion is recall-first: non-overlapping findings from independent detectors are retained, while overlapping findings of the same semantic type are merged conservatively. For faces, the merged redaction box is the union of learned and browser-native boxes so disagreement cannot shrink the protected region.
+
+Each fused finding carries `supportingProviders`, `supportCount`, and a `SINGLE_SOURCE` or `CORROBORATED` consensus label. Agreement between the packaged UltraFace detector and the browser-native face detector is recorded explicitly in the perception report as `learnedNativeFaceAgreements`. A single-source finding is still retained for privacy; corroboration increases confidence but is never required to redact a potentially sensitive region.

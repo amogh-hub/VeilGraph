@@ -284,6 +284,22 @@ class BrowserLocalVisualFinding(BaseModel):
     provider: str | None = Field(default=None, max_length=128)
     modalities: list[Literal["DOM", "ACCESSIBILITY", "VISUAL"]] = Field(default_factory=list, max_length=3)
     related_element_ids: list[str] = Field(default_factory=list, max_length=64)
+    supporting_providers: list[str] = Field(default_factory=list, max_length=16)
+    support_count: int | None = Field(default=None, ge=1, le=16)
+    consensus: Literal["SINGLE_SOURCE", "CORROBORATED"] | None = None
+
+    @model_validator(mode="after")
+    def validate_support_accounting(self):
+        unique_providers = list(dict.fromkeys(self.supporting_providers))
+        if len(unique_providers) != len(self.supporting_providers):
+            raise ValueError("supporting_providers must be unique")
+        if self.support_count is not None and self.support_count != len(self.supporting_providers):
+            raise ValueError("support_count must match supporting_providers")
+        if self.consensus == "CORROBORATED" and (self.support_count or 0) < 2:
+            raise ValueError("CORROBORATED requires at least two supporting providers")
+        if self.consensus == "SINGLE_SOURCE" and self.support_count not in (None, 1):
+            raise ValueError("SINGLE_SOURCE requires exactly one supporting provider")
+        return self
 
 
 class BrowserVisualCapability(BaseModel):
@@ -350,6 +366,23 @@ class BrowserLearnedModelEvidence(BaseModel):
     fallback_reason: str | None = Field(default=None, max_length=512)
 
 
+class BrowserVisualFusionSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    total_findings: int = Field(ge=0, le=10_000)
+    corroborated_findings: int = Field(ge=0, le=10_000)
+    single_source_findings: int = Field(ge=0, le=10_000)
+    learned_native_face_agreements: int = Field(ge=0, le=10_000)
+
+    @model_validator(mode="after")
+    def validate_fusion_counts(self):
+        if self.corroborated_findings + self.single_source_findings > self.total_findings:
+            raise ValueError("fusion evidence counts cannot exceed total_findings")
+        if self.learned_native_face_agreements > self.corroborated_findings:
+            raise ValueError("learned/native face agreements cannot exceed corroborated findings")
+        return self
+
+
 class BrowserVisualPerceptionReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -362,6 +395,14 @@ class BrowserVisualPerceptionReport(BaseModel):
     capabilities: list[BrowserVisualCapability] = Field(default_factory=list, max_length=32)
     finding_count: int = Field(ge=0, le=10_000)
     stage_timings_ms: BrowserVisualStageTimings = Field(default_factory=BrowserVisualStageTimings)
+    fusion_summary: BrowserVisualFusionSummary = Field(
+        default_factory=lambda: BrowserVisualFusionSummary(
+            total_findings=0,
+            corroborated_findings=0,
+            single_source_findings=0,
+            learned_native_face_agreements=0,
+        )
+    )
     learned_model: BrowserLearnedModelEvidence | None = None
 
 
