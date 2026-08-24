@@ -33,6 +33,16 @@ class Settings(BaseSettings):
     max_image_pixels: int = 40_000_000
     max_browser_screenshot_bytes: int = 15 * 1024 * 1024
     max_browser_metadata_bytes: int = 2 * 1024 * 1024
+
+    # Sanitized reasoning is disabled by default. A deployed reasoning server
+    # must opt in and pin the exact VeilGraph device signer fingerprint.
+    reasoning_enabled: bool = False
+    reasoning_ollama_base_url: str = "http://127.0.0.1:11434"
+    reasoning_ollama_model: str = ""
+    reasoning_timeout_seconds: float = 45.0
+    reasoning_trusted_signer_sha256: str | None = None
+    reasoning_max_actions: int = 8
+
     max_video_duration_seconds: float = 60.0
     max_video_frames: int = 3600
     max_video_width: int = 1920

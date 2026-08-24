@@ -1,5 +1,8 @@
 export const BROWSER_RELEASE_SCHEMA = 'veilgraph.browser-release-payload.v1' as const
 export const BROWSER_AUTH_SCHEMA = 'veilgraph.browser-network-authorization.v1' as const
+export const BROWSER_ACTION_PLAN_SCHEMA = 'veilgraph.browser-action-plan.v1' as const
+export const BROWSER_REASONING_REQUEST_SCHEMA = 'veilgraph.browser-reasoning-request.v1' as const
+export const BROWSER_REASONING_RESPONSE_SCHEMA = 'veilgraph.browser-reasoning-response.v1' as const
 
 export type NetworkDecision = 'ALLOW_NETWORK_RELEASE' | 'DENY_NETWORK_RELEASE'
 export type LocalPerceptionStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE' | 'ERROR'
@@ -124,10 +127,29 @@ export interface BrowserVerificationSummary {
   critical_exposure_present: boolean
 }
 
+export interface BrowserMinimizationEvidence {
+  contract: 'TASK_MINIMIZATION_V1'
+  task_intent: 'CLICK' | 'TYPE' | 'SELECT' | 'READ' | 'NAVIGATE' | 'SUBMIT' | 'GENERAL'
+  raw_element_count: number
+  candidate_element_count: number
+  released_element_count: number
+  dropped_irrelevant_count: number
+  required_anchor_ids: Array<`vg_${string}`>
+  dependency_anchor_ids: Array<`vg_${string}`>
+  semantic_minimization_basis_points: number
+  visual_minimization_basis_points: number
+  overall_minimization_basis_points: number
+  task_token_coverage_basis_points: number
+  actionability_preserved: boolean
+  utility_sufficient: boolean
+  retained_visual_regions: number
+}
+
 export interface BrowserReleasePreparation {
   schema: 'veilgraph.browser-release-preparation.v1'
   analysis: Record<string, unknown>
   payload: BrowserReleasePayload
+  minimization: BrowserMinimizationEvidence
   verification: BrowserVerificationSummary
   authorization: BrowserNetworkAuthorization
 }
@@ -271,18 +293,42 @@ export type BrowserActionType = 'CLICK' | 'SCROLL' | 'TYPE' | 'SELECT' | 'NAVIGA
 
 export interface BrowserAction {
   action: BrowserActionType
-  target_id?: `vg_${string}`
-  value?: string
+  target_id?: `vg_${string}` | null
+  value?: string | null
+  url?: string | null
+  scroll_delta_y?: number | null
+  wait_ms?: number | null
   confidence_basis_points: number
   reason: string
   requires_confirmation: boolean
 }
 
 export interface BrowserActionPlan {
-  schema: 'veilgraph.browser-action-plan.v1'
+  schema: typeof BROWSER_ACTION_PLAN_SCHEMA
   session_id: string
   task_id: string
   actions: BrowserAction[]
+  complete: boolean
+  summary: string
+}
+
+export interface BrowserReasoningEvidence {
+  provider: 'ollama'
+  model: string
+  elapsed_ms: number
+  payload_sha256: string
+  visual_context_used: boolean
+  structured_output_validated: boolean
+  target_ids_validated: boolean
+  authorization_verified: boolean
+  signer_trusted: boolean
+  replay_protected: boolean
+}
+
+export interface BrowserReasoningResponse {
+  schema: typeof BROWSER_REASONING_RESPONSE_SCHEMA
+  plan: BrowserActionPlan
+  evidence: BrowserReasoningEvidence
 }
 
 export type RuntimeRequest =
@@ -290,6 +336,7 @@ export type RuntimeRequest =
   | { type: 'VG_PAIR_LOCAL_COMPANION' }
   | { type: 'VG_ANALYSE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_PREPARE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
+  | { type: 'VG_REASON_ACTIVE_PAGE'; task: string; serverUrl: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_CAPTURE_FRAME' }
   | { type: 'VG_GET_STATUS' }
 

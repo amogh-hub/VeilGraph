@@ -1279,6 +1279,48 @@
         }
       }
     },
+    "/api/v1/browser/reason": {
+      "post": {
+        "tags": [
+          "browser-reasoning"
+        ],
+        "summary": "Reason Browser",
+        "description": "Reason only over an exact sanitized payload carrying a trusted signed ALLOW.",
+        "operationId": "reason_browser_api_v1_browser_reason_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserReasoningRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserReasoningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ops/status": {
       "get": {
         "tags": [
@@ -1672,6 +1714,161 @@
           "file"
         ],
         "title": "Body_upload_file_api_v1_jobs__job_id__files_post"
+      },
+      "BrowserAction": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "CLICK",
+              "SCROLL",
+              "TYPE",
+              "SELECT",
+              "NAVIGATE",
+              "READ",
+              "WAIT"
+            ],
+            "title": "Action"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 96,
+                "minLength": 8,
+                "pattern": "^vg_[A-Za-z0-9_-]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "scroll_delta_y": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": -10000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scroll Delta Y"
+          },
+          "wait_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wait Ms"
+          },
+          "confidence_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Confidence Basis Points"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Reason"
+          },
+          "requires_confirmation": {
+            "type": "boolean",
+            "title": "Requires Confirmation",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action",
+          "confidence_basis_points",
+          "reason"
+        ],
+        "title": "BrowserAction",
+        "description": "Typed server proposal. It is a plan, never executable code."
+      },
+      "BrowserActionPlan": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-action-plan.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-action-plan.v1"
+          },
+          "session_id": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 16,
+            "title": "Session Id"
+          },
+          "task_id": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 16,
+            "title": "Task Id"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserAction"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Actions"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete",
+            "default": false
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Summary",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "task_id"
+        ],
+        "title": "BrowserActionPlan"
       },
       "BrowserCaptureCoverageItem": {
         "properties": {
@@ -2580,6 +2777,118 @@
         ],
         "title": "BrowserPublicVisualContext",
         "description": "Sanitized raster context eligible for external reasoning.\n\nThe raw screenshot is never represented by this type. ``image_base64`` must\nbe a newly encoded, flattened image produced after local redaction."
+      },
+      "BrowserReasoningEvidence": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "ollama",
+            "title": "Provider",
+            "default": "ollama"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "maximum": 300000.0,
+            "minimum": 0.0,
+            "title": "Elapsed Ms"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Payload Sha256"
+          },
+          "visual_context_used": {
+            "type": "boolean",
+            "title": "Visual Context Used"
+          },
+          "structured_output_validated": {
+            "type": "boolean",
+            "title": "Structured Output Validated"
+          },
+          "target_ids_validated": {
+            "type": "boolean",
+            "title": "Target Ids Validated"
+          },
+          "authorization_verified": {
+            "type": "boolean",
+            "title": "Authorization Verified"
+          },
+          "signer_trusted": {
+            "type": "boolean",
+            "title": "Signer Trusted"
+          },
+          "replay_protected": {
+            "type": "boolean",
+            "title": "Replay Protected"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "elapsed_ms",
+          "payload_sha256",
+          "visual_context_used",
+          "structured_output_validated",
+          "target_ids_validated",
+          "authorization_verified",
+          "signer_trusted",
+          "replay_protected"
+        ],
+        "title": "BrowserReasoningEvidence"
+      },
+      "BrowserReasoningRequest": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-reasoning-request.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-reasoning-request.v1"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BrowserReleasePayload"
+          },
+          "authorization": {
+            "$ref": "#/components/schemas/BrowserNetworkAuthorization"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payload",
+          "authorization"
+        ],
+        "title": "BrowserReasoningRequest",
+        "description": "Only already-authorized sanitized context may enter server reasoning."
+      },
+      "BrowserReasoningResponse": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-reasoning-response.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-reasoning-response.v1"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/BrowserActionPlan"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/BrowserReasoningEvidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "plan",
+          "evidence"
+        ],
+        "title": "BrowserReasoningResponse"
       },
       "BrowserReleasePayload": {
         "properties": {

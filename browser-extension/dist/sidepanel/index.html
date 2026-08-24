@@ -16,11 +16,14 @@
     <button id="pair" class="pair" type="button">Pair trusted local companion</button>
     <label for="task">What should the agent do?</label>
     <input id="task" type="text" autocomplete="off" placeholder="e.g. Book the follow-up appointment">
+    <label for="server-url">Sanitized reasoning server</label>
+    <input id="server-url" type="url" autocomplete="off" value="http://127.0.0.1:8001/api/v1/browser/reason">
     <p id="status">Ready for local analysis.</p>
     <button id="analyse" type="button">Analyse current page locally</button>
     <button id="prepare" class="secondary" type="button">Build & verify safe network payload</button>
+    <button id="reason" class="secondary" type="button">Reason on sanitized context</button>
     <pre id="detail" aria-live="polite"></pre>
-    <footer>Raw screen context is sent only to the local VeilGraph companion on 127.0.0.1. External release remains impossible without a signed privacy authorization.</footer>
+    <footer>Raw screen context stays local. Only a task-minimized, sanitized payload with a valid signed privacy authorization can reach the reasoning server. Server actions are typed plans, never executable code.</footer>
   </main>
   <script type="module" src="index.js"></script>
 </body>

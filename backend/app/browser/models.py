@@ -10,6 +10,9 @@ from app.core.enums import TestStatus
 
 BROWSER_RELEASE_SCHEMA = "veilgraph.browser-release-payload.v1"
 BROWSER_AUTH_SCHEMA = "veilgraph.browser-network-authorization.v1"
+BROWSER_ACTION_PLAN_SCHEMA = "veilgraph.browser-action-plan.v1"
+BROWSER_REASONING_REQUEST_SCHEMA = "veilgraph.browser-reasoning-request.v1"
+BROWSER_REASONING_RESPONSE_SCHEMA = "veilgraph.browser-reasoning-response.v1"
 
 
 class BrowserPublicElement(BaseModel):
@@ -167,6 +170,119 @@ class BrowserNetworkAuthorization(BaseModel):
     payload: BrowserNetworkAuthorizationPayload
     signature_algorithm: Literal["Ed25519"] = "Ed25519"
     signature_b64: str
+
+
+class BrowserAction(BaseModel):
+    """Typed server proposal. It is a plan, never executable code."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["CLICK", "SCROLL", "TYPE", "SELECT", "NAVIGATE", "READ", "WAIT"]
+    target_id: str | None = Field(default=None, min_length=8, max_length=96, pattern=r"^vg_[A-Za-z0-9_-]+$")
+    value: str | None = Field(default=None, max_length=1024)
+    url: str | None = Field(default=None, max_length=2048)
+    scroll_delta_y: int | None = Field(default=None, ge=-10_000, le=10_000)
+    wait_ms: int | None = Field(default=None, ge=0, le=5_000)
+    confidence_basis_points: int = Field(ge=0, le=10_000)
+    reason: str = Field(min_length=1, max_length=300)
+    requires_confirmation: bool = False
+
+    @model_validator(mode="after")
+    def validate_typed_shape(self):
+        targeted = {"CLICK", "TYPE", "SELECT", "READ"}
+        if self.action in targeted and self.target_id is None:
+            raise ValueError(f"{self.action} requires target_id")
+        if self.action not in targeted and self.target_id is not None:
+            raise ValueError(f"{self.action} must not carry target_id")
+
+        if self.action in {"TYPE", "SELECT"}:
+            if self.value is None or not self.value.strip():
+                raise ValueError(f"{self.action} requires a non-empty value")
+        elif self.value is not None:
+            raise ValueError(f"{self.action} must not carry value")
+
+        if self.action == "NAVIGATE":
+            if self.url is None or not self.url.strip():
+                raise ValueError("NAVIGATE requires url")
+        elif self.url is not None:
+            raise ValueError(f"{self.action} must not carry url")
+
+        if self.action == "SCROLL":
+            if self.scroll_delta_y is None or self.scroll_delta_y == 0:
+                raise ValueError("SCROLL requires a non-zero scroll_delta_y")
+        elif self.scroll_delta_y is not None:
+            raise ValueError(f"{self.action} must not carry scroll_delta_y")
+
+        if self.action == "WAIT":
+            if self.wait_ms is None or self.wait_ms <= 0:
+                raise ValueError("WAIT requires wait_ms > 0")
+        elif self.wait_ms is not None:
+            raise ValueError(f"{self.action} must not carry wait_ms")
+        return self
+
+
+class BrowserActionPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal[BROWSER_ACTION_PLAN_SCHEMA] = Field(
+        default=BROWSER_ACTION_PLAN_SCHEMA,
+        alias="schema",
+        serialization_alias="schema",
+    )
+    session_id: str = Field(min_length=16, max_length=96)
+    task_id: str = Field(min_length=16, max_length=96)
+    actions: list[BrowserAction] = Field(default_factory=list, max_length=8)
+    complete: bool = False
+    summary: str = Field(default="", max_length=512)
+
+    @model_validator(mode="after")
+    def validate_completion_shape(self):
+        if self.complete and self.actions:
+            raise ValueError("complete action plan must not contain further actions")
+        if not self.complete and not self.actions:
+            raise ValueError("incomplete action plan requires at least one action")
+        return self
+
+
+class BrowserReasoningRequest(BaseModel):
+    """Only already-authorized sanitized context may enter server reasoning."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal[BROWSER_REASONING_REQUEST_SCHEMA] = Field(
+        default=BROWSER_REASONING_REQUEST_SCHEMA,
+        alias="schema",
+        serialization_alias="schema",
+    )
+    payload: BrowserReleasePayload
+    authorization: BrowserNetworkAuthorization
+
+
+class BrowserReasoningEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    provider: Literal["ollama"] = "ollama"
+    model: str = Field(min_length=1, max_length=256)
+    elapsed_ms: int = Field(ge=0, le=300_000)
+    payload_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    visual_context_used: bool
+    structured_output_validated: bool
+    target_ids_validated: bool
+    authorization_verified: bool
+    signer_trusted: bool
+    replay_protected: bool
+
+
+class BrowserReasoningResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal[BROWSER_REASONING_RESPONSE_SCHEMA] = Field(
+        default=BROWSER_REASONING_RESPONSE_SCHEMA,
+        alias="schema",
+        serialization_alias="schema",
+    )
+    plan: BrowserActionPlan
+    evidence: BrowserReasoningEvidence
 
 
 class BrowserPairingRequest(BaseModel):

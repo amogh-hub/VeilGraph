@@ -34,6 +34,7 @@ FOCUSED_BROWSER_TESTS = [
     "tests/test_browser_pairing.py",
     "tests/test_browser_privacy_pipeline.py",
     "tests/test_browser_release_gate.py",
+    "tests/test_browser_reasoning.py",
 ]
 
 
@@ -280,6 +281,7 @@ class Harness:
         self.run_command("Perception + visual contract", ["npm", "run", "verify:perception"], cwd=ext)
 
         self.run_command("Python↔browser interoperability", [self.backend_python, "scripts/verify_browser_protocol_interop.py"], cwd=ROOT)
+        self.run_command("Typed action-plan contract", ["npm", "run", "verify:action-plan"], cwd=ext)
 
         focused = [self.backend_python, "-m", "pytest", *FOCUSED_BROWSER_TESTS, "-q"]
         self.run_command("Browser/privacy regression", focused, cwd=backend, summary_parser=self._pytest_summary, env={"PYTHONPATH": "."})
@@ -383,6 +385,7 @@ def main() -> int:
             "Learned local model contract",
             "Perception + visual contract",
             "Python↔browser interoperability",
+            "Typed action-plan contract",
             "Browser/privacy regression",
             "Full backend regression (skipped in --quick)",
             "Frontend dependency audit",

@@ -5,7 +5,7 @@
   "description": "Privacy-governed browser agent: raw screen context stays local until VeilGraph authorizes a sanitized release.",
   "minimum_chrome_version": "121",
   "permissions": ["activeTab", "scripting", "storage", "sidePanel", "tabs", "webNavigation"],
-  "host_permissions": ["http://127.0.0.1:8000/*"],
+  "host_permissions": ["http://127.0.0.1:8000/*", "http://127.0.0.1:8001/*"],
   "optional_host_permissions": ["https://*/*"],
   "background": {
     "service_worker": "background/serviceWorker.js",

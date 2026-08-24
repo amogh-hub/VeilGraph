@@ -69,6 +69,25 @@ export interface components {
     "Body_upload_file_api_v1_jobs__job_id__files_post": {
       "file": string
     }
+    "BrowserAction": {
+      "action": "CLICK" | "SCROLL" | "TYPE" | "SELECT" | "NAVIGATE" | "READ" | "WAIT"
+      "target_id"?: string | null
+      "value"?: string | null
+      "url"?: string | null
+      "scroll_delta_y"?: number | null
+      "wait_ms"?: number | null
+      "confidence_basis_points": number
+      "reason": string
+      "requires_confirmation"?: boolean
+    }
+    "BrowserActionPlan": {
+      "schema"?: string
+      "session_id": string
+      "task_id": string
+      "actions"?: Array<components['schemas']['BrowserAction']>
+      "complete"?: boolean
+      "summary"?: string
+    }
     "BrowserCaptureCoverageItem": {
       "name": "DOM" | "ACCESSIBILITY" | "VISUAL" | "TEXT_REGIONS" | "FACE" | "QR"
       "status": "READY" | "PARTIAL" | "UNAVAILABLE" | "ERROR"
@@ -205,6 +224,28 @@ export interface components {
       "image_base64": string
       "sanitized_sha256": string
       "redacted_regions": number
+    }
+    "BrowserReasoningEvidence": {
+      "provider"?: string
+      "model": string
+      "elapsed_ms": number
+      "payload_sha256": string
+      "visual_context_used": boolean
+      "structured_output_validated": boolean
+      "target_ids_validated": boolean
+      "authorization_verified": boolean
+      "signer_trusted": boolean
+      "replay_protected": boolean
+    }
+    "BrowserReasoningRequest": {
+      "schema"?: string
+      "payload": components['schemas']['BrowserReleasePayload']
+      "authorization": components['schemas']['BrowserNetworkAuthorization']
+    }
+    "BrowserReasoningResponse": {
+      "schema"?: string
+      "plan": components['schemas']['BrowserActionPlan']
+      "evidence": components['schemas']['BrowserReasoningEvidence']
     }
     "BrowserReleasePayload": {
       "schema"?: string

@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import increment_non_local_inbound, router
 from app.browser.routes import router as browser_router
+from app.browser.reasoning import router as browser_reasoning_router
 from app.core.config import settings
 from app.core.database import db
 from app.ops.admission import AdmissionController, AdmissionRejected, is_heavy_request
@@ -148,4 +149,5 @@ async def production_boundary_metrics_and_headers(request: Request, call_next):
 
 app.include_router(router)
 app.include_router(browser_router)
+app.include_router(browser_reasoning_router)
 app.include_router(ops_router)

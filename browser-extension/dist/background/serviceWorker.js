@@ -5,6 +5,7 @@ import { createOnnxLearnedFaceDetector } from '../perception/learnedFaceModel.js
 import * as ortRuntime from '../vendor/onnxruntime/ort.webgpu.bundle.min.mjs';
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
 import { pairLocalCompanion } from '../security/pairing.js';
+import { validateReasoningResponse } from '../security/actionPlan.js';
 const learnedFaceDetector = createOnnxLearnedFaceDetector(ortRuntime, (path) => chrome.runtime.getURL(path));
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -310,28 +311,48 @@ async function prepareWithLocalCompanion(bundle, task, audienceProfile, privacyL
     }
     return prepared;
 }
+function normalizeReasoningServerUrl(serverUrl) {
+    const parsed = new URL(serverUrl);
+    const local = parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost' || parsed.hostname === '::1';
+    if (parsed.username || parsed.password)
+        throw new Error('reasoning-server URL must not contain credentials');
+    if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && local)) {
+        throw new Error('reasoning server must use HTTPS, except explicit localhost development');
+    }
+    if (parsed.hash)
+        throw new Error('reasoning-server URL must not contain a fragment');
+    return parsed.toString();
+}
 async function sendExternally(serverUrl, payload, authorization) {
     const result = await verifyTrustedNetworkAuthorization(authorization, payload);
     if (!result.allowed)
         throw new Error(`VeilGraph blocked external release: ${result.reason}`);
-    const origin = new URL(serverUrl).origin + '/*';
+    const normalizedServerUrl = normalizeReasoningServerUrl(serverUrl);
+    const origin = new URL(normalizedServerUrl).origin + '/*';
     if (!(await chrome.permissions.contains({ origins: [origin] }))) {
         const granted = await chrome.permissions.request({ origins: [origin] });
         if (!granted)
             throw new Error('reasoning-server origin permission was not granted');
     }
-    const response = await fetch(serverUrl, {
+    const response = await fetch(normalizedServerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-        body: JSON.stringify({ payload, authorization }),
+        body: JSON.stringify({
+            schema: 'veilgraph.browser-reasoning-request.v1',
+            payload,
+            authorization,
+        }),
         credentials: 'omit',
         cache: 'no-store',
         redirect: 'error',
         referrerPolicy: 'no-referrer',
     });
-    if (!response.ok)
-        throw new Error(`reasoning server returned HTTP ${response.status}`);
-    return response.json();
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(`reasoning server returned HTTP ${response.status}${detail ? `: ${detail.slice(0, 240)}` : ''}`);
+    }
+    const raw = await response.json();
+    return validateReasoningResponse(raw, payload, authorization.payload.payload_sha256);
 }
 chrome.action.onClicked.addListener((tab) => {
     if (tab.id)
@@ -377,12 +398,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             .catch((error) => sendResponse({ ok: false, error: error instanceof Error ? error.message : 'privacy release preparation failed' }));
         return true;
     }
+    if (request.type === 'VG_REASON_ACTIVE_PAGE'
+        && typeof request.task === 'string'
+        && request.task.trim()
+        && typeof request.serverUrl === 'string'
+        && request.serverUrl.trim()) {
+        const audienceProfile = request.audienceProfile;
+        const privacyLevel = request.privacyLevel;
+        if (!audienceProfile || !privacyLevel) {
+            sendResponse({ ok: false, error: 'missing audience/privacy policy' });
+            return false;
+        }
+        void captureActivePage()
+            .then(async (bundle) => {
+            const preparation = await prepareWithLocalCompanion(bundle, request.task, audienceProfile, privacyLevel);
+            if (preparation.authorization.payload.decision !== 'ALLOW_NETWORK_RELEASE') {
+                throw new Error('VeilGraph denied network release; reasoning server was not contacted');
+            }
+            const reasoning = await sendExternally(request.serverUrl, preparation.payload, preparation.authorization);
+            return { preparation, reasoning };
+        })
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : 'sanitized server reasoning failed',
+        }));
+        return true;
+    }
     if (request.type === 'VG_GET_STATUS') {
-        sendResponse({ ok: true, data: { product: 'VeilGraph', networkReleaseGate: 'FAIL_CLOSED', perceptionContract: 'VIEWPORT_BOUND_V2' } });
+        sendResponse({
+            ok: true,
+            data: {
+                product: 'VeilGraph',
+                networkReleaseGate: 'FAIL_CLOSED',
+                perceptionContract: 'VIEWPORT_BOUND_V2',
+                minimizationContract: 'TASK_MINIMIZATION_V1',
+                reasoningContract: 'SANITIZED_REASONING_ACTION_V1',
+            },
+        });
     }
     return false;
 });
-// Intentionally not exported through the runtime message surface yet. External
-// egress will be wired only after the local privacy compiler + Browser Red Team
-// produce a trusted signed authorization object.
-void sendExternally;
+// External egress is reachable only through VG_REASON_ACTIVE_PAGE, after the
+// extension independently verifies a signed ALLOW_NETWORK_RELEASE authorization.
+// Returned server plans remain plans; local action execution is a later boundary.

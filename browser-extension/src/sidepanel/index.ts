@@ -1,15 +1,18 @@
-import type { BrowserReleasePreparation, RuntimeResponse } from '../common/protocol.js'
+import type { BrowserReasoningResponse, BrowserReleasePreparation, RuntimeResponse } from '../common/protocol.js'
 
 const status = document.querySelector<HTMLDivElement>('#status')
 const analyseButton = document.querySelector<HTMLButtonElement>('#analyse')
 const pairButton = document.querySelector<HTMLButtonElement>('#pair')
 const prepareButton = document.querySelector<HTMLButtonElement>('#prepare')
+const reasonButton = document.querySelector<HTMLButtonElement>('#reason')
 const taskInput = document.querySelector<HTMLInputElement>('#task')
+const serverInput = document.querySelector<HTMLInputElement>('#server-url')
 const detail = document.querySelector<HTMLPreElement>('#detail')
 
 function setBusy(busy: boolean): void {
   if (analyseButton) analyseButton.disabled = busy
   if (prepareButton) prepareButton.disabled = busy
+  if (reasonButton) reasonButton.disabled = busy
   if (pairButton) pairButton.disabled = busy
 }
 
@@ -91,7 +94,12 @@ async function prepareRelease(): Promise<void> {
       riskBefore: result.payload.identity_exposure_before,
       residualExposure: result.payload.residual_identity_exposure,
       taskUtility: result.payload.task_utility_score,
-      semanticMinimizationBasisPoints: result.payload.minimization_basis_points,
+      semanticMinimizationBasisPoints: result.minimization.semantic_minimization_basis_points,
+      visualMinimizationBasisPoints: result.minimization.visual_minimization_basis_points,
+      overallMinimizationBasisPoints: result.minimization.overall_minimization_basis_points,
+      taskIntent: result.minimization.task_intent,
+      releasedElements: result.minimization.released_element_count,
+      droppedIrrelevantElements: result.minimization.dropped_irrelevant_count,
       effectivePrivacyLevel: result.payload.privacy_level,
       networkPrivacyFloor: result.payload.network_privacy_floor,
       redactedVisualRegions: result.payload.page.visual_context?.redacted_regions ?? 0,
@@ -103,6 +111,63 @@ async function prepareRelease(): Promise<void> {
     }, null, 2)
   } catch (error) {
     status.textContent = 'Privacy release preparation failed'
+    detail.textContent = error instanceof Error ? error.message : 'unknown error'
+  } finally {
+    setBusy(false)
+  }
+}
+
+
+async function reasonSafely(): Promise<void> {
+  if (!status || !detail || !serverInput) return
+  const task = taskOrWarn()
+  if (!task) return
+  const serverUrl = serverInput.value.trim()
+  if (!serverUrl) {
+    status.textContent = 'Configure the sanitized reasoning server first.'
+    return
+  }
+
+  setBusy(true)
+  status.textContent = 'Minimizing locally, verifying release, then reasoning on sanitized context…'
+  try {
+    const response = await chrome.runtime.sendMessage<RuntimeResponse>({
+      type: 'VG_REASON_ACTIVE_PAGE',
+      task,
+      serverUrl,
+      audienceProfile: 'PUBLIC_RELEASE',
+      privacyLevel: 4,
+    })
+    if (!response.ok) throw new Error(response.error)
+
+    const data = response.data as {
+      preparation: BrowserReleasePreparation
+      reasoning: BrowserReasoningResponse
+    }
+    const auth = data.preparation.authorization.payload
+    const plan = data.reasoning.plan
+
+    status.textContent = 'SANITIZED SERVER PLAN VERIFIED — execution remains local and disabled in this checkpoint.'
+    detail.textContent = JSON.stringify({
+      releaseDecision: auth.decision,
+      proofScore: data.preparation.verification.proof_score,
+      residualExposure: data.preparation.payload.residual_identity_exposure,
+      overallMinimizationBasisPoints: data.preparation.minimization.overall_minimization_basis_points,
+      provider: data.reasoning.evidence.provider,
+      model: data.reasoning.evidence.model,
+      serverReasoningMs: data.reasoning.evidence.elapsed_ms,
+      authorizationVerified: data.reasoning.evidence.authorization_verified,
+      signerTrusted: data.reasoning.evidence.signer_trusted,
+      replayProtected: data.reasoning.evidence.replay_protected,
+      structuredOutputValidated: data.reasoning.evidence.structured_output_validated,
+      targetIdsValidated: data.reasoning.evidence.target_ids_validated,
+      actionPlan: plan.actions,
+      planComplete: plan.complete,
+      planSummary: plan.summary,
+      executionState: 'NOT_EXECUTED — local action validator/executor is the next security boundary',
+    }, null, 2)
+  } catch (error) {
+    status.textContent = 'Sanitized server reasoning blocked or failed'
     detail.textContent = error instanceof Error ? error.message : 'unknown error'
   } finally {
     setBusy(false)
@@ -136,3 +201,4 @@ async function pairCompanion(): Promise<void> {
 pairButton?.addEventListener('click', () => void pairCompanion())
 analyseButton?.addEventListener('click', () => void analyse())
 prepareButton?.addEventListener('click', () => void prepareRelease())
+reasonButton?.addEventListener('click', () => void reasonSafely())
