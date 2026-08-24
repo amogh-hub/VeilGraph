@@ -19,7 +19,7 @@ import { createOnnxLearnedFaceDetector } from '../perception/learnedFaceModel.js
 import type { OnnxRuntimeLike } from '../perception/learnedFaceModel.js'
 // The build copies this pinned ONNX Runtime Web module into dist/vendor.
 // @ts-ignore -- generated vendor asset intentionally lives outside src/.
-import * as ortRuntime from '../vendor/onnxruntime/ort.webgpu.bundle.min.mjs'
+import * as ortRuntime from '../vendor/onnxruntime/ort.wasm.bundle.min.mjs'
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js'
 import { pairLocalCompanion } from '../security/pairing.js'
 import { validateReasoningResponse } from '../security/actionPlan.js'
@@ -734,7 +734,18 @@ async function captureFreshFrame(tabId: number, frameId: number): Promise<FrameC
     { frameId },
   )
   if (!response.ok) throw new Error(`fresh action preflight capture failed: ${response.error}`)
-  return response.data as FrameCapture
+
+  const captured = response.data as FrameCapture
+
+  // chrome.tabs.sendMessage(..., { frameId }) already addressed this exact
+  // browser frame. The content script cannot know Chrome's frame identifier
+  // and therefore reports -1. Bind the fresh evidence to the trusted
+  // browser-assigned frame identity before security validation.
+  return {
+    ...captured,
+    frameId,
+    isTopFrame: frameId === 0,
+  }
 }
 
 async function executePendingAction(

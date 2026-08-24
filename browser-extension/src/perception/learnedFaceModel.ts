@@ -11,6 +11,29 @@ const INPUT_HEIGHT = 240
 const FACE_THRESHOLD = 0.65
 const NMS_IOU_THRESHOLD = 0.30
 const MAX_FACES = 64
+const PROVIDER_INIT_TIMEOUT_MS = 8_000
+const PROVIDER_INFERENCE_TIMEOUT_MS = 12_000
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        )
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
+}
 
 type ExecutionProvider = 'webgpu' | 'wasm'
 
@@ -42,6 +65,7 @@ export interface OnnxRuntimeLike {
       options: {
         executionProviders: ExecutionProvider[]
         graphOptimizationLevel: 'all'
+        logSeverityLevel?: number
       },
     ): Promise<RuntimeSession>
   }
@@ -229,6 +253,10 @@ export function createOnnxLearnedFaceDetector(
     const created = model().then((bytes) => ort.InferenceSession.create(bytes, {
       executionProviders: [provider],
       graphOptimizationLevel: 'all',
+      // 0=verbose, 1=info, 2=warning, 3=error, 4=fatal.
+      // Chrome should surface genuine runtime errors, not harmless model
+      // optimization warnings from the pinned UltraFace export.
+      logSeverityLevel: 3,
     }))
     sessions.set(provider, created)
     try {
@@ -244,38 +272,65 @@ export function createOnnxLearnedFaceDetector(
       try {
         ort.env.wasm.numThreads = 1
         ort.env.wasm.wasmPaths = {
-          wasm: resolveAssetUrl(`${ORT_WASM_ROOT}ort-wasm-simd-threaded.jsep.wasm`),
+          wasm: resolveAssetUrl(`${ORT_WASM_ROOT}ort-wasm-simd-threaded.wasm`),
         }
-        ort.env.logLevel = 'warning'
+        ort.env.logLevel = 'error'
 
         const inputData = preprocess(bitmap)
         const inputTensor = new ort.Tensor('float32', inputData, [1, 3, INPUT_HEIGHT, INPUT_WIDTH])
         let selectedProvider: ExecutionProvider = 'wasm'
         let fallbackUsed = false
         let fallbackReason: string | undefined
-        let runtimeSession: RuntimeSession
 
-        const webgpuAvailable = typeof navigator !== 'undefined' && 'gpu' in navigator
+        const executeProvider = async (provider: ExecutionProvider) => {
+          const runtimeSession = await withTimeout(
+            session(provider),
+            PROVIDER_INIT_TIMEOUT_MS,
+            `${provider} UltraFace session initialization`,
+          )
+
+          const inputName = runtimeSession.inputNames[0]
+          if (!inputName) throw new Error('UltraFace model has no input tensor')
+
+          const inferenceStarted = nowMs()
+          const outputs = await withTimeout(
+            runtimeSession.run({ [inputName]: inputTensor }),
+            PROVIDER_INFERENCE_TIMEOUT_MS,
+            `${provider} UltraFace inference`,
+          )
+
+          return {
+            runtimeSession,
+            outputs,
+            inferenceMs: elapsedMs(inferenceStarted),
+          }
+        }
+
+        let execution
+        const webgpuAvailable = false
+
         if (webgpuAvailable) {
           try {
-            runtimeSession = await session('webgpu')
+            execution = await executeProvider('webgpu')
             selectedProvider = 'webgpu'
           } catch (error) {
             fallbackUsed = true
-            fallbackReason = error instanceof Error ? error.message : 'WebGPU session initialization failed'
-            runtimeSession = await session('wasm')
+            fallbackReason = error instanceof Error
+              ? error.message
+              : 'WebGPU UltraFace execution failed'
+            execution = await executeProvider('wasm')
+            selectedProvider = 'wasm'
           }
         } else {
           fallbackUsed = true
-          fallbackReason = 'WebGPU unavailable in this browser context'
-          runtimeSession = await session('wasm')
+          fallbackReason = 'MV3 live-browser path is using packaged WASM after WebGPU runtime incompatibility'
+          execution = await executeProvider('wasm')
+          selectedProvider = 'wasm'
         }
 
-        const inputName = runtimeSession.inputNames[0]
-        if (!inputName) throw new Error('UltraFace model has no input tensor')
-        const inferenceStarted = nowMs()
-        const outputs = await runtimeSession.run({ [inputName]: inputTensor })
-        const inferenceMs = elapsedMs(inferenceStarted)
+        const runtimeSession = execution.runtimeSession
+        const outputs = execution.outputs
+        const inferenceMs = execution.inferenceMs
         const findings = postprocess(runtimeSession, outputs)
         const evidence: LearnedModelEvidence = {
           modelId: ULTRAFACE_MODEL_ID,

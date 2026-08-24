@@ -6,8 +6,9 @@ import io
 import re
 import secrets
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterable
+from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw
 
@@ -98,6 +99,93 @@ def _safe_normalize(entity_type: EntityType, value: str) -> str:
         return normalize_value(entity_type, value)
     except Exception:
         return re.sub(r"\s+", " ", value.strip()).casefold()
+
+
+_SITE_SECOND_LEVEL_SUFFIXES = {
+    "co", "com", "org", "net", "gov", "ac", "edu",
+}
+
+
+def _site_identity_key(value: str) -> str:
+    """Canonical comparison key for public site-brand identity only."""
+    return re.sub(r"[^a-z0-9]+", "", value.casefold())
+
+
+def _public_site_identity_keys(
+    metadata: BrowserLocalCaptureMetadata,
+) -> set[str]:
+    """Derive the public registrable-site brand from the clean page origin.
+
+    Examples:
+      www.google.com       -> google
+      accounts.google.com  -> google
+      www.example.co.in    -> example
+
+    This is not a general allow-list. It is scoped to the exact current
+    browser origin.
+    """
+    top_frame = next(
+        (frame for frame in metadata.frames if frame.is_top_frame),
+        metadata.frames[0],
+    )
+
+    try:
+        hostname = (urlparse(top_frame.origin).hostname or "").strip(".").casefold()
+    except Exception:
+        return set()
+
+    labels = [label for label in hostname.split(".") if label]
+
+    # localhost, IP-like/single-label hosts and malformed origins receive no
+    # site-brand exemption.
+    if len(labels) < 2:
+        return set()
+
+    if (
+        len(labels) >= 3
+        and len(labels[-1]) == 2
+        and labels[-2] in _SITE_SECOND_LEVEL_SUFFIXES
+    ):
+        brand = labels[-3]
+    else:
+        brand = labels[-2]
+
+    key = _site_identity_key(brand)
+    if len(key) < 3 or not any(char.isalpha() for char in key):
+        return set()
+
+    return {key}
+
+
+def _is_public_site_identity_false_positive(
+    detection: DetectedMention,
+    *,
+    site_identity_keys: set[str],
+    protected_field_keys: set[str],
+) -> bool:
+    """Suppress only obvious site-brand NER false positives.
+
+    A public brand match is never exempted when the same value occurs in an
+    actual sensitive/raw browser field. Direct patterned identifiers such as
+    email, phone, PAN, Aadhaar and payment cards are unaffected.
+    """
+    if detection.source == DetectionSource.VISUAL:
+        return False
+
+    if detection.entity_type not in {
+        EntityType.EMPLOYER,
+        EntityType.PERSON_NAME,
+        EntityType.LOCALITY,
+    }:
+        return False
+
+    key = _site_identity_key(detection.plaintext)
+
+    return (
+        len(key) >= 3
+        and key in site_identity_keys
+        and key not in protected_field_keys
+    )
 
 
 def _replacement_map(
@@ -578,8 +666,43 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     context = build_browser_analysis_context(metadata, screenshot, level_override=effective_level)
     analysis = browser_analysis_response_from_context(metadata, screenshot, context)
 
-    replacements, sensitive_values, direct_values, policy_actions = _replacement_map(context.detections, effective_level, context.audience)
+    top_frame = next(
+        (frame for frame in metadata.frames if frame.is_top_frame),
+        metadata.frames[0],
+    )
+
     secret_values = _sensitive_element_values(metadata)
+    protected_field_keys = {
+        _site_identity_key(value)
+        for value in secret_values
+        if _site_identity_key(value)
+    }
+    site_identity_keys = _public_site_identity_keys(metadata)
+
+    policy_detections = tuple(
+        detection
+        for detection in context.detections
+        if not _is_public_site_identity_false_positive(
+            detection,
+            site_identity_keys=site_identity_keys,
+            protected_field_keys=protected_field_keys,
+        )
+    )
+
+    # Keep the original analysis evidence intact, but use the independently
+    # filtered detection view for the network-bound privacy compiler and raster
+    # sanitizer.
+    sanitization_context = replace(
+        context,
+        detections=policy_detections,
+    )
+
+    replacements, sensitive_values, direct_values, policy_actions = _replacement_map(
+        policy_detections,
+        effective_level,
+        context.audience,
+    )
+
     all_sensitive_values = tuple(dict.fromkeys((*sensitive_values, *secret_values)))
     all_direct_values = tuple(dict.fromkeys((*direct_values, *secret_values)))
 
@@ -589,7 +712,6 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     # control appear relevant to the task.
     relevance_task = _sanitize_text(metadata.task, {}, all_sensitive_values)[:1000]
     sanitized_task = _sanitize_text(metadata.task, replacements, secret_values)[:1000]
-    top_frame = next((frame for frame in metadata.frames if frame.is_top_frame), metadata.frames[0])
     sanitized_title = _sanitize_text(top_frame.title, replacements, secret_values)[:256]
 
     plan = _public_elements(metadata, relevance_task, replacements, secret_values)
@@ -598,7 +720,7 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     visual_context, sanitized_image, redaction_rects, visual_minimization, retained_visual_regions = _sanitize_visual_context(
         screenshot,
         metadata,
-        context,
+        sanitization_context,
         elements,
     )
 
@@ -653,7 +775,7 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
 
     evidence = BrowserSanitizationEvidence(
         metadata=metadata,
-        context=context,
+        context=sanitization_context,
         payload=payload,
         sanitized_image_bytes=sanitized_image,
         sensitive_values=all_sensitive_values,

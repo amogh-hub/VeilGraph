@@ -97,7 +97,11 @@ async function prepareRelease(): Promise<void> {
     const authorization = result.authorization.payload
     const failed = result.verification.tests
       .filter((test) => test.status !== 'PASS')
-      .map((test) => `${test.name}:${test.status}`)
+      .map((test) => ({
+        name: test.name,
+        status: test.status,
+        detail: test.detail,
+      }))
 
     status.textContent = authorization.decision === 'ALLOW_NETWORK_RELEASE'
       ? 'SAFE PAYLOAD AUTHORIZED — external send still requires the release gate.'

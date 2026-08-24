@@ -37,7 +37,7 @@ export async function getTrustedCompanionSigner() {
     const value = stored[TRUST_KEY];
     return isTrustedSigner(value) ? value : null;
 }
-export async function pairLocalCompanion(nowMs = Date.now()) {
+export async function pairLocalCompanion(nowMs) {
     const challenge = randomChallenge();
     const response = await fetch('http://127.0.0.1:8000/api/v1/browser/pair', {
         method: 'POST',
@@ -61,7 +61,12 @@ export async function pairLocalCompanion(nowMs = Date.now()) {
     }
     const issued = Date.parse(raw.payload.issued_at);
     const expires = Date.parse(raw.payload.expires_at);
-    if (!Number.isFinite(issued) || !Number.isFinite(expires) || nowMs < issued || nowMs > expires || expires <= issued) {
+    const verificationNowMs = nowMs ?? Date.now();
+    if (!Number.isFinite(issued)
+        || !Number.isFinite(expires)
+        || verificationNowMs < issued
+        || verificationNowMs > expires
+        || expires <= issued) {
         throw new Error('local companion pairing attestation is outside its validity window');
     }
     const computedFingerprint = await publicKeyFingerprint(raw.payload.signer.public_key_b64);
@@ -79,7 +84,7 @@ export async function pairLocalCompanion(nowMs = Date.now()) {
     const trusted = {
         publicKeyB64: raw.payload.signer.public_key_b64,
         publicKeySha256: computedFingerprint,
-        pairedAt: new Date(nowMs).toISOString(),
+        pairedAt: new Date(verificationNowMs).toISOString(),
     };
     await chrome.storage.local.set({ [TRUST_KEY]: trusted });
     return trusted;

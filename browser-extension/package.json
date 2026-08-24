@@ -14,6 +14,7 @@
     "verify:agent-loop": "npm run build && node scripts/verify_agent_loop_contract.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.25.9",
     "typescript": "5.6.3"
   },
   "dependencies": {

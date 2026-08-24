@@ -12,8 +12,8 @@ MODEL = ROOT / "models" / "ultraface" / "version-RFB-320.onnx"
 MODEL_SHA256 = "34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017"
 ORT_DIST = ROOT / "node_modules" / "onnxruntime-web" / "dist"
 ORT_FILES = (
-    "ort.webgpu.bundle.min.mjs",
-    "ort-wasm-simd-threaded.jsep.wasm",
+    "ort.wasm.bundle.min.mjs",
+    "ort-wasm-simd-threaded.wasm",
 )
 
 
@@ -31,10 +31,17 @@ DIST.mkdir(parents=True)
 
 tsc_name = "tsc.cmd" if os.name == "nt" else "tsc"
 tsc = ROOT / "node_modules" / ".bin" / tsc_name
+
+esbuild_name = "esbuild.exe" if os.name == "nt" else "esbuild"
+esbuild = ROOT / "node_modules" / ".bin" / esbuild_name
+
 if not tsc.exists():
     raise SystemExit(
         "Local TypeScript compiler is missing. Run `npm ci` in browser-extension before building."
     )
+if not esbuild.exists():
+    raise SystemExit("Local esbuild is missing. Run npm ci.")
+
 if not MODEL.exists():
     raise SystemExit(
         "Packaged UltraFace model is missing. Run `python3 ../scripts/provision_learned_vision.py` from browser-extension or the root bootstrap script."
@@ -51,6 +58,27 @@ for filename in ORT_FILES:
         )
 
 subprocess.run([str(tsc), "-p", str(ROOT / "tsconfig.json")], check=True)
+
+content_bundle = DIST / "content" / "contentScript.js"
+
+subprocess.run(
+    [
+        str(esbuild),
+        str(ROOT / "src" / "content" / "contentScript.ts"),
+        "--bundle",
+        "--format=iife",
+        "--platform=browser",
+        "--target=chrome121",
+        f"--outfile={content_bundle}",
+    ],
+    check=True,
+)
+
+built_content = content_bundle.read_text(encoding="utf-8")
+
+if "import " in built_content or "export " in built_content:
+    raise SystemExit("Bundled content script still contains ES-module syntax")
+
 shutil.copy2(ROOT / "manifest.json", DIST / "manifest.json")
 
 sidepanel = DIST / "sidepanel"
@@ -69,4 +97,4 @@ for filename in ORT_FILES:
 
 print(DIST)
 print(f"Packaged learned model: ultraface-rfb-320 sha256={MODEL_SHA256}")
-print("Packaged ONNX Runtime Web: 1.27.0 (WebGPU preferred, WASM fallback)")
+print("Packaged ONNX Runtime Web: 1.27.0 (WASM live-browser path)")

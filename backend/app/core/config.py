@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     reasoning_timeout_seconds: float = 45.0
     reasoning_trusted_signer_sha256: str | None = None
     reasoning_max_actions: int = 8
+    reasoning_context_tokens: int = 8192
 
     max_video_duration_seconds: float = 60.0
     max_video_frames: int = 3600

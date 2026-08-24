@@ -8,8 +8,8 @@ const root = resolve(import.meta.dirname, '..')
 const manifest = JSON.parse(await readFile(resolve(root, 'models/ultraface/MODEL_MANIFEST.json'), 'utf8'))
 const modelPath = resolve(root, 'models/ultraface', manifest.filename)
 const distModelPath = resolve(root, 'dist/models/ultraface', manifest.filename)
-const distRuntimePath = resolve(root, 'dist/vendor/onnxruntime/ort.webgpu.bundle.min.mjs')
-const distWasmPath = resolve(root, 'dist/vendor/onnxruntime/ort-wasm-simd-threaded.jsep.wasm')
+const distRuntimePath = resolve(root, 'dist/vendor/onnxruntime/ort.wasm.bundle.min.mjs')
+const distWasmPath = resolve(root, 'dist/vendor/onnxruntime/ort-wasm-simd-threaded.wasm')
 const distManifest = JSON.parse(await readFile(resolve(root, 'dist/manifest.json'), 'utf8'))
 
 const modelBytes = new Uint8Array(await readFile(modelPath))
@@ -35,11 +35,17 @@ assert.ok(shapes.includes('1x4420x2'), `missing UltraFace score output: ${shapes
 assert.ok(shapes.includes('1x4420x4'), `missing UltraFace box output: ${shapes.join(', ')}`)
 
 const serviceWorker = await readFile(resolve(root, 'dist/background/serviceWorker.js'), 'utf8')
-assert.match(serviceWorker, /ort\.webgpu\.bundle\.min\.mjs/)
+assert.match(serviceWorker, /ort\.wasm\.bundle\.min\.mjs/)
+assert.doesNotMatch(serviceWorker, /ort\.webgpu\.bundle\.min\.mjs/)
 assert.match(serviceWorker, /createOnnxLearnedFaceDetector/)
+
 const learnedSource = await readFile(resolve(root, 'src/perception/learnedFaceModel.ts'), 'utf8')
 assert.match(learnedSource, /executionProviders:\s*\[provider\]/)
-assert.match(learnedSource, /webgpu/)
+assert.match(learnedSource, /const webgpuAvailable = false/)
+assert.match(
+  learnedSource,
+  /MV3 live-browser path is using packaged WASM after WebGPU runtime incompatibility/,
+)
 assert.match(learnedSource, /wasm/)
 assert.doesNotMatch(learnedSource, /https?:\/\//)
 
@@ -51,6 +57,7 @@ console.log(JSON.stringify({
   modelBytes: modelBytes.byteLength,
   runtime: 'onnxruntime-web@1.27.0',
   verifiedProvider: 'wasm',
-  browserPreferredProvider: 'webgpu',
+  browserLiveProvider: 'wasm',
+  webgpuLiveProvider: 'disabled-after-mv3-runtime-incompatibility',
   outputShapes: shapes,
 }))

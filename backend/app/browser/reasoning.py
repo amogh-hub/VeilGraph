@@ -152,7 +152,10 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
         ],
         "stream": False,
         "format": schema,
-        "options": {"temperature": 0},
+        "options": {
+            "temperature": 0,
+            "num_ctx": settings.reasoning_context_tokens,
+        },
     }
 
     try:

@@ -27,6 +27,21 @@ async def _read_bounded(upload: UploadFile, limit: int) -> bytes:
     return data
 
 
+def _safe_validation_errors(exc: ValidationError) -> dict:
+    """Return field/type diagnostics without echoing captured values."""
+    return {
+        "message": "Invalid browser capture metadata",
+        "errors": [
+            {
+                "loc": ".".join(str(part) for part in error["loc"]),
+                "type": error["type"],
+                "msg": error["msg"],
+            }
+            for error in exc.errors()[:12]
+        ],
+    }
+
+
 
 @router.post("/pair", response_model=BrowserPairingAttestation)
 def pair_local_companion(request: BrowserPairingRequest) -> BrowserPairingAttestation:
@@ -57,7 +72,7 @@ async def analyse_capture(
     try:
         parsed = BrowserLocalCaptureMetadata.model_validate_json(metadata)
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail="Invalid browser capture metadata") from exc
+        raise HTTPException(status_code=422, detail=_safe_validation_errors(exc)) from exc
 
     screenshot_bytes = await _read_bounded(screenshot, settings.max_browser_screenshot_bytes)
     try:
@@ -84,7 +99,7 @@ async def prepare_release(
     try:
         parsed = BrowserLocalCaptureMetadata.model_validate_json(metadata)
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail="Invalid browser capture metadata") from exc
+        raise HTTPException(status_code=422, detail=_safe_validation_errors(exc)) from exc
 
     screenshot_bytes = await _read_bounded(screenshot, settings.max_browser_screenshot_bytes)
     try:
