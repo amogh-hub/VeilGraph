@@ -3,6 +3,7 @@ import { clipRectToViewport } from '../perception/geometry.js'
 
 const MAX_CAPTURED_ELEMENTS = 2000
 const ids = new WeakMap<Element, `vg_${string}`>()
+const elementsById = new Map<`vg_${string}`, Element>()
 
 function nowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now()
@@ -10,12 +11,25 @@ function nowMs(): number {
 
 function localId(element: Element): `vg_${string}` {
   const existing = ids.get(element)
-  if (existing) return existing
+  if (existing) {
+    elementsById.set(existing, element)
+    return existing
+  }
   const bytes = crypto.getRandomValues(new Uint8Array(12))
   const token = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
   const created = `vg_${token}` as const
   ids.set(element, created)
+  elementsById.set(created, element)
   return created
+}
+
+export function resolveLocalElement(localIdValue: `vg_${string}`): Element | null {
+  const element = elementsById.get(localIdValue)
+  if (!element || !element.isConnected || ids.get(element) !== localIdValue) {
+    elementsById.delete(localIdValue)
+    return null
+  }
+  return element
 }
 
 function viewportSize(): { width: number; height: number } {
@@ -68,7 +82,7 @@ function accessibleName(element: Element): string {
   return candidates.find(Boolean)?.slice(0, 512) ?? ''
 }
 
-function implicitRole(element: Element): string {
+export function implicitRole(element: Element): string {
   const explicit = element.getAttribute('role')?.trim()
   if (explicit) return explicit
   const tag = element.tagName.toLowerCase()
@@ -87,7 +101,7 @@ function implicitRole(element: Element): string {
   return tag
 }
 
-function privacyHints(element: Element): string[] {
+export function privacyHints(element: Element): string[] {
   const hints: string[] = []
   const tokens = [
     element.getAttribute('name'),
@@ -140,6 +154,9 @@ function collectRoots(): Array<Document | ShadowRoot> {
 
 export function captureFrame(): FrameCapture {
   const started = nowMs()
+  for (const [localIdValue, element] of elementsById) {
+    if (!element.isConnected) elementsById.delete(localIdValue)
+  }
   const roots = collectRoots()
   const candidates: Element[] = []
   for (const root of roots) candidates.push(...Array.from(root.querySelectorAll('*')).filter(shouldCapture))

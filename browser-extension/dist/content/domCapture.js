@@ -1,18 +1,30 @@
 import { clipRectToViewport } from '../perception/geometry.js';
 const MAX_CAPTURED_ELEMENTS = 2000;
 const ids = new WeakMap();
+const elementsById = new Map();
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 function localId(element) {
     const existing = ids.get(element);
-    if (existing)
+    if (existing) {
+        elementsById.set(existing, element);
         return existing;
+    }
     const bytes = crypto.getRandomValues(new Uint8Array(12));
     const token = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
     const created = `vg_${token}`;
     ids.set(element, created);
+    elementsById.set(created, element);
     return created;
+}
+export function resolveLocalElement(localIdValue) {
+    const element = elementsById.get(localIdValue);
+    if (!element || !element.isConnected || ids.get(element) !== localIdValue) {
+        elementsById.delete(localIdValue);
+        return null;
+    }
+    return element;
 }
 function viewportSize() {
     return {
@@ -57,7 +69,7 @@ function accessibleName(element) {
     ];
     return candidates.find(Boolean)?.slice(0, 512) ?? '';
 }
-function implicitRole(element) {
+export function implicitRole(element) {
     const explicit = element.getAttribute('role')?.trim();
     if (explicit)
         return explicit;
@@ -84,7 +96,7 @@ function implicitRole(element) {
         return 'heading';
     return tag;
 }
-function privacyHints(element) {
+export function privacyHints(element) {
     const hints = [];
     const tokens = [
         element.getAttribute('name'),
@@ -139,6 +151,10 @@ function collectRoots() {
 }
 export function captureFrame() {
     const started = nowMs();
+    for (const [localIdValue, element] of elementsById) {
+        if (!element.isConnected)
+            elementsById.delete(localIdValue);
+    }
     const roots = collectRoots();
     const candidates = [];
     for (const root of roots)

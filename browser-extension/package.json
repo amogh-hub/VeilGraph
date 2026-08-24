@@ -9,7 +9,8 @@
     "verify:visual": "npm run build && node scripts/verify_visual_layer.mjs",
     "verify:perception": "npm run build && node scripts/verify_perception_contract.mjs && node scripts/verify_visual_layer.mjs",
     "verify:learned": "npm run build && node scripts/verify_learned_model_contract.mjs",
-    "verify:action-plan": "npm run build && node scripts/verify_action_plan_contract.mjs"
+    "verify:action-plan": "npm run build && node scripts/verify_action_plan_contract.mjs",
+    "verify:local-action": "npm run build && node scripts/verify_local_action_contract.mjs"
   },
   "devDependencies": {
     "typescript": "5.6.3"

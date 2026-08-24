@@ -22,8 +22,9 @@
     <button id="analyse" type="button">Analyse current page locally</button>
     <button id="prepare" class="secondary" type="button">Build & verify safe network payload</button>
     <button id="reason" class="secondary" type="button">Reason on sanitized context</button>
+    <button id="execute" class="secondary" type="button" disabled>Execute next locally verified action</button>
     <pre id="detail" aria-live="polite"></pre>
-    <footer>Raw screen context stays local. Only a task-minimized, sanitized payload with a valid signed privacy authorization can reach the reasoning server. Server actions are typed plans, never executable code.</footer>
+    <footer>Raw screen context stays local. Server plans cannot execute directly: every action is revalidated against the live DOM, stale/hidden/disabled targets are blocked, and high-impact actions require local confirmation.</footer>
   </main>
   <script type="module" src="index.js"></script>
 </body>

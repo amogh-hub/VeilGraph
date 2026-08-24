@@ -3,9 +3,11 @@ const analyseButton = document.querySelector('#analyse');
 const pairButton = document.querySelector('#pair');
 const prepareButton = document.querySelector('#prepare');
 const reasonButton = document.querySelector('#reason');
+const executeButton = document.querySelector('#execute');
 const taskInput = document.querySelector('#task');
 const serverInput = document.querySelector('#server-url');
 const detail = document.querySelector('#detail');
+let pendingExecution = null;
 function setBusy(busy) {
     if (analyseButton)
         analyseButton.disabled = busy;
@@ -13,6 +15,8 @@ function setBusy(busy) {
         prepareButton.disabled = busy;
     if (reasonButton)
         reasonButton.disabled = busy;
+    if (executeButton)
+        executeButton.disabled = busy || pendingExecution === null;
     if (pairButton)
         pairButton.disabled = busy;
 }
@@ -135,6 +139,7 @@ async function reasonSafely() {
         status.textContent = 'Configure the sanitized reasoning server first.';
         return;
     }
+    pendingExecution = null;
     setBusy(true);
     status.textContent = 'Minimizing locally, verifying release, then reasoning on sanitized context…';
     try {
@@ -150,7 +155,12 @@ async function reasonSafely() {
         const data = response.data;
         const auth = data.preparation.authorization.payload;
         const plan = data.reasoning.plan;
-        status.textContent = 'SANITIZED SERVER PLAN VERIFIED — execution remains local and disabled in this checkpoint.';
+        pendingExecution = data.pendingExecution;
+        status.textContent = plan.complete
+            ? 'TASK COMPLETE — server returned no further action.'
+            : pendingExecution
+                ? 'SERVER PLAN VERIFIED — next action is awaiting local security execution.'
+                : 'SERVER PLAN VERIFIED — no executable local action was issued.';
         detail.textContent = JSON.stringify({
             releaseDecision: auth.decision,
             proofScore: data.preparation.verification.proof_score,
@@ -167,11 +177,69 @@ async function reasonSafely() {
             actionPlan: plan.actions,
             planComplete: plan.complete,
             planSummary: plan.summary,
-            executionState: 'NOT_EXECUTED — local action validator/executor is the next security boundary',
+            executionState: pendingExecution ? 'PENDING_LOCAL_SECURITY_VALIDATION' : (plan.complete ? 'COMPLETE' : 'NO_PENDING_ACTION'),
+            pendingExecution: pendingExecution ? {
+                executionId: pendingExecution.execution_id,
+                action: pendingExecution.action.action,
+                targetId: pendingExecution.target_id,
+                frameId: pendingExecution.frame_id,
+                requiresConfirmation: pendingExecution.requires_confirmation,
+                expiresAt: pendingExecution.expires_at,
+            } : null,
         }, null, 2);
     }
     catch (error) {
         status.textContent = 'Sanitized server reasoning blocked or failed';
+        detail.textContent = error instanceof Error ? error.message : 'unknown error';
+    }
+    finally {
+        setBusy(false);
+    }
+}
+async function executePending() {
+    if (!status || !detail || !pendingExecution)
+        return;
+    const execution = pendingExecution;
+    const action = execution.action;
+    let confirmed = false;
+    if (execution.requires_confirmation) {
+        confirmed = window.confirm(`VeilGraph local confirmation required before ${action.action}.\n\n${action.reason}\n\nProceed?`);
+        if (!confirmed) {
+            status.textContent = 'High-impact action was not confirmed. Nothing executed.';
+            return;
+        }
+    }
+    setBusy(true);
+    status.textContent = 'Re-validating live DOM state before local execution…';
+    try {
+        const response = await chrome.runtime.sendMessage({
+            type: 'VG_EXECUTE_PENDING_ACTION',
+            executionId: execution.execution_id,
+            confirmed,
+        });
+        if (!response.ok)
+            throw new Error(response.error);
+        const result = response.data;
+        pendingExecution = null;
+        status.textContent = 'LOCAL ACTION EXECUTED — fresh observation is required before any next action.';
+        detail.textContent = JSON.stringify({
+            contract: result.contract,
+            executionId: result.execution_id,
+            status: result.status,
+            action: result.action,
+            tabId: result.tab_id,
+            frameId: result.frame_id,
+            targetId: result.target_id,
+            confirmed: result.confirmed,
+            freshness: result.freshness,
+            elapsedMs: result.elapsed_ms,
+            nextStep: result.next_step,
+            rule: 'Every later action requires a new observe → sanitize → reason → validate cycle.',
+        }, null, 2);
+    }
+    catch (error) {
+        pendingExecution = null;
+        status.textContent = 'LOCAL ACTION BLOCKED — re-plan from a fresh page observation.';
         detail.textContent = error instanceof Error ? error.message : 'unknown error';
     }
     finally {
@@ -208,4 +276,6 @@ pairButton?.addEventListener('click', () => void pairCompanion());
 analyseButton?.addEventListener('click', () => void analyse());
 prepareButton?.addEventListener('click', () => void prepareRelease());
 reasonButton?.addEventListener('click', () => void reasonSafely());
+executeButton?.addEventListener('click', () => void executePending());
+setBusy(false);
 export {};

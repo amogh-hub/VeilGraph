@@ -6,6 +6,7 @@ import * as ortRuntime from '../vendor/onnxruntime/ort.webgpu.bundle.min.mjs';
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
 import { pairLocalCompanion } from '../security/pairing.js';
 import { validateReasoningResponse } from '../security/actionPlan.js';
+import { createPendingExecution, validatePendingExecution, } from '../security/localAction.js';
 const learnedFaceDetector = createOnnxLearnedFaceDetector(ortRuntime, (path) => chrome.runtime.getURL(path));
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -13,6 +14,33 @@ function nowMs() {
 function captureId() {
     const bytes = crypto.getRandomValues(new Uint8Array(12));
     return `VGC-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+function executionId() {
+    const bytes = crypto.getRandomValues(new Uint8Array(12));
+    return `VGX-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+const pendingExecutions = new Map();
+function rememberPendingExecution(record) {
+    const now = Date.now();
+    for (const [key, candidate] of pendingExecutions) {
+        if (Date.parse(candidate.public.expires_at) < now)
+            pendingExecutions.delete(key);
+    }
+    pendingExecutions.set(record.public.execution_id, record);
+}
+function pageOrigin(url) {
+    if (!url)
+        throw new Error('active tab URL is unavailable');
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+        throw new Error('active tab is not an HTTP(S) page');
+    return parsed.origin;
+}
+function trustedSidepanelSender(sender) {
+    return (sender.id === chrome.runtime.id
+        && !sender.tab
+        && typeof sender.url === 'string'
+        && sender.url.startsWith(chrome.runtime.getURL('sidepanel/')));
 }
 async function activeTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -354,6 +382,60 @@ async function sendExternally(serverUrl, payload, authorization) {
     const raw = await response.json();
     return validateReasoningResponse(raw, payload, authorization.payload.payload_sha256);
 }
+async function captureFreshFrame(tabId, frameId) {
+    const response = await chrome.tabs.sendMessage(tabId, { type: 'VG_CAPTURE_FRAME' }, { frameId });
+    if (!response.ok)
+        throw new Error(`fresh action preflight capture failed: ${response.error}`);
+    return response.data;
+}
+async function executePendingAction(record, confirmed) {
+    const started = nowMs();
+    const tab = await activeTab();
+    if (!tab.id)
+        throw new Error('active tab is unavailable');
+    if (tab.id !== record.tabId)
+        throw new Error('active tab changed after reasoning');
+    const currentOrigin = pageOrigin(tab.url);
+    let freshFrame = null;
+    if (record.public.frame_id !== null) {
+        freshFrame = await captureFreshFrame(tab.id, record.public.frame_id);
+    }
+    const preflight = validatePendingExecution(record, tab.id, currentOrigin, freshFrame, confirmed, Date.now());
+    const action = record.public.action;
+    if (action.action === 'WAIT') {
+        await new Promise((resolve) => setTimeout(resolve, action.wait_ms ?? 0));
+    }
+    else if (action.action === 'NAVIGATE') {
+        if (!action.url)
+            throw new Error('validated NAVIGATE action is missing url');
+        await chrome.tabs.update(tab.id, { url: action.url });
+    }
+    else {
+        const frameId = preflight.frameId;
+        if (frameId === null)
+            throw new Error('validated local frame action has no frame');
+        const response = await chrome.tabs.sendMessage(tab.id, {
+            type: 'VG_EXECUTE_FRAME_ACTION',
+            executionId: record.public.execution_id,
+            action,
+        }, { frameId });
+        if (!response.ok)
+            throw new Error(`local content executor blocked action: ${response.error}`);
+    }
+    return {
+        contract: 'LOCAL_ACTION_SECURITY_EXECUTION_V1',
+        execution_id: record.public.execution_id,
+        status: 'EXECUTED',
+        action: action.action,
+        tab_id: tab.id,
+        frame_id: record.public.frame_id,
+        target_id: record.public.target_id,
+        confirmed,
+        freshness: record.public.target_id ? 'LIVE_NODE_MATCH' : 'NONTARGET_ACTION',
+        elapsed_ms: Math.max(0, Math.round(nowMs() - started)),
+        next_step: 'RECAPTURE_REQUIRED',
+    };
+}
 chrome.action.onClicked.addListener((tab) => {
     if (tab.id)
         void chrome.sidePanel.open({ tabId: tab.id });
@@ -416,12 +498,44 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 throw new Error('VeilGraph denied network release; reasoning server was not contacted');
             }
             const reasoning = await sendExternally(request.serverUrl, preparation.payload, preparation.authorization);
-            return { preparation, reasoning };
+            const pendingRecord = createPendingExecution(executionId(), bundle.tabId, bundle.frames, preparation.payload, reasoning, Date.now());
+            if (pendingRecord)
+                rememberPendingExecution(pendingRecord);
+            return {
+                preparation,
+                reasoning,
+                pendingExecution: pendingRecord?.public ?? null,
+            };
         })
             .then((data) => sendResponse({ ok: true, data }))
             .catch((error) => sendResponse({
             ok: false,
             error: error instanceof Error ? error.message : 'sanitized server reasoning failed',
+        }));
+        return true;
+    }
+    if (request.type === 'VG_EXECUTE_PENDING_ACTION'
+        && typeof request.executionId === 'string'
+        && request.executionId.startsWith('VGX-')
+        && typeof request.confirmed === 'boolean') {
+        if (!trustedSidepanelSender(_sender)) {
+            sendResponse({ ok: false, error: 'local execution requires the trusted VeilGraph side panel' });
+            return false;
+        }
+        const executionKey = request.executionId;
+        const record = pendingExecutions.get(executionKey);
+        if (!record) {
+            sendResponse({ ok: false, error: 'pending action is missing, expired, consumed, or lost after service-worker restart' });
+            return false;
+        }
+        // Consume before mutation. A failed execution must be re-planned, never
+        // blindly retried, which prevents duplicate clicks/submissions.
+        pendingExecutions.delete(executionKey);
+        void executePendingAction(record, request.confirmed)
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : 'local action security validator blocked execution',
         }));
         return true;
     }
@@ -434,6 +548,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 perceptionContract: 'VIEWPORT_BOUND_V2',
                 minimizationContract: 'TASK_MINIMIZATION_V1',
                 reasoningContract: 'SANITIZED_REASONING_ACTION_V1',
+                localActionContract: 'LOCAL_ACTION_SECURITY_EXECUTION_V1',
             },
         });
     }

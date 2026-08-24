@@ -331,12 +331,40 @@ export interface BrowserReasoningResponse {
   evidence: BrowserReasoningEvidence
 }
 
+export interface PendingActionExecution {
+  contract: 'LOCAL_ACTION_SECURITY_EXECUTION_V1'
+  execution_id: `VGX-${string}`
+  session_id: string
+  task_id: string
+  action: BrowserAction
+  frame_id: number | null
+  target_id: `vg_${string}` | null
+  requires_confirmation: boolean
+  expires_at: string
+}
+
+export interface LocalActionExecutionResult {
+  contract: 'LOCAL_ACTION_SECURITY_EXECUTION_V1'
+  execution_id: `VGX-${string}`
+  status: 'EXECUTED'
+  action: BrowserActionType
+  tab_id: number
+  frame_id: number | null
+  target_id: `vg_${string}` | null
+  confirmed: boolean
+  freshness: 'LIVE_NODE_MATCH' | 'NONTARGET_ACTION'
+  elapsed_ms: number
+  next_step: 'RECAPTURE_REQUIRED'
+}
+
 export type RuntimeRequest =
   | { type: 'VG_CAPTURE_ACTIVE_PAGE' }
   | { type: 'VG_PAIR_LOCAL_COMPANION' }
   | { type: 'VG_ANALYSE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_PREPARE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_REASON_ACTIVE_PAGE'; task: string; serverUrl: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
+  | { type: 'VG_EXECUTE_PENDING_ACTION'; executionId: `VGX-${string}`; confirmed: boolean }
+  | { type: 'VG_EXECUTE_FRAME_ACTION'; executionId: `VGX-${string}`; action: BrowserAction }
   | { type: 'VG_CAPTURE_FRAME' }
   | { type: 'VG_GET_STATUS' }
 

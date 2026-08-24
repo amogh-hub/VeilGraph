@@ -1,11 +1,13 @@
 declare namespace chrome {
   namespace runtime {
     interface MessageSender {
+      id?: string
       tab?: tabs.Tab
       frameId?: number
       url?: string
     }
     type SendResponse = (response?: unknown) => void
+    const id: string
     const onMessage: {
       addListener(
         callback: (message: unknown, sender: MessageSender, sendResponse: SendResponse) => boolean | void,
@@ -20,6 +22,7 @@ declare namespace chrome {
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>
     function sendMessage<T = unknown>(tabId: number, message: unknown, options?: { frameId?: number }): Promise<T>
     function captureVisibleTab(windowId?: number, options?: { format?: 'png' | 'jpeg'; quality?: number }): Promise<string>
+    function update(tabId: number, updateProperties: { url?: string }): Promise<Tab>
   }
 
   namespace webNavigation {
