@@ -2030,6 +2030,125 @@
         ],
         "title": "BrowserLocalAnalysisResponse"
       },
+      "BrowserMinimizationEvidence": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "TASK_MINIMIZATION_V1",
+            "title": "Contract",
+            "default": "TASK_MINIMIZATION_V1"
+          },
+          "task_intent": {
+            "type": "string",
+            "enum": [
+              "CLICK",
+              "TYPE",
+              "SELECT",
+              "READ",
+              "NAVIGATE",
+              "SUBMIT",
+              "GENERAL"
+            ],
+            "title": "Task Intent"
+          },
+          "raw_element_count": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Raw Element Count"
+          },
+          "candidate_element_count": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Candidate Element Count"
+          },
+          "released_element_count": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 0.0,
+            "title": "Released Element Count"
+          },
+          "dropped_irrelevant_count": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Dropped Irrelevant Count"
+          },
+          "required_anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Required Anchor Ids"
+          },
+          "dependency_anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 128,
+            "title": "Dependency Anchor Ids"
+          },
+          "semantic_minimization_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Semantic Minimization Basis Points"
+          },
+          "visual_minimization_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Visual Minimization Basis Points"
+          },
+          "overall_minimization_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Overall Minimization Basis Points"
+          },
+          "task_token_coverage_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Task Token Coverage Basis Points"
+          },
+          "actionability_preserved": {
+            "type": "boolean",
+            "title": "Actionability Preserved"
+          },
+          "utility_sufficient": {
+            "type": "boolean",
+            "title": "Utility Sufficient"
+          },
+          "retained_visual_regions": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 0.0,
+            "title": "Retained Visual Regions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_intent",
+          "raw_element_count",
+          "candidate_element_count",
+          "released_element_count",
+          "dropped_irrelevant_count",
+          "semantic_minimization_basis_points",
+          "visual_minimization_basis_points",
+          "overall_minimization_basis_points",
+          "task_token_coverage_basis_points",
+          "actionability_preserved",
+          "utility_sufficient",
+          "retained_visual_regions"
+        ],
+        "title": "BrowserMinimizationEvidence",
+        "description": "Local evidence describing the exact context-minimization decision.\n\nThis object is returned to the local UI/judge dashboard. It is deliberately\nseparate from BrowserReleasePayload so the server receives only the minimum\ntask context, not the internal reasoning trace used to decide that minimum."
+      },
       "BrowserNetworkAuthorization": {
         "properties": {
           "payload": {
@@ -2559,6 +2678,9 @@
           "payload": {
             "$ref": "#/components/schemas/BrowserReleasePayload"
           },
+          "minimization": {
+            "$ref": "#/components/schemas/BrowserMinimizationEvidence"
+          },
           "verification": {
             "$ref": "#/components/schemas/BrowserVerificationSummary"
           },
@@ -2571,6 +2693,7 @@
         "required": [
           "analysis",
           "payload",
+          "minimization",
           "verification",
           "authorization"
         ],

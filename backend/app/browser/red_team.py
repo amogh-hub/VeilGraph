@@ -204,18 +204,39 @@ def _identifier_fragment_attack(evidence) -> BrowserGateResult:
 
 
 def _task_minimization(evidence) -> BrowserGateResult:
-    within_cap = evidence.released_element_count <= 80
-    reduced = evidence.raw_element_count <= 5 or evidence.released_element_count < evidence.raw_element_count or evidence.payload.minimization_basis_points >= 500
-    if not within_cap or not reduced:
+    m = evidence.minimization
+    problems: list[str] = []
+    if m.contract != "TASK_MINIMIZATION_V1":
+        problems.append(f"contract={m.contract}")
+    if m.released_element_count != evidence.released_element_count:
+        problems.append("released element accounting mismatch")
+    if m.raw_element_count != evidence.raw_element_count:
+        problems.append("raw element accounting mismatch")
+    if m.released_element_count > 32:
+        problems.append(f"released element cap exceeded ({m.released_element_count}/32)")
+    if m.raw_element_count > 2 and m.dropped_irrelevant_count <= 0:
+        problems.append("no irrelevant context was removed")
+    if m.raw_element_count > 2 and m.overall_minimization_basis_points < 500:
+        problems.append(f"overall minimization too small ({m.overall_minimization_basis_points}/10000)")
+    if not m.required_anchor_ids:
+        problems.append("no required task anchor was identified")
+    if m.retained_visual_regions > max(1, m.released_element_count):
+        problems.append("visual retention regions exceed released semantic anchors")
+
+    if problems:
         return _gate(
             "task_minimization",
             TestStatus.FAIL,
-            f"Task-conditioned minimization insufficient: raw_elements={evidence.raw_element_count}, released={evidence.released_element_count}, minimization={evidence.payload.minimization_basis_points}/10000",
+            "TASK_MINIMIZATION_V1 invariant failure: " + "; ".join(problems),
         )
     return _gate(
         "task_minimization",
         TestStatus.PASS,
-        f"Task-conditioned release reduced semantic context to {evidence.released_element_count}/{evidence.raw_element_count} element(s); minimization={evidence.payload.minimization_basis_points}/10000",
+        (
+            f"TASK_MINIMIZATION_V1 released {m.released_element_count}/{m.raw_element_count} element(s); "
+            f"dropped={m.dropped_irrelevant_count}; semantic={m.semantic_minimization_basis_points}/10000; "
+            f"visual={m.visual_minimization_basis_points}/10000; overall={m.overall_minimization_basis_points}/10000"
+        ),
     )
 
 
@@ -239,17 +260,33 @@ def _payload_commitment_integrity(evidence) -> BrowserGateResult:
 
 def _task_utility_anchor_preservation(evidence) -> BrowserGateResult:
     score = evidence.payload.task_utility_score
-    if score < 60 or evidence.released_element_count == 0 or evidence.relevant_anchor_count == 0:
+    m = evidence.minimization
+    if (
+        score < 60
+        or evidence.released_element_count == 0
+        or evidence.relevant_anchor_count == 0
+        or not m.actionability_preserved
+        or not m.utility_sufficient
+        or m.task_token_coverage_basis_points < 4_000
+    ):
         return _gate(
             "task_utility_anchor_preservation",
             TestStatus.FAIL,
-            f"Sanitization removed too much task context: utility={score}/100 anchors={evidence.relevant_anchor_count} elements={evidence.released_element_count}",
+            (
+                f"Sanitization removed too much task context: utility={score}/100 "
+                f"anchors={evidence.relevant_anchor_count} elements={evidence.released_element_count} "
+                f"token_coverage={m.task_token_coverage_basis_points}/10000 "
+                f"actionability={m.actionability_preserved} sufficient={m.utility_sufficient}"
+            ),
             severity="high",
         )
     return _gate(
         "task_utility_anchor_preservation",
         TestStatus.PASS,
-        f"Task-critical semantic anchors remain available after protection: utility={score}/100 anchors={evidence.relevant_anchor_count}",
+        (
+            f"Task-critical anchors remain after minimization: utility={score}/100 "
+            f"anchors={evidence.relevant_anchor_count} token_coverage={m.task_token_coverage_basis_points}/10000"
+        ),
         severity="high",
     )
 

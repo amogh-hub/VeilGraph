@@ -196,6 +196,58 @@ class BrowserPairingAttestation(BaseModel):
     signature_b64: str
 
 
+class BrowserMinimizationEvidence(BaseModel):
+    """Local evidence describing the exact context-minimization decision.
+
+    This object is returned to the local UI/judge dashboard. It is deliberately
+    separate from BrowserReleasePayload so the server receives only the minimum
+    task context, not the internal reasoning trace used to decide that minimum.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract: Literal["TASK_MINIMIZATION_V1"] = "TASK_MINIMIZATION_V1"
+    task_intent: Literal["CLICK", "TYPE", "SELECT", "READ", "NAVIGATE", "SUBMIT", "GENERAL"]
+    raw_element_count: int = Field(ge=0, le=100_000)
+    candidate_element_count: int = Field(ge=0, le=100_000)
+    released_element_count: int = Field(ge=0, le=500)
+    dropped_irrelevant_count: int = Field(ge=0, le=100_000)
+    required_anchor_ids: list[str] = Field(default_factory=list, max_length=64)
+    dependency_anchor_ids: list[str] = Field(default_factory=list, max_length=128)
+    semantic_minimization_basis_points: int = Field(ge=0, le=10_000)
+    visual_minimization_basis_points: int = Field(ge=0, le=10_000)
+    overall_minimization_basis_points: int = Field(ge=0, le=10_000)
+    task_token_coverage_basis_points: int = Field(ge=0, le=10_000)
+    actionability_preserved: bool
+    utility_sufficient: bool
+    retained_visual_regions: int = Field(ge=0, le=500)
+
+    @model_validator(mode="after")
+    def validate_minimization_accounting(self):
+        if self.released_element_count > self.candidate_element_count:
+            raise ValueError("released_element_count cannot exceed candidate_element_count")
+        if self.candidate_element_count > self.raw_element_count:
+            raise ValueError("candidate_element_count cannot exceed raw_element_count")
+        if self.dropped_irrelevant_count != self.raw_element_count - self.released_element_count:
+            raise ValueError("dropped_irrelevant_count must equal raw minus released elements")
+        if self.overall_minimization_basis_points != min(
+            self.semantic_minimization_basis_points,
+            self.visual_minimization_basis_points,
+        ):
+            raise ValueError("overall minimization must be the conservative minimum of semantic and visual minimization")
+        required = list(dict.fromkeys(self.required_anchor_ids))
+        dependencies = list(dict.fromkeys(self.dependency_anchor_ids))
+        if len(required) != len(self.required_anchor_ids) or len(dependencies) != len(self.dependency_anchor_ids):
+            raise ValueError("minimization anchor IDs must be unique")
+        if set(required) & set(dependencies):
+            raise ValueError("required and dependency anchor IDs must be disjoint")
+        if len(required) + len(dependencies) > self.released_element_count:
+            raise ValueError("anchor accounting cannot exceed released_element_count")
+        if self.utility_sufficient and not self.actionability_preserved:
+            raise ValueError("utility_sufficient requires actionability_preserved")
+        return self
+
+
 class BrowserReleasePreparationResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -204,6 +256,7 @@ class BrowserReleasePreparationResponse(BaseModel):
     )
     analysis: "BrowserLocalAnalysisResponse"
     payload: BrowserReleasePayload
+    minimization: BrowserMinimizationEvidence
     verification: BrowserVerificationSummary
     authorization: BrowserNetworkAuthorization
 

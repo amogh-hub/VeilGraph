@@ -113,6 +113,21 @@ def test_prepare_release_builds_sanitized_payload_runs_all_gates_and_authorizes_
     decoded = base64.b64decode(visual.image_base64, validate=True)
     assert hashlib.sha256(decoded).hexdigest() == visual.sanitized_sha256
     assert visual.redacted_regions >= 1
+    assert result.minimization.contract == "TASK_MINIMIZATION_V1"
+    assert result.minimization.task_intent == "NAVIGATE"
+    assert result.minimization.raw_element_count == 3
+    assert result.minimization.released_element_count == len(result.payload.page.elements)
+    assert result.minimization.dropped_irrelevant_count >= 2
+    assert "vg_settings_button_003" in result.minimization.required_anchor_ids
+    released_ids = {element.element_id for element in result.payload.page.elements}
+    assert "vg_email_field_001" not in released_ids
+    assert "vg_password_field_002" not in released_ids
+    assert result.minimization.semantic_minimization_basis_points > 0
+    assert result.minimization.visual_minimization_basis_points > 0
+    assert result.minimization.overall_minimization_basis_points == result.payload.minimization_basis_points
+    assert result.minimization.task_token_coverage_basis_points >= 4000
+    assert result.minimization.actionability_preserved is True
+    assert result.minimization.utility_sufficient is True
 
 
 def test_prepare_release_endpoint_never_returns_raw_email_or_credential(client):
@@ -192,6 +207,13 @@ def test_sanitized_visual_flattens_sensitive_dom_region_into_new_raster():
     r, g, b = sanitized.getpixel((280, 84))
     assert max(r, g, b) < 40
 
+    # The relevant Account settings button remains inside the retained visual
+    # region, while unrelated viewport pixels are deliberately opaque.
+    button_pixel = sanitized.getpixel((200, 204))
+    assert min(button_pixel) > 200
+    irrelevant_pixel = sanitized.getpixel((700, 500))
+    assert max(irrelevant_pixel) < 40
+
 
 def test_prepare_release_endpoint_rejects_l5_for_live_browser(client):
     response = client.post(
@@ -201,3 +223,79 @@ def test_prepare_release_endpoint_rejects_l5_for_live_browser(client):
     )
     assert response.status_code == 422
     assert "structured datasets" in response.text
+
+def test_task_minimizer_drops_unrelated_actionable_controls_and_keeps_dependency_context():
+    raw = _metadata()
+    raw["task"] = "Book follow-up appointment"
+    raw["frames"][0]["elements"] = [
+        {
+            "local_id": "vg_heading_followup_001",
+            "tag": "h2",
+            "role": "heading",
+            "accessible_name": "Follow-up appointment",
+            "visible_text": "Follow-up appointment",
+            "disabled": False,
+            "bbox": [800, 1200, 5000, 1700],
+            "privacy_hints": [],
+        },
+        {
+            "local_id": "vg_book_followup_002",
+            "tag": "button",
+            "role": "button",
+            "accessible_name": "Book follow-up",
+            "visible_text": "Book follow-up",
+            "disabled": False,
+            "bbox": [1000, 1900, 4200, 2700],
+            "privacy_hints": [],
+        },
+    ]
+    for index in range(12):
+        raw["frames"][0]["elements"].append(
+            {
+                "local_id": f"vg_irrelevant_{index:03d}",
+                "tag": "button",
+                "role": "button",
+                "accessible_name": f"Unrelated action {index}",
+                "visible_text": f"Unrelated action {index}",
+                "disabled": False,
+                "bbox": [5500, 300 + index * 400, 9000, 600 + index * 400],
+                "privacy_hints": [],
+            }
+        )
+
+    result = prepare_browser_release(BrowserLocalCaptureMetadata.model_validate(raw), _png())
+    ids = {element.element_id for element in result.payload.page.elements}
+
+    assert "vg_book_followup_002" in ids
+    assert "vg_heading_followup_001" in ids
+    assert not any(element_id.startswith("vg_irrelevant_") for element_id in ids)
+    assert result.minimization.raw_element_count == 14
+    assert result.minimization.released_element_count <= 4
+    assert result.minimization.dropped_irrelevant_count >= 10
+    assert result.minimization.overall_minimization_basis_points >= 500
+    assert result.minimization.utility_sufficient is True
+    assert next(test for test in result.verification.tests if test.name == "task_minimization").status.value == "PASS"
+    assert result.authorization.payload.decision == "ALLOW_NETWORK_RELEASE"
+
+
+def test_minimization_evidence_model_rejects_impossible_accounting():
+    from app.browser.models import BrowserMinimizationEvidence
+
+    with pytest.raises(ValueError, match="released_element_count"):
+        BrowserMinimizationEvidence.model_validate({
+            "contract": "TASK_MINIMIZATION_V1",
+            "task_intent": "CLICK",
+            "raw_element_count": 2,
+            "candidate_element_count": 1,
+            "released_element_count": 2,
+            "dropped_irrelevant_count": 0,
+            "required_anchor_ids": ["vg_anchor_001"],
+            "dependency_anchor_ids": [],
+            "semantic_minimization_basis_points": 5000,
+            "visual_minimization_basis_points": 6000,
+            "overall_minimization_basis_points": 5000,
+            "task_token_coverage_basis_points": 9000,
+            "actionability_preserved": True,
+            "utility_sufficient": True,
+            "retained_visual_regions": 1,
+        })

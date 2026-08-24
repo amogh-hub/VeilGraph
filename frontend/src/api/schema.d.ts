@@ -122,6 +122,23 @@ export interface components {
       "readiness": "READY_FOR_SANITIZATION" | "NEEDS_REVIEW" | "VISUAL_COVERAGE_INCOMPLETE"
       "note": string
     }
+    "BrowserMinimizationEvidence": {
+      "contract"?: string
+      "task_intent": "CLICK" | "TYPE" | "SELECT" | "READ" | "NAVIGATE" | "SUBMIT" | "GENERAL"
+      "raw_element_count": number
+      "candidate_element_count": number
+      "released_element_count": number
+      "dropped_irrelevant_count": number
+      "required_anchor_ids"?: Array<string>
+      "dependency_anchor_ids"?: Array<string>
+      "semantic_minimization_basis_points": number
+      "visual_minimization_basis_points": number
+      "overall_minimization_basis_points": number
+      "task_token_coverage_basis_points": number
+      "actionability_preserved": boolean
+      "utility_sufficient": boolean
+      "retained_visual_regions": number
+    }
     "BrowserNetworkAuthorization": {
       "payload": components['schemas']['BrowserNetworkAuthorizationPayload']
       "signature_algorithm"?: string
@@ -206,6 +223,7 @@ export interface components {
       "schema"?: string
       "analysis": components['schemas']['BrowserLocalAnalysisResponse']
       "payload": components['schemas']['BrowserReleasePayload']
+      "minimization": components['schemas']['BrowserMinimizationEvidence']
       "verification": components['schemas']['BrowserVerificationSummary']
       "authorization": components['schemas']['BrowserNetworkAuthorization']
     }

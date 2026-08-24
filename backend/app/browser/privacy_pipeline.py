@@ -19,6 +19,7 @@ from app.browser.local_analysis import (
 )
 from app.browser.models import (
     BrowserLocalCaptureMetadata,
+    BrowserMinimizationEvidence,
     BrowserNetworkAuthorization,
     BrowserPublicElement,
     BrowserPublicPage,
@@ -35,7 +36,7 @@ from app.policy.compiler import DIRECT_TYPES, action_for, replacement_for_policy
 
 
 NETWORK_PRIVACY_FLOOR = PrivacyLevel.RELATIONSHIP_SAFE_PSEUDONYMIZATION
-_MAX_RELEASE_ELEMENTS = 80
+_MAX_RELEASE_ELEMENTS = 32
 _STOPWORDS = {
     "a", "an", "and", "the", "to", "of", "for", "on", "in", "this", "that", "my", "me", "please",
     "current", "page", "website", "web", "do", "it", "with", "from", "at", "is", "are",
@@ -63,8 +64,33 @@ class BrowserSanitizationEvidence:
     raw_element_count: int
     released_element_count: int
     relevant_anchor_count: int
+    minimization: BrowserMinimizationEvidence
     overall_visual_status: str
     policy_action_count: int
+
+
+@dataclass(frozen=True)
+class _ElementCandidate:
+    score: int
+    ordinal: int
+    frame_id: int
+    is_top_frame: bool
+    public: BrowserPublicElement
+    bbox: tuple[int, int, int, int]
+    task_overlap: int
+    role_compatible: bool
+    sensitive: bool
+
+
+@dataclass(frozen=True)
+class _TaskMinimizationPlan:
+    task_intent: str
+    candidate_count: int
+    elements: tuple[BrowserPublicElement, ...]
+    required_anchor_ids: tuple[str, ...]
+    dependency_anchor_ids: tuple[str, ...]
+    task_token_coverage_basis_points: int
+    actionability_preserved: bool
 
 
 def _safe_normalize(entity_type: EntityType, value: str) -> str:
@@ -142,11 +168,53 @@ def _sanitize_text(value: str, replacements: dict[str, str], extra_secret_values
     return re.sub(r"\s+", " ", result).strip()
 
 
+_TASK_VERB_STOPWORDS = {"click", "tap", "press", "open", "go", "navigate", "visit"}
+_ACTION_INTENTS = {"CLICK", "TYPE", "SELECT", "NAVIGATE", "SUBMIT"}
+_READ_ROLES = {"heading", "text", "div", "span", "label", "paragraph", "cell", "row", "link"}
+
+
 def _task_tokens(task: str) -> set[str]:
+    # Protected placeholders are compiler output, not task meaning. Letting words
+    # such as EMAIL/PROTECTED influence relevance would accidentally keep the
+    # very sensitive controls that minimization is supposed to remove.
+    cleaned = re.sub(r"\[[^\]]*PROTECTED[^\]]*\]", " ", task, flags=re.I)
     return {
-        token for token in re.findall(r"[a-z0-9]+", task.casefold())
-        if len(token) > 1 and token not in _STOPWORDS
+        token for token in re.findall(r"[a-z0-9]+", cleaned.casefold())
+        if len(token) > 1 and token not in _STOPWORDS and token not in _TASK_VERB_STOPWORDS
     }
+
+
+def _task_intent(task: str) -> str:
+    lowered = task.casefold()
+    words = set(re.findall(r"[a-z]+", lowered))
+    if words & {"type", "enter", "fill", "write", "input"}:
+        return "TYPE"
+    if words & {"select", "choose", "pick", "toggle", "uncheck"}:
+        return "SELECT"
+    if words & {"submit", "confirm", "send", "save", "pay", "purchase"}:
+        return "SUBMIT"
+    if words & {"navigate", "visit", "open", "go"}:
+        return "NAVIGATE"
+    if words & {"click", "tap", "press", "book"}:
+        return "CLICK"
+    if words & {"read", "show", "find", "what", "view", "inspect", "check"}:
+        return "READ"
+    return "GENERAL"
+
+
+def _role_compatible(intent: str, role: str) -> bool:
+    role = role.casefold()
+    if intent in {"CLICK", "NAVIGATE"}:
+        return role in {"button", "link", "menuitem"}
+    if intent == "SUBMIT":
+        return role in {"button", "link"}
+    if intent == "TYPE":
+        return role in {"textbox", "combobox"}
+    if intent == "SELECT":
+        return role in {"combobox", "checkbox", "radio", "option", "menuitem"}
+    if intent == "READ":
+        return role in _READ_ROLES
+    return role in _ACTIONABLE_ROLES or role in _READ_ROLES
 
 
 def _element_score(task: str, label: str, text: str, role: str) -> int:
@@ -155,16 +223,29 @@ def _element_score(task: str, label: str, text: str, role: str) -> int:
     score = 12 * len(tokens & haystack)
     if role in _ACTIONABLE_ROLES:
         score += 3
-    lowered = task.casefold()
-    if any(word in lowered for word in ("click", "open", "book", "submit", "continue", "confirm", "send")) and role in {"button", "link"}:
-        score += 8
-    if any(word in lowered for word in ("type", "enter", "fill", "write")) and role in {"textbox", "combobox"}:
-        score += 8
-    if any(word in lowered for word in ("select", "choose", "pick")) and role in {"combobox", "checkbox", "radio", "option"}:
-        score += 8
-    if any(word in lowered for word in ("read", "show", "find", "check", "what")) and role in {"heading", "text", "div", "span", "label"}:
-        score += 4
+    intent = _task_intent(task)
+    if _role_compatible(intent, role):
+        score += 8 if intent in _ACTION_INTENTS else 4
     return score
+
+
+def _bbox_distance(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> int:
+    dx = max(a[0] - b[2], b[0] - a[2], 0)
+    dy = max(a[1] - b[3], b[1] - a[3], 0)
+    return dx + dy
+
+
+def _released_token_coverage(task: str, elements: Iterable[BrowserPublicElement]) -> int:
+    tokens = _task_tokens(task)
+    if not tokens:
+        return 10_000
+    released = set(
+        re.findall(
+            r"[a-z0-9]+",
+            " ".join(f"{item.label} {item.text} {item.role}" for item in elements).casefold(),
+        )
+    )
+    return max(0, min(10_000, round(10_000 * len(tokens & released) / len(tokens))))
 
 
 def _sensitive_element_values(metadata: BrowserLocalCaptureMetadata) -> tuple[str, ...]:
@@ -182,19 +263,34 @@ def _public_elements(
     task: str,
     replacements: dict[str, str],
     secret_values: tuple[str, ...],
-) -> tuple[list[BrowserPublicElement], int]:
-    candidates: list[tuple[int, int, BrowserPublicElement]] = []
+) -> _TaskMinimizationPlan:
+    intent = _task_intent(task)
+    task_tokens = _task_tokens(task)
+    candidates: list[_ElementCandidate] = []
     ordinal = 0
+
     for frame in metadata.frames:
         for element in frame.elements:
             label = _sanitize_text(element.accessible_name, replacements, secret_values)
             text = _sanitize_text(element.visible_text, replacements, secret_values)
             role = element.role[:64] or element.tag[:64]
-            score = _element_score(task, label, text, role)
             is_actionable = role in _ACTIONABLE_ROLES
-            if score <= 0 and not is_actionable:
+            if not label and not text and not is_actionable:
                 ordinal += 1
                 continue
+
+            haystack = set(re.findall(r"[a-z0-9]+", f"{label} {text} {role}".casefold()))
+            overlap = len(task_tokens & haystack)
+            compatible = _role_compatible(intent, role)
+            hints = {hint.casefold() for hint in element.privacy_hints}
+            sensitive = bool(hints & _SENSITIVE_HINTS or (element.input_type or "").casefold() == "password")
+            score = _element_score(task, label, text, role)
+
+            # A sensitive control is allowed to survive only when the task itself
+            # names it or its role is necessary for an explicit input/select task.
+            if sensitive and overlap == 0 and intent not in {"TYPE", "SELECT"}:
+                score -= 24
+
             public = BrowserPublicElement(
                 element_id=element.local_id,
                 role=role,
@@ -206,14 +302,105 @@ def _public_elements(
                 selected=element.selected,
                 bbox=element.bbox if frame.is_top_frame else None,
             )
-            # Stable tie-breaking by capture order avoids non-deterministic JSON.
-            candidates.append((score, -ordinal, public))
+            candidates.append(
+                _ElementCandidate(
+                    score=score,
+                    ordinal=ordinal,
+                    frame_id=frame.frame_id,
+                    is_top_frame=frame.is_top_frame,
+                    public=public,
+                    bbox=element.bbox,
+                    task_overlap=overlap,
+                    role_compatible=compatible,
+                    sensitive=sensitive,
+                )
+            )
             ordinal += 1
 
-    candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
-    selected = [item[2] for item in candidates[:_MAX_RELEASE_ELEMENTS]]
-    anchors = sum(item[0] > 3 for item in candidates[:_MAX_RELEASE_ELEMENTS])
-    return selected, anchors
+    ranked = sorted(candidates, key=lambda item: (item.score, item.task_overlap, -item.ordinal), reverse=True)
+    required: list[_ElementCandidate] = []
+
+    if intent in _ACTION_INTENTS:
+        # Prefer controls that are both role-compatible and semantically tied to
+        # the task. Generic buttons do not become network context just because
+        # they are clickable.
+        required = [item for item in ranked if item.role_compatible and item.task_overlap > 0 and item.score > 0][:_MAX_RELEASE_ELEMENTS]
+        required = required[:4]
+        if not required:
+            fallback = [item for item in ranked if item.role_compatible and item.score > 0]
+            required = fallback[:1]
+    elif intent == "READ":
+        required = [item for item in ranked if item.task_overlap > 0 and item.score > 0][:4]
+    else:
+        required = [item for item in ranked if item.task_overlap > 0 and item.score > 0][:4]
+        if not required:
+            required = [item for item in ranked if item.score > 0][:1]
+
+    required_ids = {item.public.element_id for item in required}
+    dependencies: list[_ElementCandidate] = []
+    dependency_ids: set[str] = set()
+
+    for anchor in required:
+        nearby = []
+        for item in ranked:
+            if item.public.element_id in required_ids or item.public.element_id in dependency_ids:
+                continue
+            if item.frame_id != anchor.frame_id:
+                continue
+            if item.sensitive and item.task_overlap == 0:
+                continue
+            semantic_dependency = item.public.role.casefold() in _READ_ROLES
+            if not semantic_dependency:
+                continue
+            distance = _bbox_distance(anchor.bbox, item.bbox)
+            if item.task_overlap > 0 or distance <= 1200:
+                nearby.append((item.task_overlap, -distance, item.score, -item.ordinal, item))
+        nearby.sort(reverse=True, key=lambda entry: entry[:4])
+        for entry in nearby[:2]:
+            item = entry[4]
+            dependencies.append(item)
+            dependency_ids.add(item.public.element_id)
+
+    # Small dynamic budget: enough for required controls and their explanatory
+    # context, never a disguised dump of every visible control.
+    budget = min(_MAX_RELEASE_ELEMENTS, max(8, len(required) * 4 + 4))
+    selected: list[_ElementCandidate] = []
+    selected_ids: set[str] = set()
+    for item in [*required, *dependencies]:
+        if item.public.element_id not in selected_ids and len(selected) < budget:
+            selected.append(item)
+            selected_ids.add(item.public.element_id)
+
+    # Add only strongly task-relevant extras. A generic actionable score alone is
+    # intentionally below this threshold.
+    for item in ranked:
+        if len(selected) >= budget:
+            break
+        if item.public.element_id in selected_ids:
+            continue
+        if item.task_overlap <= 0 or item.score < 12:
+            continue
+        if item.sensitive and item.task_overlap == 0:
+            continue
+        selected.append(item)
+        selected_ids.add(item.public.element_id)
+
+    elements = tuple(item.public for item in selected)
+    coverage = _released_token_coverage(task, elements)
+    if intent in _ACTION_INTENTS:
+        actionability = any(_role_compatible(intent, item.role) and not item.disabled for item in elements)
+    else:
+        actionability = bool(elements)
+
+    return _TaskMinimizationPlan(
+        task_intent=intent,
+        candidate_count=len(candidates),
+        elements=elements,
+        required_anchor_ids=tuple(item.public.element_id for item in required if item.public.element_id in selected_ids),
+        dependency_anchor_ids=tuple(item.public.element_id for item in dependencies if item.public.element_id in selected_ids),
+        task_token_coverage_basis_points=coverage,
+        actionability_preserved=actionability,
+    )
 
 
 def _to_pixel_rect(
@@ -285,29 +472,63 @@ def _redaction_rectangles(
     return _merge_rectangles(rects)
 
 
+def _visual_retention_rects(
+    elements: Iterable[BrowserPublicElement],
+    image: Image.Image,
+) -> list[tuple[int, int, int, int]]:
+    width, height = image.size
+    rects: list[tuple[int, int, int, int]] = []
+    for element in elements:
+        if element.bbox is None:
+            continue
+        rects.append(_bp_to_pixel_rect(element.bbox, width, height, padding=24))
+    return _merge_rectangles(rects)
+
+
 def _sanitize_visual_context(
     screenshot: bytes,
     metadata: BrowserLocalCaptureMetadata,
     context: BrowserAnalysisContext,
-) -> tuple[BrowserPublicVisualContext, bytes, tuple[tuple[int, int, int, int], ...]]:
+    released_elements: Iterable[BrowserPublicElement],
+) -> tuple[
+    BrowserPublicVisualContext,
+    bytes,
+    tuple[tuple[int, int, int, int], ...],
+    int,
+    int,
+]:
     try:
         image = Image.open(io.BytesIO(screenshot)).convert("RGB")
         image.load()
     except Exception as exc:
         raise BrowserPreparationError("unable to decode screenshot for local visual sanitization") from exc
 
-    rects = _redaction_rectangles(metadata, context, image)
-    draw = ImageDraw.Draw(image)
-    for x0, y0, x1, y1 in rects:
+    redaction_rects = _redaction_rectangles(metadata, context, image)
+    protected = image.copy()
+    draw = ImageDraw.Draw(protected)
+    for x0, y0, x1, y1 in redaction_rects:
         draw.rectangle((x0, y0, x1, y1), fill=(18, 18, 20))
+
+    # Preserve the original viewport coordinate system, but make every pixel not
+    # needed by the selected semantic anchors opaque. This gives the remote VLM
+    # spatial context without handing it the rest of the page.
+    retention_rects = _visual_retention_rects(released_elements, protected)
+    minimized = Image.new("RGB", protected.size, (18, 18, 20))
+    for rect in retention_rects:
+        minimized.paste(protected.crop(rect), rect)
+
+    total_area = max(1, minimized.width * minimized.height)
+    retained_area = sum(max(0, x1 - x0) * max(0, y1 - y0) for x0, y0, x1, y1 in retention_rects)
+    visual_minimization = max(0, min(10_000, round((1.0 - min(1.0, retained_area / total_area)) * 10_000)))
 
     out = io.BytesIO()
     mime = "image/webp"
     try:
-        image.save(out, format="WEBP", quality=86, method=4, exact=True)
+        # Lossless encoding prevents compression artifacts at privacy boundaries.
+        minimized.save(out, format="WEBP", lossless=True, method=4, exact=True)
     except Exception:
         out = io.BytesIO()
-        image.save(out, format="PNG", optimize=True)
+        minimized.save(out, format="PNG", optimize=True)
         mime = "image/png"
     sanitized = out.getvalue()
     if not sanitized:
@@ -315,13 +536,13 @@ def _sanitize_visual_context(
     encoded = base64.b64encode(sanitized).decode("ascii")
     visual = BrowserPublicVisualContext(
         mime_type=mime,
-        width=image.width,
-        height=image.height,
+        width=minimized.width,
+        height=minimized.height,
         image_base64=encoded,
         sanitized_sha256=hashlib.sha256(sanitized).hexdigest(),
-        redacted_regions=len(rects),
+        redacted_regions=len(redaction_rects),
     )
-    return visual, sanitized, tuple(rects)
+    return visual, sanitized, tuple(redaction_rects), visual_minimization, len(retention_rects)
 
 
 def _semantic_size(metadata: BrowserLocalCaptureMetadata) -> int:
@@ -339,9 +560,7 @@ def _released_semantic_size(task: str, title: str, elements: list[BrowserPublicE
 def _task_utility_score(task: str, elements: list[BrowserPublicElement], anchors: int) -> int:
     if not elements:
         return 0
-    tokens = _task_tokens(task)
-    released = set(re.findall(r"[a-z0-9]+", " ".join(f"{e.label} {e.text} {e.role}" for e in elements).casefold()))
-    coverage = 1.0 if not tokens else len(tokens & released) / max(1, len(tokens))
+    coverage = _released_token_coverage(task, elements) / 10_000
     actionable = any(element.role in _ACTIONABLE_ROLES and not element.disabled for element in elements)
     score = round(58 * coverage + (32 if actionable else 0) + min(10, anchors * 2))
     return max(0, min(100, score))
@@ -364,16 +583,53 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     all_sensitive_values = tuple(dict.fromkeys((*sensitive_values, *secret_values)))
     all_direct_values = tuple(dict.fromkeys((*direct_values, *secret_values)))
 
+    # Task relevance must be derived from the local task semantics with
+    # sensitive source values removed BEFORE privacy replacements are introduced.
+    # Otherwise pseudonyms such as EMAIL_* can spuriously make an unrelated Email
+    # control appear relevant to the task.
+    relevance_task = _sanitize_text(metadata.task, {}, all_sensitive_values)[:1000]
     sanitized_task = _sanitize_text(metadata.task, replacements, secret_values)[:1000]
     top_frame = next((frame for frame in metadata.frames if frame.is_top_frame), metadata.frames[0])
     sanitized_title = _sanitize_text(top_frame.title, replacements, secret_values)[:256]
-    elements, anchors = _public_elements(metadata, sanitized_task, replacements, secret_values)
-    visual_context, sanitized_image, redaction_rects = _sanitize_visual_context(screenshot, metadata, context)
+
+    plan = _public_elements(metadata, relevance_task, replacements, secret_values)
+    elements = list(plan.elements)
+    anchors = len(plan.required_anchor_ids)
+    visual_context, sanitized_image, redaction_rects, visual_minimization, retained_visual_regions = _sanitize_visual_context(
+        screenshot,
+        metadata,
+        context,
+        elements,
+    )
 
     raw_semantic = _semantic_size(metadata)
     released_semantic = _released_semantic_size(sanitized_task, sanitized_title, elements)
-    minimization = max(0, min(10_000, round((1.0 - min(1.0, released_semantic / raw_semantic)) * 10_000)))
-    task_utility = _task_utility_score(sanitized_task, elements, anchors)
+    semantic_minimization = max(0, min(10_000, round((1.0 - min(1.0, released_semantic / raw_semantic)) * 10_000)))
+    overall_minimization = min(semantic_minimization, visual_minimization)
+    task_utility = _task_utility_score(relevance_task, elements, anchors)
+    utility_sufficient = (
+        task_utility >= 60
+        and anchors > 0
+        and plan.actionability_preserved
+        and plan.task_token_coverage_basis_points >= 4_000
+    )
+    raw_element_count = sum(len(frame.elements) for frame in metadata.frames)
+    minimization = BrowserMinimizationEvidence(
+        task_intent=plan.task_intent,
+        raw_element_count=raw_element_count,
+        candidate_element_count=plan.candidate_count,
+        released_element_count=len(elements),
+        dropped_irrelevant_count=max(0, raw_element_count - len(elements)),
+        required_anchor_ids=list(plan.required_anchor_ids),
+        dependency_anchor_ids=list(plan.dependency_anchor_ids),
+        semantic_minimization_basis_points=semantic_minimization,
+        visual_minimization_basis_points=visual_minimization,
+        overall_minimization_basis_points=overall_minimization,
+        task_token_coverage_basis_points=plan.task_token_coverage_basis_points,
+        actionability_preserved=plan.actionability_preserved,
+        utility_sufficient=utility_sufficient,
+        retained_visual_regions=retained_visual_regions,
+    )
     risk = context.graph["risk"]
 
     payload = BrowserReleasePayload(
@@ -392,7 +648,7 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
         identity_exposure_before=int(risk["before"]),
         residual_identity_exposure=int(risk["after"]),
         task_utility_score=task_utility,
-        minimization_basis_points=minimization,
+        minimization_basis_points=overall_minimization,
     )
 
     evidence = BrowserSanitizationEvidence(
@@ -403,9 +659,10 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
         sensitive_values=all_sensitive_values,
         direct_sensitive_values=all_direct_values,
         redaction_rects=redaction_rects,
-        raw_element_count=sum(len(frame.elements) for frame in metadata.frames),
+        raw_element_count=raw_element_count,
         released_element_count=len(elements),
         relevant_anchor_count=anchors,
+        minimization=minimization,
         overall_visual_status=_overall_visual_status(metadata, context),
         policy_action_count=policy_actions + len(secret_values),
     )
@@ -419,6 +676,7 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     return BrowserReleasePreparationResponse(
         analysis=analysis,
         payload=payload,
+        minimization=minimization,
         verification=verification,
         authorization=authorization,
     )
