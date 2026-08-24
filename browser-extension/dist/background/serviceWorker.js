@@ -7,6 +7,7 @@ import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
 import { pairLocalCompanion } from '../security/pairing.js';
 import { validateReasoningResponse } from '../security/actionPlan.js';
 import { createPendingExecution, validatePendingExecution, } from '../security/localAction.js';
+import { appendLoopTrace, beginSecureAgentLoop, evaluateLoopAction, markLoopCancelled, markLoopComplete, markLoopStopped, publicLoopResult, registerLoopExecution, validateLoopContinuation, validateLoopOrigin, } from '../security/agentLoop.js';
 const learnedFaceDetector = createOnnxLearnedFaceDetector(ortRuntime, (path) => chrome.runtime.getURL(path));
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -41,6 +42,219 @@ function trustedSidepanelSender(sender) {
         && !sender.tab
         && typeof sender.url === 'string'
         && sender.url.startsWith(chrome.runtime.getURL('sidepanel/')));
+}
+const secureAgentLoops = new Map();
+const ACTION_SETTLE_MS = 350;
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function pruneAgentLoops() {
+    const now = Date.now();
+    for (const [key, runtime] of secureAgentLoops) {
+        const terminal = ['COMPLETE', 'BLOCKED', 'CANCELLED', 'STEP_LIMIT', 'LOOP_DETECTED'].includes(runtime.machine.status);
+        const ended = runtime.machine.endedAtMs ?? runtime.machine.startedAtMs;
+        if ((terminal && now - ended > 60_000) || now - runtime.machine.startedAtMs > 5 * 60_000) {
+            secureAgentLoops.delete(key);
+        }
+    }
+}
+function assertNoCompetingLoop(tabId) {
+    pruneAgentLoops();
+    for (const runtime of secureAgentLoops.values()) {
+        if (runtime.machine.tabId === tabId
+            && (runtime.machine.status === 'RUNNING' || runtime.machine.status === 'WAITING_CONFIRMATION')) {
+            throw new Error('another secure agent loop is already active on this tab');
+        }
+    }
+}
+async function observeForLoop(tabId) {
+    let lastError = null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0)
+            await sleep(250 * attempt);
+        try {
+            const bundle = await captureActivePage();
+            if (bundle.tabId !== tabId)
+                throw new Error('active tab changed during secure agent loop');
+            if (!bundle.frames.some((frame) => frame.isTopFrame)) {
+                throw new Error('top-frame observation is not ready');
+            }
+            return bundle;
+        }
+        catch (error) {
+            lastError = error;
+        }
+    }
+    throw new Error(`fresh loop observation failed${lastError instanceof Error ? `: ${lastError.message}` : ''}`);
+}
+function loopResult(runtime) {
+    return publicLoopResult(runtime.machine, runtime.pendingRecord?.public ?? null);
+}
+async function continueSecureAgentLoop(runtime, confirmation) {
+    const machine = runtime.machine;
+    machine.status = 'RUNNING';
+    if (runtime.pendingRecord) {
+        if (confirmation !== true) {
+            if (confirmation === false) {
+                runtime.pendingRecord = null;
+                runtime.cancelled = true;
+                markLoopCancelled(machine, 'LOCAL_CONFIRMATION_DENIED', Date.now());
+                return loopResult(runtime);
+            }
+            machine.status = 'WAITING_CONFIRMATION';
+            return loopResult(runtime);
+        }
+        const pending = runtime.pendingRecord;
+        runtime.pendingRecord = null;
+        const executed = await executePendingAction(pending, true);
+        registerLoopExecution(machine, pending.public.action, executed.elapsed_ms, Date.now());
+        appendLoopTrace(machine, {
+            stage: 'EXECUTE',
+            action: pending.public.action.action,
+            targetId: pending.public.target_id,
+            proofScore: null,
+            residualExposure: null,
+            minimizationBasisPoints: null,
+            elapsedMs: executed.elapsed_ms,
+            note: 'Locally confirmed action executed; a fresh observation is mandatory.',
+        });
+        await sleep(ACTION_SETTLE_MS);
+    }
+    while (true) {
+        if (runtime.cancelled) {
+            markLoopCancelled(machine, 'LOCAL_CANCEL_REQUEST', Date.now());
+            return loopResult(runtime);
+        }
+        const active = await activeTab();
+        if (!active.id)
+            throw new Error('active tab is unavailable');
+        const continuation = validateLoopContinuation(machine, active.id, Date.now());
+        if (!continuation.allowed) {
+            markLoopStopped(machine, continuation.status, continuation.reason, Date.now());
+            return loopResult(runtime);
+        }
+        const observeStarted = nowMs();
+        const bundle = await observeForLoop(machine.tabId);
+        const topFrame = bundle.frames.find((frame) => frame.isTopFrame);
+        if (!topFrame) {
+            markLoopStopped(machine, 'BLOCKED', 'TOP_FRAME_MISSING_AFTER_OBSERVATION', Date.now());
+            return loopResult(runtime);
+        }
+        const originCheck = validateLoopOrigin(machine, topFrame.origin);
+        if (!originCheck.allowed) {
+            markLoopStopped(machine, 'BLOCKED', originCheck.reason, Date.now());
+            return loopResult(runtime);
+        }
+        appendLoopTrace(machine, {
+            stage: 'OBSERVE',
+            action: null,
+            targetId: null,
+            proofScore: null,
+            residualExposure: null,
+            minimizationBasisPoints: null,
+            elapsedMs: Math.max(0, Math.round(nowMs() - observeStarted)),
+            note: `Fresh viewport observation ${bundle.captureId}; raw capture remained local.`,
+        });
+        if (runtime.cancelled) {
+            markLoopCancelled(machine, 'LOCAL_CANCEL_REQUEST', Date.now());
+            return loopResult(runtime);
+        }
+        const privacyStarted = nowMs();
+        const preparation = await prepareWithLocalCompanion(bundle, runtime.task, runtime.audienceProfile, runtime.privacyLevel);
+        appendLoopTrace(machine, {
+            stage: 'PRIVACY',
+            action: null,
+            targetId: null,
+            proofScore: preparation.verification.proof_score,
+            residualExposure: preparation.payload.residual_identity_exposure,
+            minimizationBasisPoints: preparation.minimization.overall_minimization_basis_points,
+            elapsedMs: Math.max(0, Math.round(nowMs() - privacyStarted)),
+            note: `Network release decision: ${preparation.authorization.payload.decision}.`,
+        });
+        if (preparation.authorization.payload.decision !== 'ALLOW_NETWORK_RELEASE') {
+            markLoopStopped(machine, 'BLOCKED', 'PRIVACY_RELEASE_DENIED', Date.now());
+            return loopResult(runtime);
+        }
+        if (runtime.cancelled) {
+            markLoopCancelled(machine, 'LOCAL_CANCEL_REQUEST', Date.now());
+            return loopResult(runtime);
+        }
+        const reasonStarted = nowMs();
+        const reasoning = await sendExternally(runtime.serverUrl, preparation.payload, preparation.authorization);
+        const proposed = reasoning.plan.actions[0] ?? null;
+        appendLoopTrace(machine, {
+            stage: 'REASON',
+            action: proposed?.action ?? null,
+            targetId: proposed?.target_id ?? null,
+            proofScore: preparation.verification.proof_score,
+            residualExposure: preparation.payload.residual_identity_exposure,
+            minimizationBasisPoints: preparation.minimization.overall_minimization_basis_points,
+            elapsedMs: Math.max(0, Math.round(nowMs() - reasonStarted)),
+            note: reasoning.plan.complete
+                ? 'Reasoning server marked the task complete.'
+                : 'Typed server plan independently validated; only its first action is eligible.',
+        });
+        if (reasoning.plan.complete) {
+            markLoopComplete(machine, Date.now());
+            return loopResult(runtime);
+        }
+        const pending = createPendingExecution(executionId(), bundle.tabId, bundle.frames, preparation.payload, reasoning, Date.now());
+        if (!pending) {
+            markLoopStopped(machine, 'BLOCKED', 'NO_EXECUTABLE_FIRST_ACTION', Date.now());
+            return loopResult(runtime);
+        }
+        const evaluation = evaluateLoopAction(machine, pending.public.action, Date.now());
+        if (!evaluation.allowed) {
+            markLoopStopped(machine, evaluation.status, evaluation.reason, Date.now());
+            return loopResult(runtime);
+        }
+        let eligible = pending;
+        if (evaluation.requiresConfirmation && !pending.public.requires_confirmation) {
+            eligible = {
+                ...pending,
+                public: {
+                    ...pending.public,
+                    requires_confirmation: true,
+                    action: {
+                        ...pending.public.action,
+                        requires_confirmation: true,
+                    },
+                },
+            };
+        }
+        if (evaluation.requiresConfirmation) {
+            runtime.pendingRecord = eligible;
+            machine.status = 'WAITING_CONFIRMATION';
+            appendLoopTrace(machine, {
+                stage: 'STOP',
+                action: eligible.public.action.action,
+                targetId: eligible.public.target_id,
+                proofScore: null,
+                residualExposure: null,
+                minimizationBasisPoints: null,
+                elapsedMs: 0,
+                note: evaluation.reason,
+            });
+            return loopResult(runtime);
+        }
+        if (runtime.cancelled) {
+            markLoopCancelled(machine, 'LOCAL_CANCEL_REQUEST', Date.now());
+            return loopResult(runtime);
+        }
+        const executed = await executePendingAction(eligible, false);
+        registerLoopExecution(machine, eligible.public.action, executed.elapsed_ms, Date.now());
+        appendLoopTrace(machine, {
+            stage: 'EXECUTE',
+            action: eligible.public.action.action,
+            targetId: eligible.public.target_id,
+            proofScore: null,
+            residualExposure: null,
+            minimizationBasisPoints: null,
+            elapsedMs: executed.elapsed_ms,
+            note: 'Low-impact high-confidence action executed locally after fresh live-DOM validation.',
+        });
+        await sleep(ACTION_SETTLE_MS);
+    }
 }
 async function activeTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -539,6 +753,101 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         }));
         return true;
     }
+    if (request.type === 'VG_RUN_SECURE_AGENT_LOOP'
+        && typeof request.loopId === 'string'
+        && request.loopId.startsWith('VGL-')
+        && typeof request.task === 'string'
+        && request.task.trim()
+        && typeof request.serverUrl === 'string'
+        && request.serverUrl.trim()) {
+        if (!trustedSidepanelSender(_sender)) {
+            sendResponse({ ok: false, error: 'secure agent loop requires the trusted VeilGraph side panel' });
+            return false;
+        }
+        const audienceProfile = request.audienceProfile;
+        const privacyLevel = request.privacyLevel;
+        if (!audienceProfile || !privacyLevel) {
+            sendResponse({ ok: false, error: 'missing audience/privacy policy' });
+            return false;
+        }
+        void activeTab()
+            .then(async (tab) => {
+            if (!tab.id)
+                throw new Error('active tab is unavailable');
+            assertNoCompetingLoop(tab.id);
+            const machine = beginSecureAgentLoop(request.loopId, tab.id, request.task, typeof request.maxSteps === 'number' ? request.maxSteps : 6, Date.now());
+            const runtime = {
+                machine,
+                task: request.task,
+                serverUrl: request.serverUrl,
+                audienceProfile,
+                privacyLevel,
+                pendingRecord: null,
+                cancelled: false,
+            };
+            secureAgentLoops.set(machine.loopId, runtime);
+            try {
+                return await continueSecureAgentLoop(runtime, null);
+            }
+            catch (error) {
+                markLoopStopped(runtime.machine, 'BLOCKED', error instanceof Error ? error.message : 'secure agent loop failed', Date.now());
+                throw error;
+            }
+        })
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : 'secure agent loop failed',
+        }));
+        return true;
+    }
+    if (request.type === 'VG_RESUME_SECURE_AGENT_LOOP'
+        && typeof request.loopId === 'string'
+        && request.loopId.startsWith('VGL-')
+        && typeof request.confirmed === 'boolean') {
+        if (!trustedSidepanelSender(_sender)) {
+            sendResponse({ ok: false, error: 'secure agent loop resume requires the trusted VeilGraph side panel' });
+            return false;
+        }
+        const key = request.loopId;
+        const runtime = secureAgentLoops.get(key);
+        if (!runtime) {
+            sendResponse({ ok: false, error: 'secure agent loop is missing, expired, or lost after service-worker restart' });
+            return false;
+        }
+        if (runtime.machine.status !== 'WAITING_CONFIRMATION' || !runtime.pendingRecord) {
+            sendResponse({ ok: false, error: 'secure agent loop is not waiting for confirmation' });
+            return false;
+        }
+        void continueSecureAgentLoop(runtime, request.confirmed)
+            .then((data) => sendResponse({ ok: true, data }))
+            .catch((error) => {
+            markLoopStopped(runtime.machine, 'BLOCKED', error instanceof Error ? error.message : 'resume failed', Date.now());
+            sendResponse({ ok: false, error: error instanceof Error ? error.message : 'secure agent loop resume failed' });
+        });
+        return true;
+    }
+    if (request.type === 'VG_CANCEL_SECURE_AGENT_LOOP'
+        && typeof request.loopId === 'string'
+        && request.loopId.startsWith('VGL-')) {
+        if (!trustedSidepanelSender(_sender)) {
+            sendResponse({ ok: false, error: 'secure agent loop cancellation requires the trusted VeilGraph side panel' });
+            return false;
+        }
+        const key = request.loopId;
+        const runtime = secureAgentLoops.get(key);
+        if (!runtime) {
+            sendResponse({ ok: false, error: 'secure agent loop is missing, expired, or already finished' });
+            return false;
+        }
+        runtime.cancelled = true;
+        if (runtime.machine.status === 'WAITING_CONFIRMATION') {
+            runtime.pendingRecord = null;
+            markLoopCancelled(runtime.machine, 'LOCAL_CANCEL_REQUEST', Date.now());
+        }
+        sendResponse({ ok: true, data: loopResult(runtime) });
+        return false;
+    }
     if (request.type === 'VG_GET_STATUS') {
         sendResponse({
             ok: true,
@@ -549,11 +858,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 minimizationContract: 'TASK_MINIMIZATION_V1',
                 reasoningContract: 'SANITIZED_REASONING_ACTION_V1',
                 localActionContract: 'LOCAL_ACTION_SECURITY_EXECUTION_V1',
+                agentLoopContract: 'SECURE_AGENT_LOOP_V1',
             },
         });
     }
     return false;
 });
-// External egress is reachable only through VG_REASON_ACTIVE_PAGE, after the
-// extension independently verifies a signed ALLOW_NETWORK_RELEASE authorization.
-// Returned server plans remain plans; local action execution is a later boundary.
+// SECURE_AGENT_LOOP_V1 preserves the same fail-closed release boundary for
+// every iteration. Only one locally revalidated action may execute before a
+// completely fresh observe → sanitize → reason cycle.

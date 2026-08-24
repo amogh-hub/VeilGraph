@@ -283,6 +283,7 @@ class Harness:
         self.run_command("Python↔browser interoperability", [self.backend_python, "scripts/verify_browser_protocol_interop.py"], cwd=ROOT)
         self.run_command("Typed action-plan contract", ["npm", "run", "verify:action-plan"], cwd=ext)
         self.run_command("Local action security contract", ["npm", "run", "verify:local-action"], cwd=ext)
+        self.run_command("Secure agent loop contract", ["npm", "run", "verify:agent-loop"], cwd=ext)
 
         focused = [self.backend_python, "-m", "pytest", *FOCUSED_BROWSER_TESTS, "-q"]
         self.run_command("Browser/privacy regression", focused, cwd=backend, summary_parser=self._pytest_summary, env={"PYTHONPATH": "."})
@@ -388,6 +389,7 @@ def main() -> int:
             "Python↔browser interoperability",
             "Typed action-plan contract",
             "Local action security contract",
+            "Secure agent loop contract",
             "Browser/privacy regression",
             "Full backend regression (skipped in --quick)",
             "Frontend dependency audit",

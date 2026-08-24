@@ -23,8 +23,10 @@
     <button id="prepare" class="secondary" type="button">Build & verify safe network payload</button>
     <button id="reason" class="secondary" type="button">Reason on sanitized context</button>
     <button id="execute" class="secondary" type="button" disabled>Execute next locally verified action</button>
+    <button id="agent-loop" type="button">Run secure agent loop</button>
+    <button id="stop-loop" class="secondary" type="button" disabled>Stop agent loop</button>
     <pre id="detail" aria-live="polite"></pre>
-    <footer>Raw screen context stays local. Server plans cannot execute directly: every action is revalidated against the live DOM, stale/hidden/disabled targets are blocked, and high-impact actions require local confirmation.</footer>
+    <footer>Secure loop rule: every action is preceded by local privacy release authorization and live-DOM validation, and every action is followed by a fresh observation. High-impact or low-confidence actions pause for local confirmation.</footer>
   </main>
   <script type="module" src="index.js"></script>
 </body>

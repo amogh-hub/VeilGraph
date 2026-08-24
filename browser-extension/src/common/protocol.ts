@@ -357,6 +357,41 @@ export interface LocalActionExecutionResult {
   next_step: 'RECAPTURE_REQUIRED'
 }
 
+export type SecureAgentLoopStatus =
+  | 'RUNNING'
+  | 'WAITING_CONFIRMATION'
+  | 'COMPLETE'
+  | 'BLOCKED'
+  | 'CANCELLED'
+  | 'STEP_LIMIT'
+  | 'LOOP_DETECTED'
+
+export interface SecureAgentLoopTraceEntry {
+  sequence: number
+  stage: 'OBSERVE' | 'PRIVACY' | 'REASON' | 'EXECUTE' | 'STOP'
+  action: BrowserActionType | null
+  target_id: `vg_${string}` | null
+  proof_score: number | null
+  residual_identity_exposure: number | null
+  minimization_basis_points: number | null
+  elapsed_ms: number
+  note: string
+}
+
+export interface SecureAgentLoopResult {
+  contract: 'SECURE_AGENT_LOOP_V1'
+  loop_id: `VGL-${string}`
+  status: SecureAgentLoopStatus
+  task: string
+  step_count: number
+  max_steps: number
+  started_at: string
+  ended_at: string | null
+  pending_execution: PendingActionExecution | null
+  stop_reason: string | null
+  trace: SecureAgentLoopTraceEntry[]
+}
+
 export type RuntimeRequest =
   | { type: 'VG_CAPTURE_ACTIVE_PAGE' }
   | { type: 'VG_PAIR_LOCAL_COMPANION' }
@@ -364,6 +399,9 @@ export type RuntimeRequest =
   | { type: 'VG_PREPARE_ACTIVE_PAGE'; task: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_REASON_ACTIVE_PAGE'; task: string; serverUrl: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5 }
   | { type: 'VG_EXECUTE_PENDING_ACTION'; executionId: `VGX-${string}`; confirmed: boolean }
+  | { type: 'VG_RUN_SECURE_AGENT_LOOP'; loopId: `VGL-${string}`; task: string; serverUrl: string; audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS'; privacyLevel: 1 | 2 | 3 | 4 | 5; maxSteps?: number }
+  | { type: 'VG_RESUME_SECURE_AGENT_LOOP'; loopId: `VGL-${string}`; confirmed: boolean }
+  | { type: 'VG_CANCEL_SECURE_AGENT_LOOP'; loopId: `VGL-${string}` }
   | { type: 'VG_EXECUTE_FRAME_ACTION'; executionId: `VGX-${string}`; action: BrowserAction }
   | { type: 'VG_CAPTURE_FRAME' }
   | { type: 'VG_GET_STATUS' }

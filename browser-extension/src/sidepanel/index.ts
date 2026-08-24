@@ -4,6 +4,7 @@ import type {
   LocalActionExecutionResult,
   PendingActionExecution,
   RuntimeResponse,
+  SecureAgentLoopResult,
 } from '../common/protocol.js'
 
 const status = document.querySelector<HTMLDivElement>('#status')
@@ -12,16 +13,22 @@ const pairButton = document.querySelector<HTMLButtonElement>('#pair')
 const prepareButton = document.querySelector<HTMLButtonElement>('#prepare')
 const reasonButton = document.querySelector<HTMLButtonElement>('#reason')
 const executeButton = document.querySelector<HTMLButtonElement>('#execute')
+const loopButton = document.querySelector<HTMLButtonElement>('#agent-loop')
+const stopLoopButton = document.querySelector<HTMLButtonElement>('#stop-loop')
 const taskInput = document.querySelector<HTMLInputElement>('#task')
 const serverInput = document.querySelector<HTMLInputElement>('#server-url')
 const detail = document.querySelector<HTMLPreElement>('#detail')
 let pendingExecution: PendingActionExecution | null = null
+let activeLoopId: `VGL-${string}` | null = null
+let loopRunning = false
 
 function setBusy(busy: boolean): void {
   if (analyseButton) analyseButton.disabled = busy
   if (prepareButton) prepareButton.disabled = busy
   if (reasonButton) reasonButton.disabled = busy
-  if (executeButton) executeButton.disabled = busy || pendingExecution === null
+  if (executeButton) executeButton.disabled = busy || pendingExecution === null || loopRunning
+  if (loopButton) loopButton.disabled = busy || loopRunning
+  if (stopLoopButton) stopLoopButton.disabled = !loopRunning || activeLoopId === null
   if (pairButton) pairButton.disabled = busy
 }
 
@@ -252,6 +259,130 @@ async function executePending(): Promise<void> {
 }
 
 
+function localLoopId(): `VGL-${string}` {
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
+  return `VGL-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`
+}
+
+function renderLoop(result: SecureAgentLoopResult): void {
+  if (!status || !detail) return
+  activeLoopId = result.loop_id
+  const terminal = ['COMPLETE', 'BLOCKED', 'CANCELLED', 'STEP_LIMIT', 'LOOP_DETECTED'].includes(result.status)
+  if (terminal) loopRunning = false
+
+  status.textContent = result.status === 'COMPLETE'
+    ? `TASK COMPLETE — secure agent loop finished in ${result.step_count} action(s).`
+    : result.status === 'WAITING_CONFIRMATION'
+      ? 'AGENT PAUSED — local confirmation is required.'
+      : result.status === 'STEP_LIMIT'
+        ? 'AGENT STOPPED — configured action-step limit reached.'
+        : result.status === 'LOOP_DETECTED'
+          ? 'AGENT STOPPED — repeated-action loop detected.'
+          : result.status === 'CANCELLED'
+            ? 'AGENT LOOP CANCELLED LOCALLY.'
+            : result.status === 'BLOCKED'
+              ? 'AGENT LOOP BLOCKED BY A SECURITY/PRIVACY INVARIANT.'
+              : 'SECURE AGENT LOOP RUNNING…'
+
+  detail.textContent = JSON.stringify({
+    contract: result.contract,
+    loopId: result.loop_id,
+    status: result.status,
+    stepCount: result.step_count,
+    maxSteps: result.max_steps,
+    startedAt: result.started_at,
+    endedAt: result.ended_at,
+    stopReason: result.stop_reason,
+    pendingExecution: result.pending_execution ? {
+      action: result.pending_execution.action.action,
+      targetId: result.pending_execution.target_id,
+      reason: result.pending_execution.action.reason,
+      confidenceBasisPoints: result.pending_execution.action.confidence_basis_points,
+      requiresConfirmation: result.pending_execution.requires_confirmation,
+      expiresAt: result.pending_execution.expires_at,
+    } : null,
+    trace: result.trace,
+    invariant: 'Every executed action is followed by a completely fresh local observation and privacy release decision.',
+  }, null, 2)
+  setBusy(false)
+}
+
+async function continueLoopFromResult(result: SecureAgentLoopResult): Promise<void> {
+  renderLoop(result)
+  if (result.status !== 'WAITING_CONFIRMATION' || !result.pending_execution || !activeLoopId) return
+
+  const pending = result.pending_execution
+  const loopId = activeLoopId
+  const confirmed = window.confirm(
+    `VeilGraph secure agent loop requires local confirmation before ${pending.action.action}.\n\n`
+    + `${pending.action.reason}\n\nProceed with this one action?`,
+  )
+
+  setBusy(true)
+  const response = await chrome.runtime.sendMessage<RuntimeResponse>({
+    type: 'VG_RESUME_SECURE_AGENT_LOOP',
+    loopId,
+    confirmed,
+  })
+  if (!response.ok) throw new Error(response.error)
+  await continueLoopFromResult(response.data as SecureAgentLoopResult)
+}
+
+async function runSecureAgentLoop(): Promise<void> {
+  if (!status || !detail || !serverInput) return
+  const task = taskOrWarn()
+  if (!task) return
+  const serverUrl = serverInput.value.trim()
+  if (!serverUrl) {
+    status.textContent = 'Configure the sanitized reasoning server first.'
+    return
+  }
+
+  pendingExecution = null
+  const loopId = localLoopId()
+  activeLoopId = loopId
+  loopRunning = true
+  setBusy(true)
+  status.textContent = 'Starting secure observe → sanitize → reason → validate → act loop…'
+
+  try {
+    const response = await chrome.runtime.sendMessage<RuntimeResponse>({
+      type: 'VG_RUN_SECURE_AGENT_LOOP',
+      loopId,
+      task,
+      serverUrl,
+      audienceProfile: 'PUBLIC_RELEASE',
+      privacyLevel: 4,
+      maxSteps: 6,
+    })
+    if (!response.ok) throw new Error(response.error)
+    await continueLoopFromResult(response.data as SecureAgentLoopResult)
+  } catch (error) {
+    loopRunning = false
+    status.textContent = 'SECURE AGENT LOOP FAILED OR WAS BLOCKED.'
+    detail.textContent = error instanceof Error ? error.message : 'unknown error'
+    setBusy(false)
+  }
+}
+
+async function stopSecureAgentLoop(): Promise<void> {
+  if (!activeLoopId || !status) return
+  const loopId = activeLoopId
+  status.textContent = 'Requesting local loop cancellation…'
+  try {
+    const response = await chrome.runtime.sendMessage<RuntimeResponse>({
+      type: 'VG_CANCEL_SECURE_AGENT_LOOP',
+      loopId,
+    })
+    if (!response.ok) throw new Error(response.error)
+    renderLoop(response.data as SecureAgentLoopResult)
+  } catch (error) {
+    status.textContent = 'Unable to cancel loop cleanly; it will still fail closed on its next boundary.'
+    if (detail) detail.textContent = error instanceof Error ? error.message : 'unknown error'
+  }
+}
+
+
 async function pairCompanion(): Promise<void> {
   if (!status || !detail) return
   setBusy(true)
@@ -280,4 +411,6 @@ analyseButton?.addEventListener('click', () => void analyse())
 prepareButton?.addEventListener('click', () => void prepareRelease())
 reasonButton?.addEventListener('click', () => void reasonSafely())
 executeButton?.addEventListener('click', () => void executePending())
+loopButton?.addEventListener('click', () => void runSecureAgentLoop())
+stopLoopButton?.addEventListener('click', () => void stopSecureAgentLoop())
 setBusy(false)
