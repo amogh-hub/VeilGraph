@@ -447,7 +447,11 @@ async function captureActivePage(): Promise<PageCaptureBundle> {
       const response = await chrome.tabs.sendMessage<RuntimeResponse>(tabId, { type: 'VG_CAPTURE_FRAME' } satisfies RuntimeRequest, { frameId: frame.frameId })
       if (response.ok) {
         const captured = response.data as FrameCapture
-        frames.push({ ...captured, frameId: frame.frameId })
+        frames.push({
+          ...captured,
+          frameId: frame.frameId,
+          isTopFrame: frame.frameId === 0,
+        })
       } else {
         failedFrameIds.push(frame.frameId)
       }

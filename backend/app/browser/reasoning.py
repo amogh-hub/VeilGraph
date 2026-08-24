@@ -5,11 +5,12 @@ import re
 import threading
 import time
 from datetime import datetime, timezone
+from typing import Literal
 from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, HTTPException
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.browser.models import (
     BrowserAction,
@@ -51,6 +52,45 @@ class BrowserReasoningError(ValueError):
         super().__init__(detail)
         self.detail = detail
         self.status_code = status_code
+
+
+class _CompactReasoningDecision(BaseModel):
+    """Minimal model-controlled decision.
+
+    The model chooses only an action and, when required, an authorized element
+    index. VeilGraph deterministically restores the exact target ID, confidence,
+    session/task binding, confirmation policy and final BrowserActionPlan.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # DONE means the task is already complete.
+    a: Literal["DONE", "CLICK", "SCROLL", "TYPE", "SELECT", "NAVIGATE", "READ", "WAIT"]
+
+    # Index into the already-authorized, task-minimized element list.
+    i: int | None = Field(default=None, ge=0, le=31)
+
+    v: str | None = Field(default=None, max_length=1024)
+    u: str | None = Field(default=None, max_length=2048)
+    d: int | None = Field(default=None, ge=-10_000, le=10_000)
+    w: int | None = Field(default=None, ge=0, le=5_000)
+
+    @model_validator(mode="after")
+    def validate_decision_shape(self):
+        targeted = {"CLICK", "TYPE", "SELECT", "READ"}
+
+        if self.a == "DONE":
+            if any(value is not None for value in (self.i, self.v, self.u, self.d, self.w)):
+                raise ValueError("DONE must not contain action parameters")
+            return self
+
+        if self.a in targeted:
+            if self.i is None:
+                raise ValueError(f"{self.a} requires element index i")
+        elif self.i is not None:
+            raise ValueError(f"{self.a} must not contain element index i")
+
+        return self
 
 
 def reset_reasoning_replay_cache_for_tests() -> None:
@@ -116,13 +156,101 @@ def _semantic_prompt_payload(payload: BrowserReleasePayload) -> dict:
     return obj
 
 
+_SEMANTIC_FAST_ACTION_TERMS = {
+    "open", "click", "tap", "press", "go", "navigate", "visit",
+}
+
+_SEMANTIC_FAST_STOPWORDS = {
+    "a", "an", "the", "to", "my", "me", "please", "page", "website", "site",
+    "open", "click", "tap", "press", "go", "navigate", "visit",
+}
+
+_VISUAL_DEPENDENT_TERMS = {
+    "image", "picture", "photo", "icon", "logo", "visual",
+    "color", "colour",
+    "left", "right", "top", "bottom",
+    "above", "below", "beside", "near",
+    "looks", "look", "appears", "visible",
+}
+
+
+def _semantic_fast_path_eligible(payload: BrowserReleasePayload) -> bool:
+    """Conservatively decide whether remote visual reasoning adds task utility.
+
+    Full-resolution visual privacy analysis has already happened locally before
+    this function is reached. This decision only controls whether the already
+    sanitized raster is additionally supplied to the reasoning model.
+    """
+
+    elements = payload.page.elements
+
+    # V1 intentionally handles only the safest/simple case:
+    # one exact low-impact clickable semantic target.
+    if len(elements) != 1:
+        return False
+
+    target = elements[0]
+    if target.disabled:
+        return False
+
+    if target.role.casefold() not in {"button", "link", "menuitem"}:
+        return False
+
+    if payload.task_utility_score < 90:
+        return False
+
+    if payload.minimization_basis_points < 9000:
+        return False
+
+    task_words = set(re.findall(r"[a-z0-9]+", payload.task.casefold()))
+
+    if not (task_words & _SEMANTIC_FAST_ACTION_TERMS):
+        return False
+
+    # Never remove visual reasoning for explicitly visual/spatial instructions.
+    if task_words & _VISUAL_DEPENDENT_TERMS:
+        return False
+
+    # Keep high-impact flows on the multimodal path.
+    if task_words & _HIGH_IMPACT_TERMS:
+        return False
+
+    meaning_words = task_words - _SEMANTIC_FAST_STOPWORDS
+    if not meaning_words:
+        return False
+
+    target_words = set(
+        re.findall(
+            r"[a-z0-9]+",
+            f"{target.label} {target.text} {target.role}".casefold(),
+        )
+    )
+
+    # Every meaningful task token must be represented by the one released
+    # semantic target. Partial/ambiguous matches stay multimodal.
+    if not meaning_words.issubset(target_words):
+        return False
+
+    return True
+
+
+def _reasoning_uses_visual(payload: BrowserReleasePayload) -> bool:
+    return (
+        payload.page.visual_context is not None
+        and not _semantic_fast_path_eligible(payload)
+    )
+
+
 def _system_prompt() -> str:
     return (
         "You are the centralized reasoning component of VeilGraph, a privacy-governed browser agent. "
         "You receive ONLY locally sanitized and task-minimized browser context. Never infer, reconstruct, "
         "guess, or request hidden identity or redacted values. Produce only a typed BrowserActionPlan. "
         "Use target_id values exactly as provided. Never emit CSS selectors, XPath, JavaScript, eval code, "
-        "shell commands, raw DOM, or arbitrary executable text. Use at most 8 actions. If the task cannot "
+        "shell commands, raw DOM, or arbitrary executable text. Plan only the NEXT ONE action because VeilGraph "
+        "re-observes the page after every action. Return exactly one action unless the task is already complete. "
+        "Omit unused optional action fields. Keep action reason to at most 6 words and summary empty. "
+        "confidence_basis_points uses the 0..10000 basis-point scale, not 0..100. If the task cannot "
         "be safely planned from the supplied context, return the smallest safe READ/WAIT-style plan rather "
         "than inventing missing page state. High-impact actions such as submit, confirm, send, payment, "
         "purchase, deletion, transfer, booking, signing, or agreement must set requires_confirmation=true."
@@ -131,17 +259,30 @@ def _system_prompt() -> str:
 
 def _call_ollama(payload: BrowserReleasePayload) -> str:
     endpoint = settings.reasoning_ollama_base_url.rstrip("/") + "/api/chat"
-    schema = BrowserActionPlan.model_json_schema()
+    schema = _CompactReasoningDecision.model_json_schema()
+    use_visual = _reasoning_uses_visual(payload)
     semantic = _semantic_prompt_payload(payload)
+
+    # The signed BrowserReleasePayload remains unchanged. We only remove
+    # visual metadata from the model prompt when the deterministic semantic
+    # fast-path proves that the sanitized raster adds no task utility.
+    if not use_visual:
+        semantic_page = semantic.get("page")
+        if isinstance(semantic_page, dict):
+            semantic_page.pop("visual_context", None)
+    # Model targets elements by array index rather than repeating or inventing
+    # opaque vg_* identifiers.
     prompt = (
-        "Plan the next browser actions for this sanitized payload.\n"
-        "The JSON schema below is mandatory and the response must contain no prose outside the JSON object.\n"
-        f"SCHEMA:\n{json.dumps(schema, sort_keys=True, separators=(',', ':'))}\n"
+        "Choose only the NEXT browser action. Return compact JSON only. "
+        "a is DONE, CLICK, SCROLL, TYPE, SELECT, NAVIGATE, READ, or WAIT. "
+        "For CLICK/TYPE/SELECT/READ set i to the zero-based index in page.elements. "
+        "Use v=value, u=url, d=scroll_delta_y, w=wait_ms only when required. "
+        "Omit every unused key. Never infer hidden values.\n"
         f"SANITIZED_PAYLOAD:\n{json.dumps(semantic, sort_keys=True, separators=(',', ':'))}"
     )
     user_message: dict[str, object] = {"role": "user", "content": prompt}
     visual = payload.page.visual_context
-    if visual is not None:
+    if visual is not None and use_visual:
         user_message["images"] = [visual.image_base64]
 
     body = {
@@ -168,13 +309,103 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
         )
         response.raise_for_status()
         data = response.json()
+
+        # Temporary local latency diagnostics. Contains only numeric/model
+        # performance metadata and payload sizes; never logs sanitized values,
+        # prompts, images, DOM text, task text, or identifiers.
+        visual = payload.page.visual_context
+        timing = {
+            "ollama_total_ms": round(data.get("total_duration", 0) / 1e6, 1),
+            "ollama_load_ms": round(data.get("load_duration", 0) / 1e6, 1),
+            "prompt_tokens": data.get("prompt_eval_count"),
+            "prompt_eval_ms": round(data.get("prompt_eval_duration", 0) / 1e6, 1),
+            "output_tokens": data.get("eval_count"),
+            "generation_ms": round(data.get("eval_duration", 0) / 1e6, 1),
+            "reasoning_route": "VLM" if use_visual else "SEMANTIC_FAST_PATH",
+            "semantic_json_bytes": len(
+                json.dumps(
+                    semantic,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ),
+            "released_elements": len(payload.page.elements),
+            "visual_context": use_visual,
+            "visual_width": visual.width if use_visual and visual is not None else None,
+            "visual_height": visual.height if use_visual and visual is not None else None,
+            "visual_encoded_bytes": (
+                len(visual.image_base64.encode("ascii"))
+                if use_visual and visual is not None
+                else 0
+            ),
+        }
+        print("VEILGRAPH_OLLAMA_TIMING " + json.dumps(timing, sort_keys=True), flush=True)
+
     except Exception as exc:
         raise BrowserReasoningError(f"reasoning model request failed: {exc}", status_code=502) from exc
 
     content = data.get("message", {}).get("content") if isinstance(data, dict) else None
     if not isinstance(content, str) or not content.strip():
-        raise BrowserReasoningError("reasoning model returned no structured action plan", status_code=502)
-    return content
+        raise BrowserReasoningError("reasoning model returned no structured action decision", status_code=502)
+
+    try:
+        decision = _CompactReasoningDecision.model_validate_json(content)
+
+        if decision.a == "DONE":
+            plan = BrowserActionPlan(
+                session_id=payload.session_id,
+                task_id=payload.task_id,
+                actions=[],
+                complete=True,
+                summary="",
+            )
+        else:
+            target_id = None
+            if decision.i is not None:
+                if decision.i >= len(payload.page.elements):
+                    raise BrowserReasoningError(
+                        "reasoning model selected unavailable element index",
+                        status_code=502,
+                    )
+                target_id = payload.page.elements[decision.i].element_id
+
+            # Confidence is deterministic evidence, not a model assertion.
+            # Use the conservative minimum of task utility and minimization.
+            confidence_basis_points = min(
+                payload.task_utility_score * 100,
+                payload.minimization_basis_points,
+            )
+
+            action = BrowserAction(
+                action=decision.a,
+                target_id=target_id,
+                value=decision.v,
+                url=decision.u,
+                scroll_delta_y=decision.d,
+                wait_ms=decision.w,
+                confidence_basis_points=confidence_basis_points,
+                reason="Model selected next action",
+                requires_confirmation=False,
+            )
+
+            plan = BrowserActionPlan(
+                session_id=payload.session_id,
+                task_id=payload.task_id,
+                actions=[action],
+                complete=False,
+                summary="",
+            )
+
+    except ValidationError as exc:
+        raise BrowserReasoningError(
+            f"reasoning model violated compact action schema: {exc}",
+            status_code=502,
+        ) from exc
+
+    # Preserve the existing downstream contract. The rest of VeilGraph still
+    # receives a normal BrowserActionPlan and performs its independent
+    # deterministic validation afterward.
+    return plan.model_dump_json(by_alias=True, exclude_none=True)
 
 
 def _contains_direct_identifier(value: str) -> bool:
@@ -254,7 +485,7 @@ def reason_sanitized_release(
             model=settings.reasoning_ollama_model,
             elapsed_ms=elapsed_ms,
             payload_sha256=release_payload_sha256(request.payload),
-            visual_context_used=request.payload.page.visual_context is not None,
+            visual_context_used=_reasoning_uses_visual(request.payload),
             structured_output_validated=True,
             target_ids_validated=True,
             authorization_verified=True,

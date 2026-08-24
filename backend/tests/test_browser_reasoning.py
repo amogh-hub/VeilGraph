@@ -9,6 +9,7 @@ from app.browser.models import (
     BrowserGateResult,
     BrowserPublicElement,
     BrowserPublicPage,
+    BrowserPublicVisualContext,
     BrowserReasoningRequest,
     BrowserReleasePayload,
     BrowserVerificationSummary,
@@ -198,3 +199,89 @@ def test_reasoning_request_structurally_rejects_raw_capture_fields(client, monke
     response = client.post("/api/v1/browser/reason", json=body)
     assert response.status_code == 422
     assert "raw_value" in response.text
+
+
+def _payload_with_visual(payload: BrowserReleasePayload) -> BrowserReleasePayload:
+    visual = BrowserPublicVisualContext(
+        mime_type="image/png",
+        width=1084,
+        height=907,
+        image_base64="QUJDREVGR0hJSg==",
+        sanitized_sha256="0" * 64,
+        redacted_regions=1,
+    )
+    return payload.model_copy(
+        update={
+            "page": payload.page.model_copy(
+                update={"visual_context": visual}
+            )
+        }
+    )
+
+
+def test_semantic_fast_path_accepts_single_exact_low_impact_target():
+    base = _payload(
+        task="open account settings",
+        label="Account settings",
+        role="link",
+    ).model_copy(
+        update={
+            "minimization_basis_points": 9964,
+            "task_utility_score": 94,
+        }
+    )
+
+    payload = _payload_with_visual(base)
+
+    assert reasoning._semantic_fast_path_eligible(payload) is True
+    assert reasoning._reasoning_uses_visual(payload) is False
+
+
+def test_semantic_fast_path_keeps_visual_for_multiple_targets():
+    payload = _payload_with_visual(_payload())
+
+    second = BrowserPublicElement(
+        element_id="vg_other_button",
+        role="button",
+        label="Other",
+        text="Other",
+        disabled=False,
+        bbox=(4000, 1000, 5000, 1800),
+    )
+
+    payload = payload.model_copy(
+        update={
+            "page": payload.page.model_copy(
+                update={"elements": [*payload.page.elements, second]}
+            )
+        }
+    )
+
+    assert reasoning._semantic_fast_path_eligible(payload) is False
+    assert reasoning._reasoning_uses_visual(payload) is True
+
+
+def test_semantic_fast_path_keeps_visual_for_spatial_task():
+    payload = _payload_with_visual(
+        _payload(
+            task="click the settings icon on the right",
+            label="Settings",
+            role="button",
+        )
+    )
+
+    assert reasoning._semantic_fast_path_eligible(payload) is False
+    assert reasoning._reasoning_uses_visual(payload) is True
+
+
+def test_semantic_fast_path_keeps_visual_for_high_impact_task():
+    payload = _payload_with_visual(
+        _payload(
+            task="confirm booking",
+            label="Confirm booking",
+            role="button",
+        )
+    )
+
+    assert reasoning._semantic_fast_path_eligible(payload) is False
+    assert reasoning._reasoning_uses_visual(payload) is True

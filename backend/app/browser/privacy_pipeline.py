@@ -38,6 +38,12 @@ from app.policy.compiler import DIRECT_TYPES, action_for, replacement_for_policy
 
 NETWORK_PRIVACY_FLOOR = PrivacyLevel.RELATIONSHIP_SAFE_PSEUDONYMIZATION
 _MAX_RELEASE_ELEMENTS = 32
+
+# Remote VLM reasoning does not need the full device-pixel screenshot after
+# local privacy analysis. Benchmarked Qwen3-VL visual-token cost plateaus near
+# a 1084px long side, so downscale only the already-sanitized/minimized raster.
+# Full-resolution local perception and redaction remain unchanged.
+_MAX_REASONING_VISUAL_LONG_SIDE = 1084
 _STOPWORDS = {
     "a", "an", "and", "the", "to", "of", "for", "on", "in", "this", "that", "my", "me", "please",
     "current", "page", "website", "web", "do", "it", "with", "from", "at", "is", "are",
@@ -608,6 +614,18 @@ def _sanitize_visual_context(
     total_area = max(1, minimized.width * minimized.height)
     retained_area = sum(max(0, x1 - x0) * max(0, y1 - y0) for x0, y0, x1, y1 in retention_rects)
     visual_minimization = max(0, min(10_000, round((1.0 - min(1.0, retained_area / total_area)) * 10_000)))
+
+    # Downscale only after every privacy transform has completed. The external
+    # VLM receives fewer visual tokens, while the local privacy pipeline still
+    # analyzes and redacts the original full-resolution viewport.
+    long_side = max(minimized.size)
+    if long_side > _MAX_REASONING_VISUAL_LONG_SIDE:
+        scale = _MAX_REASONING_VISUAL_LONG_SIDE / long_side
+        resized = (
+            max(1, round(minimized.width * scale)),
+            max(1, round(minimized.height * scale)),
+        )
+        minimized = minimized.resize(resized, Image.Resampling.LANCZOS)
 
     out = io.BytesIO()
     mime = "image/webp"

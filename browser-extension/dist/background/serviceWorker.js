@@ -339,7 +339,11 @@ async function captureActivePage() {
             const response = await chrome.tabs.sendMessage(tabId, { type: 'VG_CAPTURE_FRAME' }, { frameId: frame.frameId });
             if (response.ok) {
                 const captured = response.data;
-                frames.push({ ...captured, frameId: frame.frameId });
+                frames.push({
+                    ...captured,
+                    frameId: frame.frameId,
+                    isTopFrame: frame.frameId === 0,
+                });
             }
             else {
                 failedFrameIds.push(frame.frameId);
