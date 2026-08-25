@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from app.browser.models import (
     BrowserAction,
     BrowserActionPlan,
+    BrowserPublicElement,
     BrowserReasoningEvidence,
     BrowserReasoningRequest,
     BrowserReasoningResponse,
@@ -187,6 +188,187 @@ _VISUAL_DEPENDENT_TERMS = {
 }
 
 
+_ACTION_CONFIDENCE_STOPWORDS = {
+    # Grammar / generic browser-task words.
+    "a", "an", "and", "the", "to", "of", "for", "on", "in", "this",
+    "that", "my", "me", "please", "current", "page", "website", "web",
+    "do", "it", "with", "from", "at", "is", "are",
+
+    # Generic interaction verbs do not identify the intended target.
+    "click", "tap", "press", "open", "go", "navigate", "visit",
+    "view", "show", "find", "read", "inspect", "check",
+
+    # Generic workflow wording does not identify the next control.
+    "available", "complete", "completed", "finish", "finished", "done",
+}
+
+_ACTION_CONFIDENCE_CLICK_ROLES = frozenset(
+    _TARGET_ROLES["CLICK"]
+)
+
+
+def _action_confidence_terms(value: str) -> set[str]:
+    """Extract target-identifying semantic terms only."""
+    return {
+        token
+        for token in re.findall(
+            r"[a-z0-9]+",
+            value.casefold(),
+        )
+        if (
+            len(token) > 1
+            and token not in _ACTION_CONFIDENCE_STOPWORDS
+        )
+    }
+
+
+def _click_target_relevance_basis_points(
+    task_terms: set[str],
+    target: BrowserPublicElement,
+) -> int:
+    """Deterministic semantic evidence for one sanitized CLICK target.
+
+    65% task coverage:
+      How much of the target-specific task meaning appears here?
+
+    35% target precision:
+      How much of the target's own semantic text is actually supported
+      by the task?
+
+    No model-provided confidence, raw DOM, privacy score, or
+    minimization score participates.
+    """
+    target_terms = _action_confidence_terms(
+        f"{target.label} {target.text}"
+    )
+
+    if not task_terms or not target_terms:
+        return 0
+
+    overlap = len(task_terms & target_terms)
+
+    if overlap == 0:
+        return 0
+
+    task_coverage_bp = round(
+        10_000 * overlap / len(task_terms)
+    )
+
+    target_precision_bp = round(
+        10_000 * overlap / len(target_terms)
+    )
+
+    return max(
+        0,
+        min(
+            10_000,
+            round(
+                (
+                    65 * task_coverage_bp
+                    + 35 * target_precision_bp
+                )
+                / 100
+            ),
+        ),
+    )
+
+
+def _action_confidence_basis_points(
+    payload: BrowserReleasePayload,
+    action: str,
+    target: BrowserPublicElement | None,
+) -> int:
+    """Deterministic execution confidence from signed target evidence.
+
+    ACTION_CONFIDENCE_V2 intentionally allows autonomous confidence only
+    for uniquely-supported, enabled CLICK targets.
+
+    TYPE / SELECT / NAVIGATE / SCROLL / READ remain conservative until
+    dedicated evidence models are separately validated.
+
+    High-impact confirmation is NOT decided here. It remains an
+    independent mandatory policy in ``validate_action_plan`` and again
+    in the browser executor.
+    """
+    if action == "WAIT":
+        return 0
+
+    # V2 scopes autonomous confidence to low-impact targeted clicks.
+    if action != "CLICK":
+        return 6_000
+
+    if target is None:
+        return 0
+
+    if target.disabled:
+        return 0
+
+    if (
+        target.role.casefold()
+        not in _ACTION_CONFIDENCE_CLICK_ROLES
+    ):
+        return 0
+
+    task_terms = _action_confidence_terms(payload.task)
+
+    if not task_terms:
+        return 3_000
+
+    selected_relevance = (
+        _click_target_relevance_basis_points(
+            task_terms,
+            target,
+        )
+    )
+
+    if selected_relevance == 0:
+        return 0
+
+    # Confidence is evaluated against every other executable CLICK
+    # candidate in the exact signed/minimized payload. Headings and
+    # disabled controls cannot create artificial ambiguity.
+    competing_scores = [
+        _click_target_relevance_basis_points(
+            task_terms,
+            candidate,
+        )
+        for candidate in payload.page.elements
+        if (
+            candidate.element_id != target.element_id
+            and not candidate.disabled
+            and candidate.role.casefold()
+                in _ACTION_CONFIDENCE_CLICK_ROLES
+        )
+    ]
+
+    runner_up = max(
+        competing_scores,
+        default=0,
+    )
+
+    # A tied or better competitor means the selected target is
+    # semantically ambiguous. Never allow autonomous execution.
+    if runner_up >= selected_relevance:
+        return min(
+            selected_relevance,
+            6_500,
+        )
+
+    # A narrow winner margin is still too ambiguous for autonomy.
+    if selected_relevance - runner_up < 1_500:
+        return min(
+            selected_relevance,
+            6_900,
+        )
+
+    # Strong unique target evidence. Cap at 9500: deterministic lexical
+    # evidence alone is never represented as absolute certainty.
+    return min(
+        selected_relevance,
+        9_500,
+    )
+
+
 def _semantic_fast_path_eligible(payload: BrowserReleasePayload) -> bool:
     """Conservatively decide whether remote visual reasoning adds task utility.
 
@@ -277,7 +459,8 @@ def _system_prompt(*, terminal_evidence: bool = False) -> str:
         + " Produce only a typed BrowserActionPlan. Use target_id values exactly as provided. Plan only the "
         "NEXT ONE action because VeilGraph re-observes the page after every action. Return exactly one action "
         "unless the task is already complete. Omit unused optional action fields. Keep action reason to at most "
-        "6 words and summary empty. confidence_basis_points uses the 0..10000 basis-point scale, not 0..100. "
+        "6 words and summary empty. VeilGraph computes action confidence and confirmation policy "
+        "deterministically; the model must not emit either. "
         "If the task cannot be safely planned from the supplied context, return the smallest safe READ/WAIT-style "
         "plan rather than inventing missing page state. High-impact actions such as submit, confirm, send, payment, "
         "purchase, deletion, transfer, booking, signing, or agreement must set requires_confirmation=true."
@@ -441,6 +624,7 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
                 )
             else:
                 target_id = None
+                target = None
 
                 if decision.i is not None:
                     if decision.i >= len(payload.page.elements):
@@ -449,13 +633,17 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
                             status_code=502,
                         )
 
-                    target_id = payload.page.elements[
+                    target = payload.page.elements[
                         decision.i
-                    ].element_id
+                    ]
+                    target_id = target.element_id
 
-                confidence_basis_points = min(
-                    payload.task_utility_score * 100,
-                    payload.minimization_basis_points,
+                confidence_basis_points = (
+                    _action_confidence_basis_points(
+                        payload,
+                        decision.a,
+                        target,
+                    )
                 )
 
                 action = BrowserAction(
