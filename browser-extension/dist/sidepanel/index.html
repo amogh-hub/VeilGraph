@@ -3,31 +3,218 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>VeilGraph</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-    <header>
-      <div class="mark">VG</div>
-      <div><strong>VeilGraph</strong><span>Privacy-governed browser agent</span></div>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <main class="shell">
+    <header class="product-header">
+      <div class="brand-lockup" aria-label="VeilGraph">
+        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <defs>
+            <linearGradient id="vgGradient" x1="3" y1="4" x2="39" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#87A9FF"/>
+              <stop offset=".48" stop-color="#6888FF"/>
+              <stop offset="1" stop-color="#A582FF"/>
+            </linearGradient>
+          </defs>
+          <path d="M22 3.4 37.9 12.6v18.8L22 40.6 6.1 31.4V12.6L22 3.4Z"
+                fill="none" stroke="url(#vgGradient)" stroke-width="2.1"/>
+          <path d="M22 11.1v21.8M12.5 16.8l19 10.5M31.5 16.8l-19 10.5"
+                stroke="url(#vgGradient)" stroke-width="1.6" stroke-linecap="round" opacity=".72"/>
+          <circle cx="22" cy="11.1" r="3" fill="url(#vgGradient)"/>
+          <circle cx="12.5" cy="27.3" r="3" fill="url(#vgGradient)"/>
+          <circle cx="31.5" cy="27.3" r="3" fill="url(#vgGradient)"/>
+          <circle cx="22" cy="32.9" r="3" fill="url(#vgGradient)"/>
+        </svg>
+        <div class="brand-copy">
+          <div class="brand-name">Veil<span>Graph</span></div>
+          <div class="brand-subtitle">Private browser intelligence</div>
+        </div>
+      </div>
+
+      <div class="local-pill" title="The privacy engine and raw page analysis stay on-device">
+        <span class="pulse-dot"></span>
+        Local
+      </div>
     </header>
-    <section class="gate"><span>Network release</span><strong>FAIL-CLOSED</strong></section>
-    <button id="pair" class="pair" type="button">Pair trusted local companion</button>
-    <label for="task">What should the agent do?</label>
-    <input id="task" type="text" autocomplete="off" placeholder="e.g. Book the follow-up appointment">
-    <label for="server-url">Sanitized reasoning server</label>
-    <input id="server-url" type="url" autocomplete="off" value="http://127.0.0.1:8001/api/v1/browser/reason">
-    <p id="status">Ready for local analysis.</p>
-    <button id="analyse" type="button">Analyse current page locally</button>
-    <button id="prepare" class="secondary" type="button">Build & verify safe network payload</button>
-    <button id="reason" class="secondary" type="button">Reason on sanitized context</button>
-    <button id="execute" class="secondary" type="button" disabled>Execute next locally verified action</button>
-    <button id="agent-loop" type="button">Run secure agent loop</button>
-    <button id="stop-loop" class="secondary" type="button" disabled>Stop agent loop</button>
-    <pre id="detail" aria-live="polite"></pre>
-    <footer>Secure loop rule: every action is preceded by local privacy release authorization and live-DOM validation, and every action is followed by a fresh observation. High-impact or low-confidence actions pause for local confirmation.</footer>
+
+    <section class="boundary-card" aria-label="Network privacy boundary">
+      <div class="boundary-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2.75 19 5.6v5.62c0 4.5-2.72 8.53-7 10.03-4.28-1.5-7-5.53-7-10.03V5.6L12 2.75Z"/>
+          <path d="m8.7 12.1 2.05 2.05 4.55-4.55"/>
+        </svg>
+      </div>
+      <div class="boundary-copy">
+        <span class="eyebrow">Network boundary</span>
+        <strong>Raw screen stays private</strong>
+        <small>Only verified, minimized context can leave this device.</small>
+      </div>
+      <div class="boundary-state">
+        <span>Fail-closed</span>
+      </div>
+    </section>
+
+    <nav class="privacy-path" aria-label="VeilGraph secure agent pipeline">
+      <div class="path-step">
+        <span class="step-orb">
+          <svg viewBox="0 0 24 24"><path d="M2.8 12s3.25-5.25 9.2-5.25S21.2 12 21.2 12 17.95 17.25 12 17.25 2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.35"/></svg>
+        </span>
+        <span>Observe</span>
+      </div>
+      <span class="path-line"></span>
+      <div class="path-step">
+        <span class="step-orb">
+          <svg viewBox="0 0 24 24"><path d="M12 2.9 18.5 5.5v5.2c0 4.2-2.52 7.92-6.5 9.4-3.98-1.48-6.5-5.2-6.5-9.4V5.5L12 2.9Z"/></svg>
+        </span>
+        <span>Protect</span>
+      </div>
+      <span class="path-line"></span>
+      <div class="path-step">
+        <span class="step-orb active">
+          <svg viewBox="0 0 24 24"><path d="M12 2.9 18.5 5.5v5.2c0 4.2-2.52 7.92-6.5 9.4-3.98-1.48-6.5-5.2-6.5-9.4V5.5L12 2.9Z"/><path d="m8.7 11.8 2.05 2.05 4.55-4.55"/></svg>
+        </span>
+        <span>Verify</span>
+      </div>
+      <span class="path-line"></span>
+      <div class="path-step">
+        <span class="step-orb">
+          <svg viewBox="0 0 24 24"><path d="M9 4.5a7.5 7.5 0 1 0 6.45 3.68"/><path d="M15.5 3.5v5h5"/></svg>
+        </span>
+        <span>Reason</span>
+      </div>
+      <span class="path-line"></span>
+      <div class="path-step">
+        <span class="step-orb">
+          <svg viewBox="0 0 24 24"><path d="m8.2 15.8 7.6-7.6M10.3 6.1l7.6 7.6M5 19l4.2-1.1L6.1 14.8 5 19Z"/></svg>
+        </span>
+        <span>Act</span>
+      </div>
+    </nav>
+
+    <section class="task-card">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Private task</span>
+          <h1>What should VeilGraph do?</h1>
+        </div>
+        <button id="pair" class="pair-chip" type="button">
+          <span class="pair-dot"></span>
+          Pair companion
+        </button>
+      </div>
+
+      <label class="sr-only" for="task">What should the agent do?</label>
+      <div class="task-composer">
+        <input id="task" type="text" autocomplete="off"
+               placeholder="Ask VeilGraph to complete a task on this page…">
+        <span class="composer-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m12 3 1.35 4.65L18 9l-4.65 1.35L12 15l-1.35-4.65L6 9l4.65-1.35L12 3Z"/><path d="m18.5 14.5.72 2.28 2.28.72-2.28.72-.72 2.28-.72-2.28-2.28-.72 2.28-.72.72-2.28Z"/></svg>
+        </span>
+      </div>
+
+      <button id="agent-loop" class="primary-action" type="button">
+        <span class="primary-glow"></span>
+        <span class="button-label">
+          <svg viewBox="0 0 24 24"><path d="M8.5 5.5 17 12l-8.5 6.5v-13Z"/></svg>
+          Run private task
+        </span>
+      </button>
+
+      <button id="stop-loop" class="stop-action" type="button" disabled>
+        Stop private task
+      </button>
+    </section>
+
+    <section class="live-card" aria-live="polite">
+      <div class="live-orb-wrap" aria-hidden="true">
+        <div class="live-orb"></div>
+        <div class="live-ring"></div>
+      </div>
+      <div class="live-copy">
+        <span class="eyebrow">Agent state</span>
+        <p id="status">Ready for local analysis.</p>
+      </div>
+      <span class="privacy-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2.9 18.5 5.5v5.2c0 4.2-2.52 7.92-6.5 9.4-3.98-1.48-6.5-5.2-6.5-9.4V5.5L12 2.9Z"/><path d="m8.7 11.8 2.05 2.05 4.55-4.55"/></svg>
+        Protected
+      </span>
+    </section>
+
+    <details class="glass-disclosure proof-disclosure">
+      <summary>
+        <span class="summary-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 17.5h16M6.5 14V9.5M12 14V5.5M17.5 14v-7"/></svg>
+        </span>
+        <span>
+          <strong>Live privacy proof</strong>
+          <small>Release gates, exposure, actions and verification evidence</small>
+        </span>
+        <svg class="chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
+      </summary>
+      <div class="proof-surface">
+        <pre id="detail" aria-live="polite"></pre>
+      </div>
+    </details>
+
+    <details class="glass-disclosure engineering-disclosure">
+      <summary>
+        <span class="summary-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.6"/></svg>
+        </span>
+        <span>
+          <strong>Engineering controls</strong>
+          <small>Manual pipeline steps and reasoning route</small>
+        </span>
+        <svg class="chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
+      </summary>
+
+      <div class="engineering-body">
+        <label for="server-url">Sanitized reasoning route</label>
+        <div class="server-field">
+          <span class="server-lock">
+            <svg viewBox="0 0 24 24"><rect x="5.5" y="10" width="13" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
+          </span>
+          <input id="server-url" type="url" autocomplete="off"
+                 value="http://127.0.0.1:8001/api/v1/browser/reason">
+        </div>
+
+        <div class="manual-grid">
+          <button id="analyse" class="manual-action" type="button">
+            <span class="manual-number">01</span>
+            <span><strong>Observe</strong><small>Analyse this page locally</small></span>
+          </button>
+          <button id="prepare" class="manual-action" type="button">
+            <span class="manual-number">02</span>
+            <span><strong>Protect & verify</strong><small>Build safe release context</small></span>
+          </button>
+          <button id="reason" class="manual-action" type="button">
+            <span class="manual-number">03</span>
+            <span><strong>Reason</strong><small>Use sanitized context only</small></span>
+          </button>
+          <button id="execute" class="manual-action" type="button" disabled>
+            <span class="manual-number">04</span>
+            <span><strong>Act</strong><small>Execute verified local action</small></span>
+          </button>
+        </div>
+      </div>
+    </details>
+
+    <footer class="privacy-footer">
+      <span class="footer-shield">
+        <svg viewBox="0 0 24 24"><path d="M12 2.9 18.5 5.5v5.2c0 4.2-2.52 7.92-6.5 9.4-3.98-1.48-6.5-5.2-6.5-9.4V5.5L12 2.9Z"/></svg>
+      </span>
+      <span>Every action requires a fresh private observation.</span>
+      <span class="footer-dot">•</span>
+      <span>High-impact actions require you.</span>
+    </footer>
   </main>
+
   <script type="module" src="index.js"></script>
 </body>
 </html>
