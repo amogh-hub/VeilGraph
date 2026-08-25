@@ -1,0 +1,84 @@
+{
+  "checks": {
+    "adversarial_pass": true,
+    "chrome_5_runs": true,
+    "egress_clean": true,
+    "firefox_1_run": true,
+    "full_checkpoint_validated": true,
+    "scorecard_release_ready": true
+  },
+  "files": {
+    "ARCHITECTURE.md": {
+      "bytes": 3492,
+      "sha256": "d6ae0a037a9e029d9b5fd6543af65370120be5f0d947009b48bc4cb1cab3e280"
+    },
+    "EVALUATION.md": {
+      "bytes": 2074,
+      "sha256": "c62b3e8c4cd994b1d07229f0c1fb4c675ee3577ffb183247143b2ed4f3204ed9"
+    },
+    "GRAND_FINALE_STAGE2.md": {
+      "bytes": 798,
+      "sha256": "28d812d28c3a8acf225bef1bf7e36999b091ad5aae9cd87876f93947a7249d3d"
+    },
+    "PRIVACY_MODEL.md": {
+      "bytes": 827,
+      "sha256": "d13868ea070b35df9f9f7e9b5d552f908edc33f2d3cd7e11596b8ab362e1ac11"
+    },
+    "PUBLIC_RELEASE.md": {
+      "bytes": 605,
+      "sha256": "947438e0b9d504216bd95fd83dcd0f55a315ca96d39d903c82a1998a73b8f843"
+    },
+    "README.md": {
+      "bytes": 4437,
+      "sha256": "97544f053c9f258e9685c35a39a837f06ba0e367f8cd300fa538c558059ed38d"
+    },
+    "SECURITY.md": {
+      "bytes": 2113,
+      "sha256": "4510e5a6d5f8bb73e5c13d8816ef578dc6605cdc13960e40e426fb33f9e78b00"
+    },
+    "SIH_TRACEABILITY.md": {
+      "bytes": 2136,
+      "sha256": "6f816517d5ba7bed2bdc1b9a70ac715e5697b1f04674123302eb08dc40c021c6"
+    },
+    "THREAT_MODEL.md": {
+      "bytes": 2070,
+      "sha256": "c89e004b3087d7bca65f0fed8a498bdf02d1e0f2e75aec0fcfe277d07b6eddc3"
+    },
+    "artifacts/sih26171/adversarial-report.json": {
+      "bytes": 2921,
+      "sha256": "fb224167a0a336e78d7d112c64d855b28492028e2001e08f4051ead5075adcbc"
+    },
+    "artifacts/sih26171/claim-registry.json": {
+      "bytes": 1303,
+      "sha256": "14f5b7945195870ab8c92acea592e20d389b46aa8b48c38294fcadf095639587"
+    },
+    "artifacts/sih26171/egress-witness-latest.json": {
+      "bytes": 17655,
+      "sha256": "ddd5cf531d60051125c9bc590322388196f454679f29d9c51e23d5ddc8dd20f8"
+    },
+    "artifacts/sih26171/judge-dashboard.html": {
+      "bytes": 2686,
+      "sha256": "e4596ce5d0e3bcaf040f96083a1d66e265b4464f8ae027d306ece35eef9199bc"
+    },
+    "artifacts/sih26171/resources-chrome.json": {
+      "bytes": 633,
+      "sha256": "eb1acacf4b89bc2f2dd4951761dac67d45b2822b5e8b319519a990bfb627e6ba"
+    },
+    "artifacts/sih26171/scorecard-latest.json": {
+      "bytes": 30744,
+      "sha256": "8aaeb23ffefeebf02b226b50eae39cf30825834bcb5de39a2ec599a26aed58eb"
+    },
+    "artifacts/verification/latest.json": {
+      "bytes": 7757,
+      "sha256": "c6a9e361ea019c7d857715ef5587f78326cde4ba8770743313077c491a65828d"
+    },
+    "competition/SIH26171_BENCHMARK_PROTOCOL.md": {
+      "bytes": 2548,
+      "sha256": "527744866110bed8ddc65eb6b344d91616f16f4be656bbf077c22efb739f0997"
+    }
+  },
+  "generated_at": "2026-08-25T13:42:53.745694+00:00",
+  "release_ready": true,
+  "schema": "veilgraph.sih26171-final-release-manifest.v1",
+  "validated_source_commit": "4184332eb674b310c08bc344750c962b759d1a39"
+}

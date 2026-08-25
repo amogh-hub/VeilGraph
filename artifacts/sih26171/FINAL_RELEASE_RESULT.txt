@@ -1,0 +1,11 @@
+VEILGRAPH SIH26171 FINAL RELEASE
+========================================================================
+PASS  scorecard_release_ready
+PASS  egress_clean
+PASS  adversarial_pass
+PASS  full_checkpoint_validated
+PASS  chrome_5_runs
+PASS  firefox_1_run
+========================================================================
+RESULT: RELEASE_READY
+MANIFEST: artifacts/sih26171/FINAL_RELEASE_MANIFEST.json
