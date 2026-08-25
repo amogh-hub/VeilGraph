@@ -275,6 +275,28 @@ export interface components {
       "public_key_b64": string
       "public_key_sha256": string
     }
+    "BrowserTransportSessionAttestation": {
+      "payload": components['schemas']['BrowserTransportSessionPayload']
+      "signature_algorithm"?: string
+      "signature_b64": string
+    }
+    "BrowserTransportSessionPayload": {
+      "schema"?: string
+      "session_id": string
+      "challenge": string
+      "purpose"?: string
+      "endpoint": "analyse-capture" | "prepare-release"
+      "client_public_key_b64": string
+      "companion_ephemeral_public_key_b64": string
+      "issued_at": string
+      "expires_at": string
+      "signer": components['schemas']['BrowserSigner']
+    }
+    "BrowserTransportSessionRequest": {
+      "challenge": string
+      "client_public_key_b64": string
+      "endpoint": "analyse-capture" | "prepare-release"
+    }
     "BrowserVerificationSummary": {
       "tests": Array<components['schemas']['BrowserGateResult']>
       "proof_score": number

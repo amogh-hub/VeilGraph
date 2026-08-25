@@ -1159,7 +1159,7 @@
           "browser-agent"
         ],
         "summary": "Pair Local Companion",
-        "description": "Return a short-lived challenge attestation for explicit extension pairing.\n\nThis endpoint does not authorize network release. It only proves that the\nlocalhost companion possesses its persistent device signing key so the\nextension can pin that identity and detect later key substitution.",
+        "description": "Explicit TOFU pairing for the persistent companion identity.",
         "operationId": "pair_local_companion_api_v1_browser_pair_post",
         "requestBody": {
           "content": {
@@ -1195,13 +1195,96 @@
         }
       }
     },
+    "/api/v1/browser/transport-session": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Browser Transport Session",
+        "description": "Authenticate an ephemeral encrypted channel before raw upload.",
+        "operationId": "browser_transport_session_api_v1_browser_transport_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserTransportSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserTransportSessionAttestation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/browser/secure/analyse-capture": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Secure Analyse Capture",
+        "operationId": "secure_analyse_capture_api_v1_browser_secure_analyse_capture_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserLocalAnalysisResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/browser/secure/prepare-release": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Secure Prepare Release",
+        "operationId": "secure_prepare_release_api_v1_browser_secure_prepare_release_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserReleasePreparationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/browser/analyse-capture": {
       "post": {
         "tags": [
           "browser-agent"
         ],
         "summary": "Analyse Capture",
-        "description": "Analyse raw browser context locally without authorizing external release.\n\nRaw metadata/screenshot bytes are processed in-memory and are not persisted by\nthis endpoint. The returned result is local analysis evidence only.",
         "operationId": "analyse_capture_api_v1_browser_analyse_capture_post",
         "requestBody": {
           "content": {
@@ -1243,7 +1326,6 @@
           "browser-agent"
         ],
         "summary": "Prepare Release",
-        "description": "Build, attack and sign the exact candidate external browser payload.\n\nCaller-supplied verification results are never accepted. Raw DOM/screenshot\nmaterial is processed only on the localhost companion. The returned\nauthorization is bound to the sanitized payload byte-for-byte.",
         "operationId": "prepare_release_api_v1_browser_prepare_release_post",
         "requestBody": {
           "content": {
@@ -3047,6 +3129,139 @@
           "public_key_sha256"
         ],
         "title": "BrowserSigner"
+      },
+      "BrowserTransportSessionAttestation": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/BrowserTransportSessionPayload"
+          },
+          "signature_algorithm": {
+            "type": "string",
+            "const": "Ed25519",
+            "title": "Signature Algorithm",
+            "default": "Ed25519"
+          },
+          "signature_b64": {
+            "type": "string",
+            "title": "Signature B64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payload",
+          "signature_b64"
+        ],
+        "title": "BrowserTransportSessionAttestation"
+      },
+      "BrowserTransportSessionPayload": {
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "veilgraph.browser-companion-transport.v1",
+            "title": "Schema",
+            "default": "veilgraph.browser-companion-transport.v1"
+          },
+          "session_id": {
+            "type": "string",
+            "pattern": "^VGT-[A-F0-9]{20}$",
+            "title": "Session Id"
+          },
+          "challenge": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge"
+          },
+          "purpose": {
+            "type": "string",
+            "const": "PROTECT_RAW_BROWSER_CAPTURE",
+            "title": "Purpose",
+            "default": "PROTECT_RAW_BROWSER_CAPTURE"
+          },
+          "endpoint": {
+            "type": "string",
+            "enum": [
+              "analyse-capture",
+              "prepare-release"
+            ],
+            "title": "Endpoint"
+          },
+          "client_public_key_b64": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 80,
+            "title": "Client Public Key B64"
+          },
+          "companion_ephemeral_public_key_b64": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 80,
+            "title": "Companion Ephemeral Public Key B64"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "signer": {
+            "$ref": "#/components/schemas/BrowserSigner"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "challenge",
+          "endpoint",
+          "client_public_key_b64",
+          "companion_ephemeral_public_key_b64",
+          "issued_at",
+          "expires_at",
+          "signer"
+        ],
+        "title": "BrowserTransportSessionPayload",
+        "description": "Ed25519-authenticated ephemeral ECDH transport parameters."
+      },
+      "BrowserTransportSessionRequest": {
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge"
+          },
+          "client_public_key_b64": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 80,
+            "title": "Client Public Key B64"
+          },
+          "endpoint": {
+            "type": "string",
+            "enum": [
+              "analyse-capture",
+              "prepare-release"
+            ],
+            "title": "Endpoint"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "challenge",
+          "client_public_key_b64",
+          "endpoint"
+        ],
+        "title": "BrowserTransportSessionRequest",
+        "description": "Create a one-time encrypted channel before any raw capture is uploaded."
       },
       "BrowserVerificationSummary": {
         "properties": {

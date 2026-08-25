@@ -313,6 +313,74 @@ class BrowserPairingAttestation(BaseModel):
     signature_b64: str
 
 
+class BrowserTransportSessionRequest(BaseModel):
+    """Create a one-time encrypted channel before any raw capture is uploaded."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    challenge: str = Field(
+        min_length=32,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
+    client_public_key_b64: str = Field(
+        min_length=80,
+        max_length=256,
+    )
+    endpoint: Literal[
+        "analyse-capture",
+        "prepare-release",
+    ]
+
+
+class BrowserTransportSessionPayload(BaseModel):
+    """Ed25519-authenticated ephemeral ECDH transport parameters."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal[
+        "veilgraph.browser-companion-transport.v1"
+    ] = Field(
+        default="veilgraph.browser-companion-transport.v1",
+        alias="schema",
+        serialization_alias="schema",
+    )
+    session_id: str = Field(
+        pattern=r"^VGT-[A-F0-9]{20}$",
+    )
+    challenge: str = Field(
+        min_length=32,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
+    purpose: Literal[
+        "PROTECT_RAW_BROWSER_CAPTURE"
+    ] = "PROTECT_RAW_BROWSER_CAPTURE"
+    endpoint: Literal[
+        "analyse-capture",
+        "prepare-release",
+    ]
+    client_public_key_b64: str = Field(
+        min_length=80,
+        max_length=256,
+    )
+    companion_ephemeral_public_key_b64: str = Field(
+        min_length=80,
+        max_length=256,
+    )
+    issued_at: datetime
+    expires_at: datetime
+    signer: BrowserSigner
+
+
+class BrowserTransportSessionAttestation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    payload: BrowserTransportSessionPayload
+    signature_algorithm: Literal["Ed25519"] = "Ed25519"
+    signature_b64: str
+
+
 class BrowserMinimizationEvidence(BaseModel):
     """Local evidence describing the exact context-minimization decision.
 

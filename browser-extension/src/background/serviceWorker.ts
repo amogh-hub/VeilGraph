@@ -21,7 +21,10 @@ import type { OnnxRuntimeLike } from '../perception/learnedFaceModel.js'
 // @ts-ignore -- generated vendor asset intentionally lives outside src/.
 import * as ortRuntime from '../vendor/onnxruntime/ort.wasm.bundle.min.mjs'
 import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js'
-import { pairLocalCompanion } from '../security/pairing.js'
+import {
+  createTrustedCompanionTransportSession,
+  pairLocalCompanion,
+} from '../security/pairing.js'
 import { validateReasoningResponse } from '../security/actionPlan.js'
 import {
   createPendingExecution,
@@ -646,29 +649,162 @@ function snakeCaseCapture(bundle: PageCaptureBundle, task: string, audienceProfi
   }
 }
 
+function localTransportBase64Url(
+  bytes: Uint8Array,
+): string {
+  let binary = ''
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
+}
+
 async function postToLocalCompanion(
   endpoint: 'analyse-capture' | 'prepare-release',
   bundle: PageCaptureBundle,
   task: string,
-  audienceProfile: 'PUBLIC_RELEASE' | 'RESEARCH_PARTNER' | 'INTERNAL_OPERATIONS',
+  audienceProfile:
+    | 'PUBLIC_RELEASE'
+    | 'RESEARCH_PARTNER'
+    | 'INTERNAL_OPERATIONS',
   privacyLevel: 1 | 2 | 3 | 4 | 5,
 ): Promise<unknown> {
-  const form = new FormData()
-  form.append('metadata', JSON.stringify(snakeCaseCapture(bundle, task, audienceProfile, privacyLevel)))
-  const screenshot = dataUrlToBlob(bundle.screenshotDataUrl)
-  form.append('screenshot', screenshot, screenshot.type === 'image/jpeg' ? 'capture.jpg' : 'capture.png')
-  const response = await fetch(`http://127.0.0.1:8000/api/v1/browser/${endpoint}`, {
-    method: 'POST',
-    body: form,
-    credentials: 'omit',
-    cache: 'no-store',
-    redirect: 'error',
-    referrerPolicy: 'no-referrer',
-  })
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(`local VeilGraph companion returned HTTP ${response.status}${detail ? `: ${detail.slice(0, 240)}` : ''}`)
+  // SECURITY BOUNDARY:
+  // Authenticate the companion's signed ephemeral ECDH key against
+  // the already-pinned Ed25519 device identity BEFORE raw DOM or
+  // screenshot bytes are placed into any HTTP request body.
+  const transport =
+    await createTrustedCompanionTransportSession(
+      endpoint,
+    )
+
+  const metadataBytes =
+    new TextEncoder().encode(
+      JSON.stringify(
+        snakeCaseCapture(
+          bundle,
+          task,
+          audienceProfile,
+          privacyLevel,
+        ),
+      ),
+    )
+
+  const screenshot =
+    dataUrlToBlob(bundle.screenshotDataUrl)
+
+  const screenshotBytes =
+    new Uint8Array(
+      await screenshot.arrayBuffer(),
+    )
+
+  if (metadataBytes.byteLength > 0xffffffff) {
+    throw new Error(
+      'browser capture metadata exceeds encrypted-envelope limit',
+    )
   }
+
+  const mimeCode =
+    screenshot.type === 'image/jpeg'
+      ? 2
+      : screenshot.type === 'image/png'
+        ? 1
+        : 0
+
+  if (mimeCode === 0) {
+    throw new Error(
+      'unsupported browser screenshot media type',
+    )
+  }
+
+  // Binary plaintext envelope:
+  // [uint32 metadata length][uint8 mime][metadata][screenshot]
+  const plaintext =
+    new Uint8Array(
+      5
+      + metadataBytes.byteLength
+      + screenshotBytes.byteLength,
+    )
+
+  new DataView(
+    plaintext.buffer,
+  ).setUint32(
+    0,
+    metadataBytes.byteLength,
+    false,
+  )
+
+  plaintext[4] = mimeCode
+  plaintext.set(metadataBytes, 5)
+  plaintext.set(
+    screenshotBytes,
+    5 + metadataBytes.byteLength,
+  )
+
+  const iv =
+    crypto.getRandomValues(
+      new Uint8Array(12),
+    )
+
+  const aad =
+    new TextEncoder().encode(
+      'veilgraph.browser-local-transport.v1'
+      + `|${transport.sessionId}|${endpoint}`,
+    )
+
+  const ciphertext =
+    await crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv,
+        additionalData: aad,
+        tagLength: 128,
+      },
+      transport.key,
+      plaintext,
+    )
+
+  // Only authenticated ciphertext crosses the localhost HTTP boundary.
+  // A process that does not possess the ECDH session key cannot recover
+  // screenshot/DOM/task contents from this request body.
+  const response = await fetch(
+    `http://127.0.0.1:8000/api/v1/browser/secure/${endpoint}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type':
+          'application/octet-stream',
+        'Cache-Control': 'no-store',
+        'X-VeilGraph-Transport-Session':
+          transport.sessionId,
+        'X-VeilGraph-Transport-IV':
+          localTransportBase64Url(iv),
+      },
+      body: ciphertext,
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'error',
+      referrerPolicy: 'no-referrer',
+    },
+  )
+
+  if (!response.ok) {
+    const detail =
+      await response.text().catch(() => '')
+
+    throw new Error(
+      `local VeilGraph encrypted companion returned HTTP ${response.status}`
+      + (
+        detail
+          ? `: ${detail.slice(0, 240)}`
+          : ''
+      ),
+    )
+  }
+
   return response.json()
 }
 
