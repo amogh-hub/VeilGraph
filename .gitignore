@@ -50,3 +50,6 @@ artifacts/verification/
 # Generated browser ML runtime/model copies (source model + npm lock are tracked)
 browser-extension/dist/vendor/
 browser-extension/dist/models/
+browser-extension/dist-firefox/
+artifacts/sih26171/runtime-logs/
+artifacts/sih26171/adversarial-pytest.log

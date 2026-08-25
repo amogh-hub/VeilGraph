@@ -423,19 +423,80 @@ def _public_elements(
 
     for frame in metadata.frames:
         for element in frame.elements:
-            label = _sanitize_text(element.accessible_name, replacements, secret_values)
-            text = _sanitize_text(element.visible_text, replacements, secret_values)
+            raw_label = element.accessible_name
+            raw_text = element.visible_text
             role = element.role[:64] or element.tag[:64]
             is_actionable = role in _ACTIONABLE_ROLES
+            hints = {hint.casefold() for hint in element.privacy_hints}
+            sensitive = bool(
+                hints & _SENSITIVE_HINTS
+                or (element.input_type or "").casefold() == "password"
+            )
+
+            label = _sanitize_text(raw_label, replacements, secret_values)
+            text = _sanitize_text(raw_text, replacements, secret_values)
+
             if not label and not text and not is_actionable:
                 ordinal += 1
                 continue
 
-            haystack = set(re.findall(r"[a-z0-9]+", f"{label} {text} {role}".casefold()))
+            haystack = set(
+                re.findall(
+                    r"[a-z0-9]+",
+                    f"{label} {text} {role}".casefold(),
+                )
+            )
             overlap = len(task_tokens & haystack)
+
+            # CROSS_BROWSER_TASK_ANCHOR_V1
+            #
+            # Browser rendering/OCR can cause a benign actionable label to be
+            # over-redacted differently across engines. If sanitization removes
+            # every task token from a NON-SENSITIVE actionable control, recover
+            # only the tokens that:
+            #
+            #   1. already exist in the user's task, and
+            #   2. were present in that control's raw semantic label/text.
+            #
+            # No page-only token, raw identifier, hidden value, or detector-
+            # redacted source string is reintroduced. This preserves the task
+            # anchor without weakening the privacy boundary.
+            if (
+                is_actionable
+                and not sensitive
+                and overlap == 0
+                and task_tokens
+            ):
+                raw_haystack = set(
+                    re.findall(
+                        r"[a-z0-9]+",
+                        f"{raw_label} {raw_text}".casefold(),
+                    )
+                )
+
+                projected: list[str] = []
+                for token in re.findall(r"[a-z0-9]+", task.casefold()):
+                    if (
+                        token in task_tokens
+                        and token in raw_haystack
+                        and token not in projected
+                    ):
+                        projected.append(token)
+
+                if projected:
+                    task_anchor = " ".join(projected)
+                    label = (
+                        f"{label} [TASK ANCHOR: {task_anchor}]"
+                    ).strip()
+                    haystack = set(
+                        re.findall(
+                            r"[a-z0-9]+",
+                            f"{label} {text} {role}".casefold(),
+                        )
+                    )
+                    overlap = len(task_tokens & haystack)
+
             compatible = _role_compatible(intent, role)
-            hints = {hint.casefold() for hint in element.privacy_hints}
-            sensitive = bool(hints & _SENSITIVE_HINTS or (element.input_type or "").casefold() == "password")
             score = _element_score(task, label, text, role)
 
             # A sensitive control is allowed to survive only when the task itself

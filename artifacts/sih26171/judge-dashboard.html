@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VeilGraph SIH26171 Evidence</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#f6f7fb;background:#090c12}
+body{margin:0;padding:36px;max-width:1280px;margin:auto}
+h1{font-size:42px;margin:0 0 6px} .sub{color:#9aa4b2;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:#111722;border:1px solid #263247;border-radius:18px;padding:22px}
+.big{font-size:34px;font-weight:800;margin:8px 0} .ok{color:#6ee7a8} .warn{color:#f6c76b}
+.small{color:#9aa4b2;font-size:13px;line-height:1.5} code{color:#9ed0ff}
+.flow{margin-top:22px;padding:22px;border-radius:18px;background:#0d131d;border:1px solid #263247;line-height:1.9}
+</style></head><body>
+<h1>VeilGraph</h1><div class="sub">SIH26171 · Privacy-preserving browser vision agent · measured evidence</div>
+<div class="grid">
+<div class="card"><b>Visual context · 25%</b><div class="big">100.00% F1</div><div class="small">12 curated browser grounding cases</div></div>
+<div class="card"><b>PII detection · 20%</b><div class="big">98.84% F1</div><div class="small">P 97.70% · R 100.00%</div></div>
+<div class="card"><b>Redaction · 20%</b><div class="big">97.96% F1</div><div class="small">Sensitive ROI redaction with safe-task preservation</div></div>
+<div class="card"><b>Client resources · 20%</b><div class="big">82.562 MB Δ</div><div class="small">Aggregate Chrome process-tree peak delta; UltraFace 1.212 MB</div></div>
+<div class="card"><b>E2E latency · 15%</b><div class="big">17893.0 ms p50</div><div class="small">p90 31874.2 · p95 36435.6 · n=5</div></div>
+<div class="card"><b>External egress</b><div class="big ok">ZERO RAW HITS</div><div class="small">19 exact outbound reasoning requests observed</div></div>
+<div class="card"><b>Cross-browser</b><div class="big">5 / 1</div><div class="small">Chrome COMPLETE / Firefox COMPLETE</div></div>
+<div class="card"><b>Release state</b><div class="big ok">RELEASE READY</div></div>
+</div>
+<div class="flow"><b>Enforced data path</b><br>
+Raw screen → local DOM/accessibility/vision → sensitive-data fusion → Identity Exposure Graph →
+task-minimal sanitizer → 12 mandatory privacy attacks → signed release authorization →
+central Qwen reasoning → typed action → deterministic local validation →
+high-impact confirmation → fresh recapture → repeat.
+</div>
+<p class="small">Claim boundaries and benchmark protocol are documented in the repository. No benchmark number is represented as an organizer-issued SIH score.</p>
+</body></html>

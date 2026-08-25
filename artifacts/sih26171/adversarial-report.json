@@ -1,0 +1,98 @@
+{
+  "attack_matrix": [
+    {
+      "attack": "malicious localhost listener / raw capture interception",
+      "covered_by": "test_browser_secure_transport.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "transport replay / one-time session reuse",
+      "covered_by": "test_browser_secure_transport.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "transport endpoint confusion",
+      "covered_by": "test_browser_secure_transport.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "ciphertext tampering / AES-GCM authentication",
+      "covered_by": "test_browser_secure_transport.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "raw credential leakage",
+      "covered_by": "test_browser_privacy_pipeline.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "privacy-floor downgrade",
+      "covered_by": "test_browser_privacy_pipeline.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "inconclusive visual coverage",
+      "covered_by": "test_browser_privacy_pipeline.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "signed payload tampering",
+      "covered_by": "test_browser_release_gate.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "wrong / untrusted signer",
+      "covered_by": "test_browser_reasoning.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "authorization replay",
+      "covered_by": "test_browser_reasoning.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "hostile model target selection",
+      "covered_by": "test_browser_reasoning.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "invalid typed action shape",
+      "covered_by": "test_browser_reasoning.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "terminal non-DONE/WAIT action",
+      "covered_by": "test_browser_reasoning.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "ambiguous click target autonomy",
+      "covered_by": "test_browser_action_confidence_v2.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "unrelated click target autonomy",
+      "covered_by": "test_browser_action_confidence_v2.py",
+      "status": "PASS"
+    },
+    {
+      "attack": "high-impact confirmation bypass",
+      "covered_by": "test_browser_action_confidence_v2.py",
+      "status": "PASS"
+    }
+  ],
+  "claim_boundary": "Coverage applies to the named implemented attacks and regression fixtures. It is not a mathematical guarantee against every possible browser attack.",
+  "generated_at": "2026-08-25T12:36:53.747526+00:00",
+  "overall_pass": true,
+  "pytest_passed": 65,
+  "pytest_warnings": 6,
+  "schema": "veilgraph.sih26171-adversarial-closure.v1",
+  "test_files": [
+    "tests/test_browser_secure_transport.py",
+    "tests/test_browser_capture_api.py",
+    "tests/test_browser_privacy_pipeline.py",
+    "tests/test_browser_release_gate.py",
+    "tests/test_browser_reasoning.py",
+    "tests/test_browser_action_confidence_v2.py"
+  ]
+}

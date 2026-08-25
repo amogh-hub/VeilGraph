@@ -586,3 +586,56 @@ def test_negative_completion_language_does_not_unlock_terminal_release():
     assert result.minimization.completion_evidence_preserved is False
     assert result.payload.terminal_evidence == "NONE"
     assert result.authorization.payload.decision == "DENY_NETWORK_RELEASE"
+
+
+def test_cross_browser_task_anchor_projection_uses_only_user_task_tokens():
+    """Recover only task-owned semantics from a benign actionable control.
+
+    This models a browser/OCR-specific over-redaction of the button label.
+    Recovery is constrained to tokens that occur in both the user's task and
+    the original non-sensitive actionable control. Page-only/private text is
+    never restored.
+    """
+    import app.browser.privacy_pipeline as privacy_pipeline
+
+    raw = _metadata()
+    raw["task"] = "Open the available follow-up appointment options and complete it."
+    raw["frames"][0]["elements"] = [
+        {
+            "local_id": "vg_followup_button_001",
+            "tag": "button",
+            "role": "button",
+            "accessible_name": "View follow-up options",
+            "visible_text": "View Follow-Up Options",
+            "disabled": False,
+            "bbox": [1000, 3000, 5000, 3800],
+            "privacy_hints": [],
+        }
+    ]
+
+    parsed = BrowserLocalCaptureMetadata.model_validate(raw)
+
+    plan = privacy_pipeline._public_elements(
+        parsed,
+        raw["task"],
+        {"View follow-up options": "[PERSON PROTECTED]"},
+        (),
+    )
+
+    assert "vg_followup_button_001" in plan.required_anchor_ids
+    assert plan.actionability_preserved is True
+    assert plan.task_token_coverage_basis_points >= 4_000
+
+    target = next(
+        item
+        for item in plan.elements
+        if item.element_id == "vg_followup_button_001"
+    )
+
+    folded = target.label.casefold()
+    assert "[task anchor:" in folded
+    assert "follow" in folded
+    assert "options" in folded
+
+    # The raw original label is not restored wholesale.
+    assert "view follow-up options" not in folded

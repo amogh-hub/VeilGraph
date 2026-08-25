@@ -11,7 +11,9 @@
     "verify:learned": "npm run build && node scripts/verify_learned_model_contract.mjs",
     "verify:action-plan": "npm run build && node scripts/verify_action_plan_contract.mjs",
     "verify:local-action": "npm run build && node scripts/verify_local_action_contract.mjs",
-    "verify:agent-loop": "npm run build && node scripts/verify_agent_loop_contract.mjs"
+    "verify:agent-loop": "npm run build && node scripts/verify_agent_loop_contract.mjs",
+    "build:firefox": "npm run build && python3 scripts/build_firefox.py",
+    "verify:firefox": "npm run build:firefox && node scripts/verify_firefox_package.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.9",

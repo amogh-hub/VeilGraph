@@ -1,0 +1,17 @@
+{
+  "baseline_rss_mb": 3061.766,
+  "baseline_window_seconds": 5.0,
+  "browser": "chrome",
+  "claim_boundary": "Aggregate browser-process measurement on this machine. It is not represented as extension-only RSS.",
+  "generated_at": "2026-08-25T12:44:01.782423+00:00",
+  "interval_seconds": 0.5,
+  "max_process_count": 16,
+  "measurement": "aggregate browser-process tree sampled via macOS ps",
+  "median_cpu_percent_sum": 3.1,
+  "p95_cpu_percent_sum": 49.3,
+  "peak_cpu_percent_sum": 144.4,
+  "peak_delta_rss_mb": 82.562,
+  "peak_rss_mb": 3144.328,
+  "sample_count": 703,
+  "schema": "veilgraph.sih26171-browser-resource-sample.v1"
+}

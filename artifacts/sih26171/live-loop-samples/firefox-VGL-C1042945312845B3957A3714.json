@@ -1,0 +1,163 @@
+{
+  "browser_family": "firefox",
+  "recorded_at": "2026-08-25T13:30:26.966502+00:00",
+  "result": {
+    "contract": "SECURE_AGENT_LOOP_V1",
+    "ended_at": "2026-08-25T13:30:26.957Z",
+    "loop_id": "VGL-C1042945312845B3957A3714",
+    "max_steps": 6,
+    "pending_execution": null,
+    "started_at": "2026-08-25T13:29:44.162Z",
+    "status": "COMPLETE",
+    "step_count": 2,
+    "stop_reason": null,
+    "task": "Open the available follow-up appointment options and complete it.",
+    "trace": [
+      {
+        "action": null,
+        "elapsed_ms": 322,
+        "minimization_basis_points": null,
+        "note": "Fresh viewport observation VGC-75540376C0B15BC19D5871D7; raw capture remained local.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 1,
+        "stage": "OBSERVE",
+        "target_id": null
+      },
+      {
+        "action": null,
+        "elapsed_ms": 2543,
+        "minimization_basis_points": 5638,
+        "note": "Network release decision: ALLOW_NETWORK_RELEASE.",
+        "proof_score": 100,
+        "residual_identity_exposure": 15,
+        "sequence": 2,
+        "stage": "PRIVACY",
+        "target_id": null
+      },
+      {
+        "action": "CLICK",
+        "elapsed_ms": 13328,
+        "minimization_basis_points": 5638,
+        "note": "Typed server plan independently validated; only its first action is eligible.",
+        "proof_score": 100,
+        "residual_identity_exposure": 15,
+        "sequence": 3,
+        "stage": "REASON",
+        "target_id": "vg_d51dc3381cfac4c212886e03"
+      },
+      {
+        "action": "CLICK",
+        "elapsed_ms": 17,
+        "minimization_basis_points": null,
+        "note": "Low-impact high-confidence action executed locally after fresh live-DOM validation.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 4,
+        "stage": "EXECUTE",
+        "target_id": "vg_d51dc3381cfac4c212886e03"
+      },
+      {
+        "action": null,
+        "elapsed_ms": 150,
+        "minimization_basis_points": null,
+        "note": "Fresh viewport observation VGC-002F141B205E151F546C4C5E; raw capture remained local.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 5,
+        "stage": "OBSERVE",
+        "target_id": null
+      },
+      {
+        "action": null,
+        "elapsed_ms": 2624,
+        "minimization_basis_points": 4421,
+        "note": "Network release decision: ALLOW_NETWORK_RELEASE.",
+        "proof_score": 100,
+        "residual_identity_exposure": 2,
+        "sequence": 6,
+        "stage": "PRIVACY",
+        "target_id": null
+      },
+      {
+        "action": "CLICK",
+        "elapsed_ms": 9228,
+        "minimization_basis_points": 4421,
+        "note": "Typed server plan independently validated; only its first action is eligible.",
+        "proof_score": 100,
+        "residual_identity_exposure": 2,
+        "sequence": 7,
+        "stage": "REASON",
+        "target_id": "vg_87da437bcbd6f221f5759f46"
+      },
+      {
+        "action": "CLICK",
+        "elapsed_ms": 0,
+        "minimization_basis_points": null,
+        "note": "HIGH_IMPACT_ACTION_REQUIRES_LOCAL_CONFIRMATION",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 8,
+        "stage": "STOP",
+        "target_id": "vg_87da437bcbd6f221f5759f46"
+      },
+      {
+        "action": "CLICK",
+        "elapsed_ms": 6,
+        "minimization_basis_points": null,
+        "note": "Locally confirmed action executed; a fresh observation is mandatory.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 9,
+        "stage": "EXECUTE",
+        "target_id": "vg_87da437bcbd6f221f5759f46"
+      },
+      {
+        "action": null,
+        "elapsed_ms": 100,
+        "minimization_basis_points": null,
+        "note": "Fresh viewport observation VGC-5E86A715321A96DF4D740CF8; raw capture remained local.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 10,
+        "stage": "OBSERVE",
+        "target_id": null
+      },
+      {
+        "action": null,
+        "elapsed_ms": 2104,
+        "minimization_basis_points": 4467,
+        "note": "Network release decision: ALLOW_NETWORK_RELEASE.",
+        "proof_score": 100,
+        "residual_identity_exposure": 1,
+        "sequence": 11,
+        "stage": "PRIVACY",
+        "target_id": null
+      },
+      {
+        "action": null,
+        "elapsed_ms": 8307,
+        "minimization_basis_points": 4467,
+        "note": "Terminal-evidence constrained reasoning marked the task complete.",
+        "proof_score": 100,
+        "residual_identity_exposure": 1,
+        "sequence": 12,
+        "stage": "REASON",
+        "target_id": null
+      },
+      {
+        "action": null,
+        "elapsed_ms": 0,
+        "minimization_basis_points": null,
+        "note": "Reasoning server reported task complete after a fresh sanitized observation.",
+        "proof_score": null,
+        "residual_identity_exposure": null,
+        "sequence": 13,
+        "stage": "STOP",
+        "target_id": null
+      }
+    ]
+  },
+  "schema": "veilgraph.sih26171-live-loop-evidence.v1",
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:154.0) Gecko/20100101 Firefox/154.0"
+}

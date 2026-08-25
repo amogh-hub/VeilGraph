@@ -970,7 +970,7 @@ async function executePendingAction(
 }
 
 chrome.action.onClicked.addListener((tab) => {
-  if (tab.id) void chrome.sidePanel.open({ tabId: tab.id })
+  if (tab.id && chrome.sidePanel?.open) void chrome.sidePanel.open({ tabId: tab.id })
 })
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {

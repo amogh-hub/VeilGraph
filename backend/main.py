@@ -81,9 +81,19 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
+    allow_origin_regex=r"^(?:chrome-extension|moz-extension)://[A-Za-z0-9._@-]+$",
     allow_credentials=False,
-    allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Content-Type", "Accept", "Authorization", "X-Request-ID"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Accept",
+        "Authorization",
+        "X-Request-ID",
+        "Cache-Control",
+        "X-VeilGraph-Transport-Session",
+        "X-VeilGraph-Transport-IV",
+    ],
+    max_age=600,
 )
 
 
@@ -140,7 +150,11 @@ async def production_boundary_metrics_and_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = (
+        "cross-origin"
+        if request.url.path.startswith("/api/v1/browser/")
+        else "same-origin"
+    )
     response.headers["Cache-Control"] = "no-store"
     if not settings.offline_mode:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

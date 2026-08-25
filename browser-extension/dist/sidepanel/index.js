@@ -264,6 +264,32 @@ function localLoopId() {
     const bytes = crypto.getRandomValues(new Uint8Array(12));
     return `VGL-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 }
+async function recordCompleteLoopEvidence(result) {
+    if (result.status !== 'COMPLETE')
+        return;
+    try {
+        await fetch('http://127.0.0.1:8000/api/v1/browser/evidence/loop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-store',
+            },
+            body: JSON.stringify({
+                browser: navigator.userAgent,
+                result,
+            }),
+            credentials: 'omit',
+            cache: 'no-store',
+            redirect: 'error',
+            referrerPolicy: 'no-referrer',
+            keepalive: true,
+        });
+    }
+    catch {
+        // Evidence recording is local observability only. Failure to record
+        // evidence must never mutate or relax the security decision itself.
+    }
+}
 function renderLoop(result) {
     if (!status || !detail)
         return;
@@ -271,6 +297,8 @@ function renderLoop(result) {
     const terminal = ['COMPLETE', 'BLOCKED', 'CANCELLED', 'STEP_LIMIT', 'LOOP_DETECTED'].includes(result.status);
     if (terminal)
         loopRunning = false;
+    if (result.status === 'COMPLETE')
+        void recordCompleteLoopEvidence(result);
     status.textContent = result.status === 'COMPLETE'
         ? `TASK COMPLETE — secure agent loop finished in ${result.step_count} action(s).`
         : result.status === 'WAITING_CONFIRMATION'
@@ -314,6 +342,11 @@ async function continueLoopFromResult(result) {
     const loopId = activeLoopId;
     const confirmed = window.confirm(`VeilGraph secure agent loop requires local confirmation before ${pending.action.action}.\n\n`
         + `${pending.action.reason}\n\nProceed with this one action?`);
+    if (status) {
+        status.textContent = confirmed
+            ? 'Confirmation accepted — executing locally, then securely re-observing…'
+            : 'Confirmation denied — cancelling this action…';
+    }
     setBusy(true);
     const response = await chrome.runtime.sendMessage({
         type: 'VG_RESUME_SECURE_AGENT_LOOP',

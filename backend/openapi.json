@@ -1279,6 +1279,52 @@
         }
       }
     },
+    "/api/v1/browser/evidence/loop": {
+      "post": {
+        "tags": [
+          "browser-agent"
+        ],
+        "summary": "Record Loop Evidence",
+        "description": "Persist sanitized COMPLETE-loop evidence for local benchmark aggregation.\n\nThis endpoint accepts only the loop trace/status object emitted by the\nextension UI. Raw captures, screenshot payloads and controlled private\ncanaries are rejected by ``record_secure_loop_evidence``.",
+        "operationId": "record_loop_evidence_api_v1_browser_evidence_loop_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Record Loop Evidence Api V1 Browser Evidence Loop Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/browser/analyse-capture": {
       "post": {
         "tags": [

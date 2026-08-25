@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim": "Raw capture is encrypted before localhost delivery to the paired companion",
+      "evidence": "LOCAL_COMPANION_ENCRYPTED_TRANSPORT_V1 + secure transport tests",
+      "status": "VALIDATED"
+    },
+    {
+      "claim": "External reasoning requests contain zero controlled raw PrismCare canaries",
+      "evidence": "egress-witness-latest.json",
+      "status": "VALIDATED"
+    },
+    {
+      "claim": "Controlled Chrome multi-cycle secure task completes",
+      "evidence": "live-loop-samples",
+      "status": "VALIDATED"
+    },
+    {
+      "claim": "Firefox controlled secure task completes",
+      "evidence": "live-loop-samples",
+      "status": "VALIDATED"
+    },
+    {
+      "claim": "Five-metric scorecard is release-ready",
+      "evidence": "scorecard-latest.json",
+      "status": "VALIDATED"
+    },
+    {
+      "claim": "Universal anonymity / zero unknown bugs",
+      "evidence": "Out of scope; explicitly prohibited overclaim",
+      "status": "NOT_CLAIMED"
+    },
+    {
+      "claim": "WebGPU live validation",
+      "evidence": "Live browser path is ONNX Runtime Web WASM on current validated machine",
+      "status": "NOT_CLAIMED"
+    }
+  ],
+  "generated_at": "2026-08-25T13:42:53.302715+00:00",
+  "schema": "veilgraph.sih26171-claim-registry.v1"
+}

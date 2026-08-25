@@ -33,6 +33,7 @@ FOCUSED_BROWSER_TESTS = [
     "tests/test_browser_local_analysis.py",
     "tests/test_browser_pairing.py",
     "tests/test_browser_secure_transport.py",
+    "tests/test_sih26171_evidence_tools.py",
     "tests/test_browser_privacy_pipeline.py",
     "tests/test_browser_release_gate.py",
     "tests/test_browser_reasoning.py",

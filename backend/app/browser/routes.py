@@ -10,6 +10,7 @@ from fastapi import (
 )
 from pydantic import ValidationError
 
+from app.browser.evidence import LoopEvidenceError, record_secure_loop_evidence
 from app.browser.local_analysis import (
     BrowserAnalysisError,
     analyse_browser_capture,
@@ -372,6 +373,21 @@ async def secure_prepare_release(
             status_code=422,
             detail=str(exc),
         ) from exc
+
+
+
+@router.post("/evidence/loop")
+def record_loop_evidence(payload: dict) -> dict:
+    """Persist sanitized COMPLETE-loop evidence for local benchmark aggregation.
+
+    This endpoint accepts only the loop trace/status object emitted by the
+    extension UI. Raw captures, screenshot payloads and controlled private
+    canaries are rejected by ``record_secure_loop_evidence``.
+    """
+    try:
+        return record_secure_loop_evidence(payload)
+    except LoopEvidenceError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 # ---------------------------------------------------------------------
