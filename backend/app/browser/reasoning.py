@@ -54,6 +54,19 @@ class BrowserReasoningError(ValueError):
         self.status_code = status_code
 
 
+class _CompactTerminalDecision(BaseModel):
+    """Decision schema after trusted positive terminal evidence.
+
+    The local privacy layer supplies evidence, not a completion verdict.
+    Central reasoning may accept it as DONE or decline with WAIT.
+    No READ or browser-mutating action is representable.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    a: Literal["DONE", "WAIT"]
+
+
 class _CompactReasoningDecision(BaseModel):
     """Minimal model-controlled decision.
 
@@ -241,25 +254,46 @@ def _reasoning_uses_visual(payload: BrowserReleasePayload) -> bool:
     )
 
 
-def _system_prompt() -> str:
-    return (
+def _system_prompt(*, terminal_evidence: bool = False) -> str:
+    common = (
         "You are the centralized reasoning component of VeilGraph, a privacy-governed browser agent. "
         "You receive ONLY locally sanitized and task-minimized browser context. Never infer, reconstruct, "
-        "guess, or request hidden identity or redacted values. Produce only a typed BrowserActionPlan. "
-        "Use target_id values exactly as provided. Never emit CSS selectors, XPath, JavaScript, eval code, "
-        "shell commands, raw DOM, or arbitrary executable text. Plan only the NEXT ONE action because VeilGraph "
-        "re-observes the page after every action. Return exactly one action unless the task is already complete. "
-        "Omit unused optional action fields. Keep action reason to at most 6 words and summary empty. "
-        "confidence_basis_points uses the 0..10000 basis-point scale, not 0..100. If the task cannot "
-        "be safely planned from the supplied context, return the smallest safe READ/WAIT-style plan rather "
-        "than inventing missing page state. High-impact actions such as submit, confirm, send, payment, "
+        "guess, or request hidden identity or redacted values. Never emit CSS selectors, XPath, JavaScript, "
+        "eval code, shell commands, raw DOM, or arbitrary executable text."
+    )
+
+    if terminal_evidence:
+        return (
+            common
+            + " The trusted local privacy layer has attached POSITIVE_COMPLETION terminal evidence to this "
+            "signed sanitized payload. This is evidence, not a completion verdict. Inspect only the supplied "
+            "sanitized context and choose DONE if it sufficiently proves the requested task is complete; "
+            "otherwise choose WAIT. Return compact terminal JSON only. READ, CLICK, TYPE, SELECT, NAVIGATE, "
+            "and SCROLL are forbidden in this state."
+        )
+
+    return (
+        common
+        + " Produce only a typed BrowserActionPlan. Use target_id values exactly as provided. Plan only the "
+        "NEXT ONE action because VeilGraph re-observes the page after every action. Return exactly one action "
+        "unless the task is already complete. Omit unused optional action fields. Keep action reason to at most "
+        "6 words and summary empty. confidence_basis_points uses the 0..10000 basis-point scale, not 0..100. "
+        "If the task cannot be safely planned from the supplied context, return the smallest safe READ/WAIT-style "
+        "plan rather than inventing missing page state. High-impact actions such as submit, confirm, send, payment, "
         "purchase, deletion, transfer, booking, signing, or agreement must set requires_confirmation=true."
     )
 
 
 def _call_ollama(payload: BrowserReleasePayload) -> str:
     endpoint = settings.reasoning_ollama_base_url.rstrip("/") + "/api/chat"
-    schema = _CompactReasoningDecision.model_json_schema()
+    terminal_mode = payload.terminal_evidence == "POSITIVE_COMPLETION"
+
+    schema = (
+        _CompactTerminalDecision.model_json_schema()
+        if terminal_mode
+        else _CompactReasoningDecision.model_json_schema()
+    )
+
     use_visual = _reasoning_uses_visual(payload)
     semantic = _semantic_prompt_payload(payload)
 
@@ -272,14 +306,22 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
             semantic_page.pop("visual_context", None)
     # Model targets elements by array index rather than repeating or inventing
     # opaque vg_* identifiers.
-    prompt = (
-        "Choose only the NEXT browser action. Return compact JSON only. "
-        "a is DONE, CLICK, SCROLL, TYPE, SELECT, NAVIGATE, READ, or WAIT. "
-        "For CLICK/TYPE/SELECT/READ set i to the zero-based index in page.elements. "
-        "Use v=value, u=url, d=scroll_delta_y, w=wait_ms only when required. "
-        "Omit every unused key. Never infer hidden values.\n"
-        f"SANITIZED_PAYLOAD:\n{json.dumps(semantic, sort_keys=True, separators=(',', ':'))}"
-    )
+    if terminal_mode:
+        prompt = (
+            "Evaluate the signed sanitized terminal evidence. Return compact JSON only. "
+            "a must be DONE if the supplied evidence sufficiently proves the requested task is complete; "
+            "otherwise a must be WAIT. No other key or action is permitted. Never infer hidden values.\n"
+            f"SANITIZED_PAYLOAD:\n{json.dumps(semantic, sort_keys=True, separators=(',', ':'))}"
+        )
+    else:
+        prompt = (
+            "Choose only the NEXT browser action. Return compact JSON only. "
+            "a is DONE, CLICK, SCROLL, TYPE, SELECT, NAVIGATE, READ, or WAIT. "
+            "For CLICK/TYPE/SELECT/READ set i to the zero-based index in page.elements. "
+            "Use v=value, u=url, d=scroll_delta_y, w=wait_ms only when required. "
+            "Omit every unused key. Never infer hidden values.\n"
+            f"SANITIZED_PAYLOAD:\n{json.dumps(semantic, sort_keys=True, separators=(',', ':'))}"
+        )
     user_message: dict[str, object] = {"role": "user", "content": prompt}
     visual = payload.page.visual_context
     if visual is not None and use_visual:
@@ -288,7 +330,12 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
     body = {
         "model": settings.reasoning_ollama_model,
         "messages": [
-            {"role": "system", "content": _system_prompt()},
+            {
+                "role": "system",
+                "content": _system_prompt(
+                    terminal_evidence=terminal_mode,
+                ),
+            },
             user_message,
         ],
         "stream": False,
@@ -349,52 +396,87 @@ def _call_ollama(payload: BrowserReleasePayload) -> str:
         raise BrowserReasoningError("reasoning model returned no structured action decision", status_code=502)
 
     try:
-        decision = _CompactReasoningDecision.model_validate_json(content)
-
-        if decision.a == "DONE":
-            plan = BrowserActionPlan(
-                session_id=payload.session_id,
-                task_id=payload.task_id,
-                actions=[],
-                complete=True,
-                summary="",
+        if terminal_mode:
+            terminal_decision = _CompactTerminalDecision.model_validate_json(
+                content
             )
+
+            if terminal_decision.a == "DONE":
+                plan = BrowserActionPlan(
+                    session_id=payload.session_id,
+                    task_id=payload.task_id,
+                    actions=[],
+                    complete=True,
+                    summary="",
+                )
+            else:
+                # Terminal WAIT is safe/non-mutating. The browser loop will
+                # stop for local review rather than executing/retrying it.
+                plan = BrowserActionPlan(
+                    session_id=payload.session_id,
+                    task_id=payload.task_id,
+                    actions=[
+                        BrowserAction(
+                            action="WAIT",
+                            wait_ms=1_000,
+                            confidence_basis_points=0,
+                            reason="Terminal completion uncertain",
+                            requires_confirmation=True,
+                        )
+                    ],
+                    complete=False,
+                    summary="",
+                )
+
         else:
-            target_id = None
-            if decision.i is not None:
-                if decision.i >= len(payload.page.elements):
-                    raise BrowserReasoningError(
-                        "reasoning model selected unavailable element index",
-                        status_code=502,
-                    )
-                target_id = payload.page.elements[decision.i].element_id
+            decision = _CompactReasoningDecision.model_validate_json(content)
 
-            # Confidence is deterministic evidence, not a model assertion.
-            # Use the conservative minimum of task utility and minimization.
-            confidence_basis_points = min(
-                payload.task_utility_score * 100,
-                payload.minimization_basis_points,
-            )
+            if decision.a == "DONE":
+                plan = BrowserActionPlan(
+                    session_id=payload.session_id,
+                    task_id=payload.task_id,
+                    actions=[],
+                    complete=True,
+                    summary="",
+                )
+            else:
+                target_id = None
 
-            action = BrowserAction(
-                action=decision.a,
-                target_id=target_id,
-                value=decision.v,
-                url=decision.u,
-                scroll_delta_y=decision.d,
-                wait_ms=decision.w,
-                confidence_basis_points=confidence_basis_points,
-                reason="Model selected next action",
-                requires_confirmation=False,
-            )
+                if decision.i is not None:
+                    if decision.i >= len(payload.page.elements):
+                        raise BrowserReasoningError(
+                            "reasoning model selected unavailable element index",
+                            status_code=502,
+                        )
 
-            plan = BrowserActionPlan(
-                session_id=payload.session_id,
-                task_id=payload.task_id,
-                actions=[action],
-                complete=False,
-                summary="",
-            )
+                    target_id = payload.page.elements[
+                        decision.i
+                    ].element_id
+
+                confidence_basis_points = min(
+                    payload.task_utility_score * 100,
+                    payload.minimization_basis_points,
+                )
+
+                action = BrowserAction(
+                    action=decision.a,
+                    target_id=target_id,
+                    value=decision.v,
+                    url=decision.u,
+                    scroll_delta_y=decision.d,
+                    wait_ms=decision.w,
+                    confidence_basis_points=confidence_basis_points,
+                    reason="Model selected next action",
+                    requires_confirmation=False,
+                )
+
+                plan = BrowserActionPlan(
+                    session_id=payload.session_id,
+                    task_id=payload.task_id,
+                    actions=[action],
+                    complete=False,
+                    summary="",
+                )
 
     except ValidationError as exc:
         raise BrowserReasoningError(
@@ -426,9 +508,28 @@ def validate_action_plan(plan: BrowserActionPlan, payload: BrowserReleasePayload
     if plan.session_id != payload.session_id or plan.task_id != payload.task_id:
         raise BrowserReasoningError("action plan is not bound to the authorized session/task", status_code=502)
     if len(plan.actions) > settings.reasoning_max_actions:
-        raise BrowserReasoningError("action plan exceeds configured maximum action count", status_code=502)
+        raise BrowserReasoningError(
+            "action plan exceeds configured maximum action count",
+            status_code=502,
+        )
 
-    elements = {item.element_id: item for item in payload.page.elements}
+    if (
+        payload.terminal_evidence == "POSITIVE_COMPLETION"
+        and not plan.complete
+    ):
+        if (
+            len(plan.actions) != 1
+            or plan.actions[0].action != "WAIT"
+        ):
+            raise BrowserReasoningError(
+                "terminal evidence permits only DONE or WAIT",
+                status_code=502,
+            )
+
+    elements = {
+        item.element_id: item
+        for item in payload.page.elements
+    }
     normalized: list[BrowserAction] = []
 
     for action in plan.actions:
@@ -455,8 +556,22 @@ def validate_action_plan(plan: BrowserActionPlan, payload: BrowserReleasePayload
             if _origin_tuple(action.url) != _origin_tuple(payload.page.origin):
                 raise BrowserReasoningError("cross-origin NAVIGATE is not permitted by SANITIZED_REASONING_ACTION_V1", status_code=502)
 
-        requires_confirmation = action.requires_confirmation or _high_impact(payload, action)
-        normalized.append(action.model_copy(update={"requires_confirmation": requires_confirmation}))
+        requires_confirmation = (
+            action.requires_confirmation
+            or _high_impact(payload, action)
+            or (
+                payload.terminal_evidence == "POSITIVE_COMPLETION"
+                and action.action == "WAIT"
+            )
+        )
+
+        normalized.append(
+            action.model_copy(
+                update={
+                    "requires_confirmation": requires_confirmation,
+                }
+            )
+        )
 
     return plan.model_copy(update={"actions": normalized})
 

@@ -5,6 +5,7 @@ export const BROWSER_REASONING_REQUEST_SCHEMA = 'veilgraph.browser-reasoning-req
 export const BROWSER_REASONING_RESPONSE_SCHEMA = 'veilgraph.browser-reasoning-response.v1' as const
 
 export type NetworkDecision = 'ALLOW_NETWORK_RELEASE' | 'DENY_NETWORK_RELEASE'
+export type BrowserTerminalEvidence = 'NONE' | 'POSITIVE_COMPLETION'
 export type LocalPerceptionStatus = 'READY' | 'PARTIAL' | 'UNAVAILABLE' | 'ERROR'
 export type PerceptionModality = 'DOM' | 'ACCESSIBILITY' | 'VISUAL'
 
@@ -50,6 +51,7 @@ export interface BrowserReleasePayload {
   residual_identity_exposure: number
   task_utility_score: number
   minimization_basis_points: number
+  terminal_evidence: BrowserTerminalEvidence
 }
 
 export interface BrowserNetworkAuthorizationPayload {
@@ -141,6 +143,7 @@ export interface BrowserMinimizationEvidence {
   overall_minimization_basis_points: number
   task_token_coverage_basis_points: number
   actionability_preserved: boolean
+  completion_evidence_preserved: boolean
   utility_sufficient: boolean
   retained_visual_regions: number
 }

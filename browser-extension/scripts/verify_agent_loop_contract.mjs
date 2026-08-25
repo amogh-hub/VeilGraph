@@ -8,6 +8,7 @@ import {
   markLoopComplete,
   publicLoopResult,
   registerLoopExecution,
+  terminalReasoningStopReason,
   validateLoopContinuation,
   validateLoopOrigin,
 } from '../dist/security/agentLoop.js'
@@ -111,6 +112,51 @@ const cancelledMachine = beginSecureAgentLoop(
 markLoopCancelled(cancelledMachine, 'LOCAL_CANCEL_REQUEST', 1_500)
 assert.equal(publicLoopResult(cancelledMachine, null).status, 'CANCELLED')
 
+const terminalDonePlan = {
+  schema: 'veilgraph.browser-action-plan.v1',
+  session_id: 'session_0123456789abcdef',
+  task_id: 'task_0123456789abcdef',
+  actions: [],
+  complete: true,
+  summary: '',
+}
+
+assert.equal(
+  terminalReasoningStopReason(
+    'POSITIVE_COMPLETION',
+    terminalDonePlan,
+  ),
+  null,
+)
+
+const terminalWaitPlan = {
+  ...terminalDonePlan,
+  actions: [{
+    action: 'WAIT',
+    wait_ms: 1000,
+    confidence_basis_points: 0,
+    reason: 'Terminal completion uncertain',
+    requires_confirmation: true,
+  }],
+  complete: false,
+}
+
+assert.equal(
+  terminalReasoningStopReason(
+    'POSITIVE_COMPLETION',
+    terminalWaitPlan,
+  ),
+  'TERMINAL_COMPLETION_UNCERTAIN',
+)
+
+assert.equal(
+  terminalReasoningStopReason(
+    'NONE',
+    terminalWaitPlan,
+  ),
+  null,
+)
+
 const bounded = beginSecureAgentLoop(
   'VGL-3123456789ABCDEF01234567',
   12,
@@ -137,7 +183,7 @@ assert.equal(bounded.trace.at(-1).sequence, 24)
 console.log(JSON.stringify({
   status: 'READY',
   contract: 'SECURE_AGENT_LOOP_V1',
-  cases: 14,
+  cases: 17,
   guarantees: [
     'bounded-max-steps',
     'tab-binding',
@@ -153,5 +199,8 @@ console.log(JSON.stringify({
     'task-complete-terminal-state',
     'local-cancellation',
     'bounded-safe-trace',
+    'terminal-done-completes',
+    'terminal-wait-stops-for-review',
+    'nonterminal-wait-unaffected',
   ],
 }))

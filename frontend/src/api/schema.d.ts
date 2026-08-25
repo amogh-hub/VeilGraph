@@ -155,6 +155,7 @@ export interface components {
       "overall_minimization_basis_points": number
       "task_token_coverage_basis_points": number
       "actionability_preserved": boolean
+      "completion_evidence_preserved": boolean
       "utility_sufficient": boolean
       "retained_visual_regions": number
     }
@@ -259,6 +260,7 @@ export interface components {
       "residual_identity_exposure": number
       "task_utility_score": number
       "minimization_basis_points": number
+      "terminal_evidence"?: "NONE" | "POSITIVE_COMPLETION"
     }
     "BrowserReleasePreparationResponse": {
       "schema"?: string

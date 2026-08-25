@@ -97,6 +97,7 @@ class BrowserReleasePayload(BaseModel):
     residual_identity_exposure: int = Field(ge=0, le=100)
     task_utility_score: int = Field(ge=0, le=100)
     minimization_basis_points: int = Field(ge=0, le=10_000)
+    terminal_evidence: Literal["NONE", "POSITIVE_COMPLETION"] = "NONE"
 
     @field_validator("network_privacy_floor")
     @classmethod
@@ -335,6 +336,7 @@ class BrowserMinimizationEvidence(BaseModel):
     overall_minimization_basis_points: int = Field(ge=0, le=10_000)
     task_token_coverage_basis_points: int = Field(ge=0, le=10_000)
     actionability_preserved: bool
+    completion_evidence_preserved: bool
     utility_sufficient: bool
     retained_visual_regions: int = Field(ge=0, le=500)
 
@@ -359,8 +361,13 @@ class BrowserMinimizationEvidence(BaseModel):
             raise ValueError("required and dependency anchor IDs must be disjoint")
         if len(required) + len(dependencies) > self.released_element_count:
             raise ValueError("anchor accounting cannot exceed released_element_count")
-        if self.utility_sufficient and not self.actionability_preserved:
-            raise ValueError("utility_sufficient requires actionability_preserved")
+        if self.utility_sufficient and not (
+            self.actionability_preserved
+            or self.completion_evidence_preserved
+        ):
+            raise ValueError(
+                "utility_sufficient requires actionable or terminal completion evidence"
+            )
         return self
 
 

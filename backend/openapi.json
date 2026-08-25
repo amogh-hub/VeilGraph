@@ -2316,6 +2316,10 @@
             "type": "boolean",
             "title": "Actionability Preserved"
           },
+          "completion_evidence_preserved": {
+            "type": "boolean",
+            "title": "Completion Evidence Preserved"
+          },
           "utility_sufficient": {
             "type": "boolean",
             "title": "Utility Sufficient"
@@ -2340,6 +2344,7 @@
           "overall_minimization_basis_points",
           "task_token_coverage_basis_points",
           "actionability_preserved",
+          "completion_evidence_preserved",
           "utility_sufficient",
           "retained_visual_regions"
         ],
@@ -2954,6 +2959,15 @@
             "maximum": 10000.0,
             "minimum": 0.0,
             "title": "Minimization Basis Points"
+          },
+          "terminal_evidence": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "POSITIVE_COMPLETION"
+            ],
+            "title": "Terminal Evidence",
+            "default": "NONE"
           }
         },
         "additionalProperties": false,

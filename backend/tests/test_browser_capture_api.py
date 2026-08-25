@@ -232,3 +232,137 @@ def test_browser_visual_fusion_summary_rejects_impossible_agreement_count():
             "single_source_findings": 2,
             "learned_native_face_agreements": 1,
         })
+
+
+def test_browser_workflow_heading_false_positive_is_scoped_to_browser_adapter():
+    from app.browser import local_analysis
+    from app.core.enums import (
+        DetectionSource,
+        EntityType,
+        FileType,
+        ReviewStatus,
+        SensitivityLevel,
+        TransformationType,
+    )
+    from app.detection.models import DetectedMention
+    from app.extraction.document_processor import (
+        PageFrame,
+        ProcessedDocument,
+    )
+
+    raw = _metadata()
+
+    raw["frames"][0]["eligible_element_count"] = 2
+    raw["frames"][0]["captured_element_count"] = 2
+
+    raw["frames"][0]["elements"] = [
+        {
+            "local_id": "vg_demo_followup_heading",
+            "tag": "h1",
+            "role": "heading",
+            "accessible_name": "Patient Follow-Up",
+            "visible_text": "Patient Follow-Up",
+            "disabled": False,
+            "bbox": [1000, 1000, 6000, 1800],
+            "privacy_hints": [],
+        },
+        {
+            "local_id": "vg_real_patient_heading",
+            "tag": "h2",
+            "role": "heading",
+            "accessible_name": "Patient Alice Brown",
+            "visible_text": "Patient Alice Brown",
+            "disabled": False,
+            "bbox": [1000, 2500, 6000, 3300],
+            "privacy_hints": [],
+        },
+    ]
+
+    metadata = BrowserLocalCaptureMetadata.model_validate(raw)
+
+    page = PageFrame(
+        page_index=0,
+        width=800.0,
+        height=600.0,
+        image=Image.new(
+            "RGB",
+            (800, 600),
+            "white",
+        ),
+        lines=(),
+        used_ocr=True,
+    )
+
+    document = ProcessedDocument(
+        file_type=FileType.IMAGE,
+        pages=(page,),
+        page_count=1,
+        scanned_pages=1,
+    )
+
+    def mention(
+        value,
+        rect,
+        source,
+    ):
+        return DetectedMention(
+            entity_type=EntityType.PERSON_NAME,
+            plaintext=value,
+            page_index=0,
+            page_char_start=0,
+            page_char_end=len(value),
+            rect=rect,
+            confidence=0.9,
+            source=source,
+            sensitivity=SensitivityLevel.HIGH,
+            transformation=TransformationType.PSEUDONYMIZE,
+            review_status=ReviewStatus.NOT_REQUIRED,
+        )
+
+    follow_rect = local_analysis._pixel_bbox(
+        (1000, 1000, 6000, 1800),
+        800,
+        600,
+    )
+
+    name_rect = local_analysis._pixel_bbox(
+        (1000, 2500, 6000, 3300),
+        800,
+        600,
+    )
+
+    false_dom = mention(
+        "Follow-Up",
+        follow_rect,
+        DetectionSource.TEXT_LAYER,
+    )
+
+    false_ocr = mention(
+        "Follow",
+        follow_rect,
+        DetectionSource.OCR,
+    )
+
+    real_name = mention(
+        "Alice Brown",
+        name_rect,
+        DetectionSource.TEXT_LAYER,
+    )
+
+    filtered = (
+        local_analysis._filter_browser_label_false_positives(
+            [
+                false_dom,
+                false_ocr,
+                real_name,
+            ],
+            metadata,
+            document,
+        )
+    )
+
+    assert false_dom not in filtered
+    assert false_ocr not in filtered
+
+    # Browser precision hardening must never suppress a genuine person name.
+    assert real_name in filtered

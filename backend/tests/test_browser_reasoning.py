@@ -35,7 +35,13 @@ MANDATORY_GATES = (
 )
 
 
-def _payload(*, task: str = "Open account settings", label: str = "Account settings", role: str = "button") -> BrowserReleasePayload:
+def _payload(
+    *,
+    task: str = "Open account settings",
+    label: str = "Account settings",
+    role: str = "button",
+    terminal_evidence: str = "NONE",
+) -> BrowserReleasePayload:
     return BrowserReleasePayload(
         session_id="session_0123456789abcdef",
         task_id="task_0123456789abcdef",
@@ -60,6 +66,7 @@ def _payload(*, task: str = "Open account settings", label: str = "Account setti
         residual_identity_exposure=8,
         task_utility_score=94,
         minimization_basis_points=8600,
+        terminal_evidence=terminal_evidence,
     )
 
 
@@ -126,6 +133,41 @@ def _plan_json(payload: BrowserReleasePayload, *, target: str = "vg_settings_but
     })
 
 
+def test_reasoning_accepts_complete_plan_without_actions(client, monkeypatch):
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Appointment confirmed",
+        role="heading",
+    )
+
+    request = _request(
+        monkeypatch,
+        payload=payload,
+    )
+
+    monkeypatch.setattr(
+        reasoning,
+        "_call_ollama",
+        lambda candidate: json.dumps({
+            "schema": "veilgraph.browser-action-plan.v1",
+            "session_id": candidate.session_id,
+            "task_id": candidate.task_id,
+            "actions": [],
+            "complete": True,
+            "summary": "",
+        }),
+    )
+
+    response = client.post(
+        "/api/v1/browser/reason",
+        json=request.model_dump(mode="json", by_alias=True),
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["plan"]["complete"] is True
+    assert response.json()["plan"]["actions"] == []
+
+
 def test_reasoning_endpoint_accepts_signed_sanitized_release_and_returns_typed_plan(client, monkeypatch):
     request = _request(monkeypatch)
     monkeypatch.setattr(reasoning, "_call_ollama", lambda payload: _plan_json(payload))
@@ -172,6 +214,31 @@ def test_reasoning_rejects_hallucinated_target_id(client, monkeypatch):
     response = client.post("/api/v1/browser/reason", json=request.model_dump(mode="json", by_alias=True))
     assert response.status_code == 502
     assert "invented unavailable target_id" in response.text
+
+
+
+def test_reasoning_rejects_click_on_non_actionable_heading(client, monkeypatch):
+    """A model may select a real element but still choose an invalid action."""
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Follow-up required",
+        role="heading",
+    )
+    request = _request(monkeypatch, payload=payload)
+
+    monkeypatch.setattr(
+        reasoning,
+        "_call_ollama",
+        lambda candidate: _plan_json(candidate),
+    )
+
+    response = client.post(
+        "/api/v1/browser/reason",
+        json=request.model_dump(mode="json", by_alias=True),
+    )
+
+    assert response.status_code == 502
+    assert "CLICK is incompatible with target role heading" in response.text
 
 
 def test_reasoning_rejects_model_generated_direct_identifier_value(client, monkeypatch):
@@ -285,3 +352,207 @@ def test_semantic_fast_path_keeps_visual_for_high_impact_task():
 
     assert reasoning._semantic_fast_path_eligible(payload) is False
     assert reasoning._reasoning_uses_visual(payload) is True
+
+
+def test_terminal_evidence_accepts_done_plan(client, monkeypatch):
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Appointment confirmed",
+        role="heading",
+        terminal_evidence="POSITIVE_COMPLETION",
+    )
+
+    request = _request(
+        monkeypatch,
+        payload=payload,
+    )
+
+    monkeypatch.setattr(
+        reasoning,
+        "_call_ollama",
+        lambda candidate: json.dumps({
+            "schema": "veilgraph.browser-action-plan.v1",
+            "session_id": candidate.session_id,
+            "task_id": candidate.task_id,
+            "actions": [],
+            "complete": True,
+            "summary": "",
+        }),
+    )
+
+    response = client.post(
+        "/api/v1/browser/reason",
+        json=request.model_dump(
+            mode="json",
+            by_alias=True,
+        ),
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["plan"]["complete"] is True
+    assert response.json()["plan"]["actions"] == []
+
+
+def test_terminal_evidence_rejects_read_even_if_model_returns_valid_plan(
+    client,
+    monkeypatch,
+):
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Appointment confirmed",
+        role="heading",
+        terminal_evidence="POSITIVE_COMPLETION",
+    )
+
+    request = _request(
+        monkeypatch,
+        payload=payload,
+    )
+
+    monkeypatch.setattr(
+        reasoning,
+        "_call_ollama",
+        lambda candidate: json.dumps({
+            "schema": "veilgraph.browser-action-plan.v1",
+            "session_id": candidate.session_id,
+            "task_id": candidate.task_id,
+            "actions": [{
+                "action": "READ",
+                "target_id": "vg_settings_button",
+                "confidence_basis_points": 9000,
+                "reason": "Read completion heading",
+                "requires_confirmation": False,
+            }],
+            "complete": False,
+            "summary": "",
+        }),
+    )
+
+    response = client.post(
+        "/api/v1/browser/reason",
+        json=request.model_dump(
+            mode="json",
+            by_alias=True,
+        ),
+    )
+
+    assert response.status_code == 502
+    assert (
+        "terminal evidence permits only DONE or WAIT"
+        in response.text
+    )
+
+
+def test_terminal_evidence_allows_only_confirmed_safe_wait(
+    client,
+    monkeypatch,
+):
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Appointment confirmed",
+        role="heading",
+        terminal_evidence="POSITIVE_COMPLETION",
+    )
+
+    request = _request(
+        monkeypatch,
+        payload=payload,
+    )
+
+    monkeypatch.setattr(
+        reasoning,
+        "_call_ollama",
+        lambda candidate: json.dumps({
+            "schema": "veilgraph.browser-action-plan.v1",
+            "session_id": candidate.session_id,
+            "task_id": candidate.task_id,
+            "actions": [{
+                "action": "WAIT",
+                "wait_ms": 1000,
+                "confidence_basis_points": 0,
+                "reason": "Terminal completion uncertain",
+                "requires_confirmation": False,
+            }],
+            "complete": False,
+            "summary": "",
+        }),
+    )
+
+    response = client.post(
+        "/api/v1/browser/reason",
+        json=request.model_dump(
+            mode="json",
+            by_alias=True,
+        ),
+    )
+
+    assert response.status_code == 200, response.text
+
+    action = response.json()["plan"]["actions"][0]
+
+    assert action["action"] == "WAIT"
+    assert action["requires_confirmation"] is True
+
+
+def test_terminal_ollama_schema_exposes_only_done_or_wait(
+    monkeypatch,
+):
+    payload = _payload(
+        task="Open the available follow-up appointment options and complete it.",
+        label="Appointment confirmed",
+        role="heading",
+        terminal_evidence="POSITIVE_COMPLETION",
+    )
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "message": {
+                    "content": json.dumps({
+                        "a": "DONE",
+                    }),
+                },
+                "total_duration": 1_000_000,
+                "load_duration": 0,
+                "prompt_eval_count": 10,
+                "prompt_eval_duration": 500_000,
+                "eval_count": 1,
+                "eval_duration": 100_000,
+            }
+
+    def fake_post(
+        endpoint,
+        *,
+        json,
+        timeout,
+        follow_redirects,
+        headers,
+    ):
+        captured["body"] = json
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        reasoning.httpx,
+        "post",
+        fake_post,
+    )
+
+    raw = reasoning._call_ollama(payload)
+    plan = json.loads(raw)
+
+    assert plan["complete"] is True
+    assert plan["actions"] == []
+
+    enum = captured["body"]["format"]["properties"]["a"]["enum"]
+
+    assert enum == [
+        "DONE",
+        "WAIT",
+    ]
+
+    assert "READ" not in enum

@@ -165,3 +165,32 @@ def test_release_payload_forbids_internal_raw_fields():
                 "raw_value": "do-not-serialize-me",
             }
         )
+
+
+def test_terminal_evidence_is_cryptographically_bound_to_release_authorization():
+    payload = _payload().model_copy(
+        update={
+            "terminal_evidence": "POSITIVE_COMPLETION",
+        }
+    )
+
+    authorization = authorize_network_release(
+        payload,
+        _summary(),
+    )
+
+    assert verify_network_authorization(
+        authorization,
+        payload,
+    )
+
+    tampered = payload.model_copy(
+        update={
+            "terminal_evidence": "NONE",
+        }
+    )
+
+    assert not verify_network_authorization(
+        authorization,
+        tampered,
+    )

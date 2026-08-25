@@ -7,7 +7,7 @@ import { verifyTrustedNetworkAuthorization } from '../security/releaseGate.js';
 import { pairLocalCompanion } from '../security/pairing.js';
 import { validateReasoningResponse } from '../security/actionPlan.js';
 import { createPendingExecution, validatePendingExecution, } from '../security/localAction.js';
-import { appendLoopTrace, beginSecureAgentLoop, evaluateLoopAction, markLoopCancelled, markLoopComplete, markLoopStopped, publicLoopResult, registerLoopExecution, validateLoopContinuation, validateLoopOrigin, } from '../security/agentLoop.js';
+import { appendLoopTrace, beginSecureAgentLoop, evaluateLoopAction, markLoopCancelled, markLoopComplete, markLoopStopped, terminalReasoningStopReason, publicLoopResult, registerLoopExecution, validateLoopContinuation, validateLoopOrigin, } from '../security/agentLoop.js';
 const learnedFaceDetector = createOnnxLearnedFaceDetector(ortRuntime, (path) => chrome.runtime.getURL(path));
 function nowMs() {
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -191,11 +191,18 @@ async function continueSecureAgentLoop(runtime, confirmation) {
             minimizationBasisPoints: preparation.minimization.overall_minimization_basis_points,
             elapsedMs: Math.max(0, Math.round(nowMs() - reasonStarted)),
             note: reasoning.plan.complete
-                ? 'Reasoning server marked the task complete.'
+                ? (preparation.payload.terminal_evidence === 'POSITIVE_COMPLETION'
+                    ? 'Terminal-evidence constrained reasoning marked the task complete.'
+                    : 'Reasoning server marked the task complete.')
                 : 'Typed server plan independently validated; only its first action is eligible.',
         });
         if (reasoning.plan.complete) {
             markLoopComplete(machine, Date.now());
+            return loopResult(runtime);
+        }
+        const terminalStop = terminalReasoningStopReason(preparation.payload.terminal_evidence, reasoning.plan);
+        if (terminalStop) {
+            markLoopStopped(machine, 'BLOCKED', terminalStop, Date.now());
             return loopResult(runtime);
         }
         const pending = createPendingExecution(executionId(), bundle.tabId, bundle.frames, preparation.payload, reasoning, Date.now());

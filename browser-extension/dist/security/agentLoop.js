@@ -83,6 +83,17 @@ export function validateLoopContinuation(machine, activeTabId, nowMs) {
     }
     return { allowed: true, status: 'RUNNING', reason: 'CONTINUE' };
 }
+export function terminalReasoningStopReason(terminalEvidence, plan) {
+    if (terminalEvidence !== 'POSITIVE_COMPLETION'
+        || plan.complete) {
+        return null;
+    }
+    if (plan.actions.length === 1
+        && plan.actions[0]?.action === 'WAIT') {
+        return 'TERMINAL_COMPLETION_UNCERTAIN';
+    }
+    return 'TERMINAL_REASONING_CONTRACT_VIOLATION';
+}
 export function evaluateLoopAction(machine, action, nowMs) {
     const continuation = validateLoopContinuation(machine, machine.tabId, nowMs);
     if (!continuation.allowed) {

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import re
 import shutil
 import time
 import uuid
@@ -256,6 +257,92 @@ def _rect_overlap_ratio(
     return intersection / area
 
 
+_BROWSER_WORKFLOW_PERSON_LABELS = {
+    "patient follow up",
+    "patient followup",
+}
+
+_BROWSER_WORKFLOW_PERSON_VALUES = {
+    "follow",
+    "follow up",
+    "followup",
+}
+
+
+def _browser_text_key(value: str) -> str:
+    return re.sub(
+        r"[^a-z0-9]+",
+        " ",
+        value.casefold(),
+    ).strip()
+
+
+def _is_browser_workflow_person_false_positive(
+    detection: DetectedMention,
+    frame,
+    page: PageFrame,
+) -> bool:
+    """Suppress a browser-only role/heading ambiguity.
+
+    Broad PII V5 remains byte-exact for its historical scientific freeze.
+
+    Browser pages can contain workflow headings such as ``Patient Follow-Up``.
+    Role-conditioned person-name detection can interpret ``Follow-Up`` or OCR's
+    shortened ``Follow`` as a person's name.
+
+    Suppression is allowed only when:
+    - the candidate is PERSON_NAME;
+    - it came from DOM text or OCR;
+    - the value is the narrow workflow token observed here;
+    - it is spatially bound to the matching browser heading.
+
+    Real person names such as ``Patient Alice Brown`` remain untouched.
+    """
+    if detection.source not in {
+        DetectionSource.TEXT_LAYER,
+        DetectionSource.OCR,
+    }:
+        return False
+
+    if detection.entity_type != EntityType.PERSON_NAME:
+        return False
+
+    if (
+        _browser_text_key(detection.plaintext)
+        not in _BROWSER_WORKFLOW_PERSON_VALUES
+    ):
+        return False
+
+    for element in frame.elements:
+        if element.role.casefold() != "heading":
+            continue
+
+        labels = {
+            _browser_text_key(element.accessible_name),
+            _browser_text_key(element.visible_text),
+        } - {""}
+
+        if not labels & _BROWSER_WORKFLOW_PERSON_LABELS:
+            continue
+
+        element_rect = _pixel_bbox(
+            element.bbox,
+            int(page.width),
+            int(page.height),
+        )
+
+        if (
+            _rect_overlap_ratio(
+                detection.rect,
+                element_rect,
+            )
+            >= 0.50
+        ):
+            return True
+
+    return False
+
+
 def _filter_browser_label_false_positives(
     detections: list[DetectedMention],
     metadata: BrowserLocalCaptureMetadata,
@@ -273,12 +360,36 @@ def _filter_browser_label_false_positives(
     if not document.pages:
         return detections
     result: list[DetectedMention] = []
+
     for detection in detections:
-        if detection.source != DetectionSource.TEXT_LAYER or detection.page_index >= len(metadata.frames):
+        if detection.page_index >= len(metadata.frames):
             result.append(detection)
             continue
+
+        if detection.source not in {
+            DetectionSource.TEXT_LAYER,
+            DetectionSource.OCR,
+        }:
+            result.append(detection)
+            continue
+
         frame = metadata.frames[detection.page_index]
         page = document.pages[detection.page_index]
+
+        if _is_browser_workflow_person_false_positive(
+            detection,
+            frame,
+            page,
+        ):
+            continue
+
+        # The existing generic browser-label suppression below is intentionally
+        # restricted to the DOM semantic layer. OCR reaches this point only for
+        # the narrow spatially-proven workflow exception above.
+        if detection.source != DetectionSource.TEXT_LAYER:
+            result.append(detection)
+            continue
+
         detected = detection.plaintext.strip().casefold()
         suppress = False
         for element in frame.elements:

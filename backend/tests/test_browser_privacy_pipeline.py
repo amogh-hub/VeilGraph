@@ -296,6 +296,293 @@ def test_minimization_evidence_model_rejects_impossible_accounting():
             "overall_minimization_basis_points": 5000,
             "task_token_coverage_basis_points": 9000,
             "actionability_preserved": True,
+            "completion_evidence_preserved": False,
             "utility_sufficient": True,
             "retained_visual_regions": 1,
         })
+
+def test_controlled_demo_task_preserves_action_anchor_across_both_cycles():
+    """The exact SIH demo task must survive minimization before and after action 1."""
+    from app.browser import privacy_pipeline
+
+    task = "Open the available follow-up appointment options and complete it."
+
+    def element(local_id, tag, role, accessible_name, visible_text, bbox):
+        return {
+            "local_id": local_id,
+            "tag": tag,
+            "role": role,
+            "accessible_name": accessible_name,
+            "visible_text": visible_text,
+            "disabled": False,
+            "bbox": bbox,
+            "privacy_hints": [],
+        }
+
+    states = [
+        (
+            "OVERVIEW",
+            [
+                element(
+                    "vg_demo_heading_001",
+                    "h1",
+                    "heading",
+                    "Patient Follow-Up",
+                    "Patient Follow-Up",
+                    [100, 100, 5000, 600],
+                ),
+                element(
+                    "vg_demo_view_0001",
+                    "button",
+                    "button",
+                    "View follow-up appointment options",
+                    "View Follow-Up Options",
+                    [6000, 6500, 9500, 7300],
+                ),
+                element(
+                    "vg_demo_notice_001",
+                    "div",
+                    "div",
+                    "Available times can be checked before any appointment is confirmed.",
+                    "Available times can be checked before any appointment is confirmed.",
+                    [6000, 4000, 9500, 6000],
+                ),
+            ],
+            "vg_demo_view_0001",
+        ),
+        (
+            "OPTIONS",
+            [
+                element(
+                    "vg_demo_available_001",
+                    "h2",
+                    "heading",
+                    "Available appointment",
+                    "Available appointment",
+                    [1000, 1200, 4500, 1700],
+                ),
+                element(
+                    "vg_demo_followup_001",
+                    "div",
+                    "div",
+                    "Follow-up consultation",
+                    "Follow-up consultation",
+                    [1000, 3500, 4500, 3900],
+                ),
+                element(
+                    "vg_demo_selected_001",
+                    "h2",
+                    "heading",
+                    "Selected option",
+                    "Selected option",
+                    [6000, 1200, 9000, 1700],
+                ),
+                element(
+                    "vg_demo_confirm_0001",
+                    "button",
+                    "button",
+                    "Confirm appointment",
+                    "Confirm Appointment",
+                    [6000, 6500, 9500, 7300],
+                ),
+                element(
+                    "vg_demo_notice2_001",
+                    "div",
+                    "div",
+                    "No appointment has been created yet. Confirmation is required before scheduling.",
+                    "No appointment has been created yet. Confirmation is required before scheduling.",
+                    [1000, 5000, 4500, 6200],
+                ),
+            ],
+            "vg_demo_confirm_0001",
+        ),
+    ]
+
+    for state, elements, expected_anchor in states:
+        raw = _metadata(
+            requested_privacy_level=4,
+            visual_status="READY",
+        )
+        raw["task"] = task
+        raw["frames"][0]["origin"] = "http://127.0.0.1:8765"
+        raw["frames"][0]["href"] = "http://127.0.0.1:8765/"
+        raw["frames"][0]["title"] = "PrismCare — Follow-Up Portal"
+        raw["frames"][0]["elements"] = elements
+
+        metadata = BrowserLocalCaptureMetadata.model_validate(raw)
+
+        plan = privacy_pipeline._public_elements(
+            metadata,
+            task,
+            {},
+            (),
+        )
+
+        # The controlled agent task must be action-oriented. A READ intent
+        # would allow descriptive headings to outrank the actual control and
+        # can lead a VLM to propose CLICK against a non-actionable heading.
+        assert plan.task_intent == "NAVIGATE", (
+            state,
+            plan.task_intent,
+        )
+
+        assert plan.elements, state
+
+        # For this deterministic two-state fixture there is exactly one
+        # task-relevant actionable control in each state. It must be the
+        # primary released element presented to reasoning.
+        assert plan.elements[0].element_id == expected_anchor, (
+            state,
+            [
+                (item.element_id, item.role, item.label)
+                for item in plan.elements
+            ],
+        )
+
+        assert plan.elements[0].role.casefold() in {
+            "button",
+            "link",
+            "menuitem",
+        }, (
+            state,
+            plan.elements[0].role,
+        )
+
+        released_ids = {
+            item.element_id
+            for item in plan.elements
+        }
+
+        assert expected_anchor in released_ids, (
+            state,
+            released_ids,
+        )
+
+        assert expected_anchor in set(plan.required_anchor_ids), (
+            state,
+            plan.required_anchor_ids,
+        )
+
+        assert plan.task_token_coverage_basis_points >= 4_000, (
+            state,
+            plan.task_token_coverage_basis_points,
+        )
+
+
+def test_terminal_completion_evidence_can_release_without_another_actionable_control():
+    """A fresh post-action success page may reach reasoning so it can return DONE."""
+    raw = _metadata(
+        requested_privacy_level=4,
+        visual_status="READY",
+    )
+
+    raw["task"] = (
+        "Open the available follow-up appointment options and complete it."
+    )
+
+    raw["frames"][0]["origin"] = "http://127.0.0.1:8765"
+    raw["frames"][0]["href"] = "http://127.0.0.1:8765/"
+    raw["frames"][0]["title"] = "PrismCare — Follow-Up Portal"
+
+    raw["frames"][0]["elements"] = [
+        {
+            "local_id": "vg_demo_complete_heading_001",
+            "tag": "h2",
+            "role": "heading",
+            "accessible_name": "Appointment confirmed",
+            "visible_text": "Appointment confirmed",
+            "disabled": False,
+            "bbox": [800, 2000, 5000, 2600],
+            "privacy_hints": [],
+        },
+        {
+            "local_id": "vg_demo_complete_text_002",
+            "tag": "p",
+            "role": "paragraph",
+            "accessible_name": (
+                "Cardiology follow-up scheduled for Thursday, "
+                "27 August 2026 at 10:30 AM."
+            ),
+            "visible_text": (
+                "Cardiology follow-up scheduled for Thursday, "
+                "27 August 2026 at 10:30 AM."
+            ),
+            "disabled": False,
+            "bbox": [800, 2800, 8500, 3400],
+            "privacy_hints": [],
+        },
+    ]
+
+    result = prepare_browser_release(
+        BrowserLocalCaptureMetadata.model_validate(raw),
+        _png(),
+    )
+
+    assert result.authorization.payload.decision == "ALLOW_NETWORK_RELEASE"
+    assert result.verification.proof_score == 100
+    assert result.verification.critical_failures == 0
+
+    assert result.minimization.task_intent == "NAVIGATE"
+
+    # Be semantically honest: there is no remaining action.
+    assert result.minimization.actionability_preserved is False
+
+    # Instead, explicit sanitized terminal evidence is preserved.
+    assert result.minimization.completion_evidence_preserved is True
+    assert result.payload.terminal_evidence == "POSITIVE_COMPLETION"
+    assert result.minimization.utility_sufficient is True
+    assert result.minimization.required_anchor_ids
+
+    assert any(
+        "Appointment confirmed" in item.label
+        for item in result.payload.page.elements
+    )
+
+    assert all(
+        item.role not in {"button", "link", "menuitem"}
+        for item in result.payload.page.elements
+    )
+
+
+def test_negative_completion_language_does_not_unlock_terminal_release():
+    """Pending/not-complete prose must not satisfy the completion fallback."""
+    raw = _metadata(
+        requested_privacy_level=4,
+        visual_status="READY",
+    )
+
+    raw["task"] = (
+        "Open the available follow-up appointment options and complete it."
+    )
+
+    raw["frames"][0]["elements"] = [
+        {
+            "local_id": "vg_demo_pending_001",
+            "tag": "p",
+            "role": "paragraph",
+            "accessible_name": "Appointment is not confirmed",
+            "visible_text": "Appointment is not confirmed",
+            "disabled": False,
+            "bbox": [1000, 2000, 7000, 2600],
+            "privacy_hints": [],
+        },
+        {
+            "local_id": "vg_demo_before_002",
+            "tag": "p",
+            "role": "paragraph",
+            "accessible_name": "Review details before scheduling",
+            "visible_text": "Review details before scheduling",
+            "disabled": False,
+            "bbox": [1000, 3000, 7000, 3600],
+            "privacy_hints": [],
+        },
+    ]
+
+    result = prepare_browser_release(
+        BrowserLocalCaptureMetadata.model_validate(raw),
+        _png(),
+    )
+
+    assert result.minimization.completion_evidence_preserved is False
+    assert result.payload.terminal_evidence == "NONE"
+    assert result.authorization.payload.decision == "DENY_NETWORK_RELEASE"

@@ -35,6 +35,7 @@ import {
   markLoopCancelled,
   markLoopComplete,
   markLoopStopped,
+  terminalReasoningStopReason,
   publicLoopResult,
   registerLoopExecution,
   validateLoopContinuation,
@@ -274,12 +275,32 @@ async function continueSecureAgentLoop(
       minimizationBasisPoints: preparation.minimization.overall_minimization_basis_points,
       elapsedMs: Math.max(0, Math.round(nowMs() - reasonStarted)),
       note: reasoning.plan.complete
-        ? 'Reasoning server marked the task complete.'
+        ? (
+            preparation.payload.terminal_evidence === 'POSITIVE_COMPLETION'
+              ? 'Terminal-evidence constrained reasoning marked the task complete.'
+              : 'Reasoning server marked the task complete.'
+          )
         : 'Typed server plan independently validated; only its first action is eligible.',
     })
 
     if (reasoning.plan.complete) {
       markLoopComplete(machine, Date.now())
+      return loopResult(runtime)
+    }
+
+    const terminalStop = terminalReasoningStopReason(
+      preparation.payload.terminal_evidence,
+      reasoning.plan,
+    )
+
+    if (terminalStop) {
+      markLoopStopped(
+        machine,
+        'BLOCKED',
+        terminalStop,
+        Date.now(),
+      )
+
       return loopResult(runtime)
     }
 

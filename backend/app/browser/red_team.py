@@ -265,7 +265,10 @@ def _task_utility_anchor_preservation(evidence) -> BrowserGateResult:
         score < 60
         or evidence.released_element_count == 0
         or evidence.relevant_anchor_count == 0
-        or not m.actionability_preserved
+        or not (
+            m.actionability_preserved
+            or m.completion_evidence_preserved
+        )
         or not m.utility_sufficient
         or m.task_token_coverage_basis_points < 4_000
     ):
@@ -276,7 +279,9 @@ def _task_utility_anchor_preservation(evidence) -> BrowserGateResult:
                 f"Sanitization removed too much task context: utility={score}/100 "
                 f"anchors={evidence.relevant_anchor_count} elements={evidence.released_element_count} "
                 f"token_coverage={m.task_token_coverage_basis_points}/10000 "
-                f"actionability={m.actionability_preserved} sufficient={m.utility_sufficient}"
+                f"actionability={m.actionability_preserved} "
+                f"completion={m.completion_evidence_preserved} "
+                f"sufficient={m.utility_sufficient}"
             ),
             severity="high",
         )
@@ -285,7 +290,9 @@ def _task_utility_anchor_preservation(evidence) -> BrowserGateResult:
         TestStatus.PASS,
         (
             f"Task-critical anchors remain after minimization: utility={score}/100 "
-            f"anchors={evidence.relevant_anchor_count} token_coverage={m.task_token_coverage_basis_points}/10000"
+            f"anchors={evidence.relevant_anchor_count} "
+            f"token_coverage={m.task_token_coverage_basis_points}/10000 "
+            f"completion={m.completion_evidence_preserved}"
         ),
         severity="high",
     )

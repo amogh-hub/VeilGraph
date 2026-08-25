@@ -98,6 +98,7 @@ class _TaskMinimizationPlan:
     dependency_anchor_ids: tuple[str, ...]
     task_token_coverage_basis_points: int
     actionability_preserved: bool
+    completion_evidence_preserved: bool
 
 
 def _safe_normalize(entity_type: EntityType, value: str) -> str:
@@ -266,6 +267,33 @@ _TASK_VERB_STOPWORDS = {"click", "tap", "press", "open", "go", "navigate", "visi
 _ACTION_INTENTS = {"CLICK", "TYPE", "SELECT", "NAVIGATE", "SUBMIT"}
 _READ_ROLES = {"heading", "text", "div", "span", "label", "paragraph", "cell", "row", "link"}
 
+# A completed task legitimately has no next actionable control. In that state
+# VeilGraph may release narrowly scoped, already-sanitized completion evidence
+# so centralized reasoning can return DONE after a fresh observation.
+_COMPLETION_TERMS = {
+    "complete",
+    "completed",
+    "confirmed",
+    "success",
+    "successful",
+    "scheduled",
+    "done",
+    "finished",
+    "submitted",
+    "saved",
+    "sent",
+    "booked",
+    "reserved",
+}
+
+# Negative/pending wording must never masquerade as terminal success.
+_COMPLETION_NEGATION = re.compile(
+    r"\b(?:not|no|never|pending|incomplete|before|requires?|required|awaiting)\b"
+    r".{0,48}"
+    r"\b(?:complete(?:d)?|confirmed|success(?:ful)?|scheduled|done|finished|submitted|saved|sent|booked|reserved)\b",
+    re.I,
+)
+
 
 def _task_tokens(task: str) -> set[str]:
     # Protected placeholders are compiler output, not task meaning. Letting words
@@ -321,6 +349,36 @@ def _element_score(task: str, label: str, text: str, role: str) -> int:
     if _role_compatible(intent, role):
         score += 8 if intent in _ACTION_INTENTS else 4
     return score
+
+
+def _is_positive_completion_evidence(
+    task: str,
+    candidate: _ElementCandidate,
+) -> bool:
+    """Identify explicit positive terminal evidence, never generic page prose.
+
+    This is used only as a fallback for action-oriented tasks after no
+    task-relevant actionable control remains. It does not locally declare the
+    task complete; it only permits narrowly scoped sanitized completion
+    evidence to reach reasoning, which must independently return DONE.
+    """
+    if candidate.public.role.casefold() not in _READ_ROLES:
+        return False
+
+    value = f"{candidate.public.label} {candidate.public.text}".strip()
+
+    if not value or candidate.task_overlap <= 0:
+        return False
+
+    words = set(re.findall(r"[a-z]+", value.casefold()))
+
+    if not (words & _COMPLETION_TERMS):
+        return False
+
+    if _COMPLETION_NEGATION.search(value):
+        return False
+
+    return True
 
 
 def _bbox_distance(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> int:
@@ -414,14 +472,45 @@ def _public_elements(
     ranked = sorted(candidates, key=lambda item: (item.score, item.task_overlap, -item.ordinal), reverse=True)
     required: list[_ElementCandidate] = []
 
+    completion_evidence = False
+
     if intent in _ACTION_INTENTS:
         # Prefer controls that are both role-compatible and semantically tied to
         # the task. Generic buttons do not become network context just because
         # they are clickable.
-        required = [item for item in ranked if item.role_compatible and item.task_overlap > 0 and item.score > 0][:_MAX_RELEASE_ELEMENTS]
+        required = [
+            item
+            for item in ranked
+            if item.role_compatible
+            and item.task_overlap > 0
+            and item.score > 0
+        ][:_MAX_RELEASE_ELEMENTS]
+
         required = required[:4]
+
         if not required:
-            fallback = [item for item in ranked if item.role_compatible and item.score > 0]
+            # A legitimate post-action terminal state has no next actionable
+            # control. Only explicit POSITIVE completion evidence may become the
+            # required anchor in that case. Ordinary action states still require
+            # an actionable task anchor exactly as before.
+            completion = [
+                item
+                for item in ranked
+                if _is_positive_completion_evidence(task, item)
+            ]
+
+            required = completion[:2]
+            completion_evidence = bool(required)
+
+        if not required:
+            # Preserve the existing conservative fallback for non-terminal
+            # states. This does not mark completion evidence as present.
+            fallback = [
+                item
+                for item in ranked
+                if item.role_compatible and item.score > 0
+            ]
+
             required = fallback[:1]
     elif intent == "READ":
         required = [item for item in ranked if item.task_overlap > 0 and item.score > 0][:4]
@@ -494,6 +583,7 @@ def _public_elements(
         dependency_anchor_ids=tuple(item.public.element_id for item in dependencies if item.public.element_id in selected_ids),
         task_token_coverage_basis_points=coverage,
         actionability_preserved=actionability,
+        completion_evidence_preserved=completion_evidence,
     )
 
 
@@ -663,12 +753,34 @@ def _released_semantic_size(task: str, title: str, elements: list[BrowserPublicE
     return max(1, len(task) + len(title) + sum(len(item.label) + len(item.text) + len(item.role) for item in elements))
 
 
-def _task_utility_score(task: str, elements: list[BrowserPublicElement], anchors: int) -> int:
+def _task_utility_score(
+    task: str,
+    elements: list[BrowserPublicElement],
+    anchors: int,
+    *,
+    completion_evidence: bool = False,
+) -> int:
     if not elements:
         return 0
+
     coverage = _released_token_coverage(task, elements) / 10_000
-    actionable = any(element.role in _ACTIONABLE_ROLES and not element.disabled for element in elements)
-    score = round(58 * coverage + (32 if actionable else 0) + min(10, anchors * 2))
+
+    actionable = any(
+        element.role in _ACTIONABLE_ROLES and not element.disabled
+        for element in elements
+    )
+
+    # Terminal completion evidence replaces the actionability component only
+    # when there is genuinely no actionable control. It does not grant extra
+    # utility on normal action-bearing states.
+    terminal_utility = completion_evidence and not actionable
+
+    score = round(
+        58 * coverage
+        + (32 if actionable or terminal_utility else 0)
+        + min(10, anchors * 2)
+    )
+
     return max(0, min(100, score))
 
 
@@ -746,11 +858,19 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
     released_semantic = _released_semantic_size(sanitized_task, sanitized_title, elements)
     semantic_minimization = max(0, min(10_000, round((1.0 - min(1.0, released_semantic / raw_semantic)) * 10_000)))
     overall_minimization = min(semantic_minimization, visual_minimization)
-    task_utility = _task_utility_score(relevance_task, elements, anchors)
+    task_utility = _task_utility_score(
+        relevance_task,
+        elements,
+        anchors,
+        completion_evidence=plan.completion_evidence_preserved,
+    )
     utility_sufficient = (
         task_utility >= 60
         and anchors > 0
-        and plan.actionability_preserved
+        and (
+            plan.actionability_preserved
+            or plan.completion_evidence_preserved
+        )
         and plan.task_token_coverage_basis_points >= 4_000
     )
     raw_element_count = sum(len(frame.elements) for frame in metadata.frames)
@@ -767,6 +887,7 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
         overall_minimization_basis_points=overall_minimization,
         task_token_coverage_basis_points=plan.task_token_coverage_basis_points,
         actionability_preserved=plan.actionability_preserved,
+        completion_evidence_preserved=plan.completion_evidence_preserved,
         utility_sufficient=utility_sufficient,
         retained_visual_regions=retained_visual_regions,
     )
@@ -789,6 +910,11 @@ def prepare_browser_release(metadata: BrowserLocalCaptureMetadata, screenshot: b
         residual_identity_exposure=int(risk["after"]),
         task_utility_score=task_utility,
         minimization_basis_points=overall_minimization,
+        terminal_evidence=(
+            "POSITIVE_COMPLETION"
+            if plan.completion_evidence_preserved
+            else "NONE"
+        ),
     )
 
     evidence = BrowserSanitizationEvidence(

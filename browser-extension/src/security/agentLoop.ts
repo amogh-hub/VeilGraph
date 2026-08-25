@@ -1,6 +1,8 @@
 import type {
   BrowserAction,
+  BrowserActionPlan,
   BrowserActionType,
+  BrowserTerminalEvidence,
   LocalActionExecutionResult,
   PendingActionExecution,
   SecureAgentLoopResult,
@@ -147,6 +149,27 @@ export function validateLoopContinuation(
     return { allowed: false, status: 'BLOCKED', reason: 'LOOP_DEADLINE_EXCEEDED' }
   }
   return { allowed: true, status: 'RUNNING', reason: 'CONTINUE' }
+}
+
+export function terminalReasoningStopReason(
+  terminalEvidence: BrowserTerminalEvidence,
+  plan: BrowserActionPlan,
+): string | null {
+  if (
+    terminalEvidence !== 'POSITIVE_COMPLETION'
+    || plan.complete
+  ) {
+    return null
+  }
+
+  if (
+    plan.actions.length === 1
+    && plan.actions[0]?.action === 'WAIT'
+  ) {
+    return 'TERMINAL_COMPLETION_UNCERTAIN'
+  }
+
+  return 'TERMINAL_REASONING_CONTRACT_VIOLATION'
 }
 
 export function evaluateLoopAction(
